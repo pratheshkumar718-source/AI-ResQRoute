@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import {
   Siren, Shield, Truck, Building2, ShieldAlert, Users, ArrowRight,
-  Clock, Heart, Activity, CheckCircle2, ChevronRight, Sparkles,
-  PhoneCall, MapPin, Eye, Bell, Radio, Lock, Stethoscope, Compass,
-  ChevronDown, ExternalLink, Zap, Layers, AlertCircle, UserPlus
+  Clock, Heart, Activity, CheckCircle2, ChevronRight,
+  PhoneCall, MapPin, Eye, Bell, Lock, Stethoscope, Compass,
+  ExternalLink, Zap, AlertTriangle, UserPlus, Info, Check, Sparkles
 } from 'lucide-react'
 import { useApp } from '../lib/store'
+import ResQRouteLogo from '../components/ResQRouteLogo'
 import Login, { PORTAL_ROLES } from './Login'
 
 interface HomeProps {
@@ -17,17 +18,8 @@ export default function Home({ onEnterDashboard }: HomeProps) {
   const [loginModalOpen, setLoginModalOpen] = useState(false)
   const [loginModalMode, setLoginModalMode] = useState<'login' | 'register'>('login')
   const [selectedLoginRole, setSelectedLoginRole] = useState('admin')
-  const [activeStep, setActiveStep] = useState(3)
-  const [heroSimState, setHeroSimState] = useState<'detect' | 'parallel' | 'hospital'>('parallel')
+  const [activeWorkflowStage, setActiveWorkflowStage] = useState(1)
   const [sosModalOpen, setSosModalOpen] = useState(false)
-
-  // Auto-cycle hero simulation preview
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHeroSimState(prev => (prev === 'detect' ? 'parallel' : prev === 'parallel' ? 'hospital' : 'detect'))
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [])
 
   const openPortalLogin = (roleId: string = 'admin') => {
     setSelectedLoginRole(roleId)
@@ -49,100 +41,245 @@ export default function Home({ onEnterDashboard }: HomeProps) {
     }
   }
 
+  // 8-Stage Coordinated Workflow Data
+  const WORKFLOW_STAGES = [
+    {
+      num: '01',
+      title: 'AI Optical Accident Detection',
+      tag: 'Autonomous Surveillance',
+      desc: 'Traffic CCTV cameras and optical video streams are analyzed in real-time by a deep learning PyTorch ResNet-18 model calibrated to a 90% confidence threshold to identify collisions autonomously.',
+      telemetry: 'Inference Latency: 28ms | Calibrated Level: 90% | Zero Manual Lag',
+      icon: Eye,
+    },
+    {
+      num: '02',
+      title: 'Visual Evidence Burst Capture',
+      tag: 'Forensic Validation',
+      desc: 'Upon crossing the 90% threshold, the system immediately captures a sequence of 6 high-resolution burst screenshots at 3-second intervals to document vehicle impact dynamics and severity.',
+      telemetry: 'Capture Protocol: 6 frames @ 3s interval | High-Fidelity JPEGs',
+      icon: Activity,
+    },
+    {
+      num: '03',
+      title: 'Paramedic Human Verification',
+      tag: 'Safety Safeguard',
+      desc: 'The nearest paramedic unit receives an audible alert and reviews the 6 visual evidence screenshots in their cockpit to verify the accident (Yes / No / Unable to Determine) before proceeding.',
+      telemetry: 'Decision Modes: Accident Confirmed, False Alarm Rejected, Additional Units Required',
+      icon: CheckCircle2,
+    },
+    {
+      num: '04',
+      title: 'Proximity Ambulance Allocation',
+      tag: 'Dynamic Dispatch',
+      desc: 'Haversine and road network distance algorithms select the closest available Advanced Life Support (ALS) or Basic Life Support (BLS) ambulances, auto-scaling for multi-victim incidents.',
+      telemetry: 'Dispatch Strategy: Nearest Available ALS/BLS | Multi-Ambulance Auto Scaling',
+      icon: Truck,
+    },
+    {
+      num: '05',
+      title: 'Police Traffic Coordination',
+      tag: 'Green Wave Corridor',
+      desc: 'Police control rooms receive incident coordinates and route vectors, enabling traffic inspectors to activate green light corridors and clear congested intersections along the ambulance route.',
+      telemetry: 'Traffic Integration: Arterial Green Corridors | Junction Clearing Alerts',
+      icon: ShieldAlert,
+    },
+    {
+      num: '06',
+      title: 'Turn-by-Turn Road Navigation',
+      tag: 'Street-Level Routing',
+      desc: 'Ambulance drivers follow turn-by-turn routes generated via Open Source Routing Machine (OSRM) along authentic street network corridors, preventing detours through unnavigable paths.',
+      telemetry: 'Navigation Engine: OSRM Road Geometry | Real Metropolitan Street Network',
+      icon: Compass,
+    },
+    {
+      num: '07',
+      title: 'Capacity-Aware Hospital Matching',
+      tag: 'Intelligent Triage',
+      desc: 'The platform evaluates real-time ICU bed availability, emergency bay status, and surgical trauma capabilities across regional hospitals to recommend the optimal destination facility.',
+      telemetry: 'Hospital Criteria: Available ICU Beds + Distance + Trauma Specialties',
+      icon: Building2,
+    },
+    {
+      num: '08',
+      title: 'Coordinated Clinical Handover',
+      tag: 'Pre-Arrival Preparation',
+      desc: 'The receiving trauma center receives live patient vital signs, estimated time of arrival (ETA), and crash severity evidence so medical teams and operating rooms are prepared prior to arrival.',
+      telemetry: 'Handover Status: Live ETA Broadcast | Trauma Bay Pre-Activation',
+      icon: Stethoscope,
+    },
+  ]
+
+  // Credible Statistics Data (MoRTH & WHO)
+  const CREDIBLE_STATS = [
+    {
+      val: '4,61,312',
+      label: 'Reported Road Accidents in India',
+      source: 'Ministry of Road Transport and Highways (MoRTH), Govt. of India',
+      reportYear: '2022 Annual Report',
+      sourceUrl: 'https://morth.nic.in/road-accidents-in-india',
+      detail: 'Official record of total traffic collisions occurring across India within a single reporting year.',
+    },
+    {
+      val: '1,68,491',
+      label: 'Annual Road Fatalities',
+      source: 'Ministry of Road Transport and Highways (MoRTH), Govt. of India',
+      reportYear: '2022 Annual Report',
+      sourceUrl: 'https://morth.nic.in/road-accidents-in-india',
+      detail: 'Lives lost on national and state highways, highlighting the critical urgency of pre-hospital response.',
+    },
+    {
+      val: '4,43,366',
+      label: 'Severe Injuries Requiring Trauma Care',
+      source: 'MoRTH Road Safety Research Cell',
+      reportYear: '2022 Annual Report',
+      sourceUrl: 'https://morth.nic.in/road-accidents-in-india',
+      detail: 'Accident victims sustaining severe bodily trauma requiring immediate specialized hospital stabilization.',
+    },
+    {
+      val: 'Up to 50%',
+      label: 'Preventable Fatalities in 1st Hour',
+      source: 'World Health Organization (WHO) Trauma Guidelines',
+      reportYear: 'Global Status Report on Road Safety',
+      sourceUrl: 'https://www.who.int/violence_injury_prevention/road_traffic/en/',
+      detail: 'Over half of pre-hospital trauma deaths can be averted through timely emergency care in the Golden Hour.',
+    },
+  ]
+
+  // Portals Overview Data
+  const PORTAL_CARDS = [
+    {
+      roleId: 'citizen',
+      title: 'Citizen & Public Emergency Portal',
+      subtitle: 'Public Safety & Bystander Assistance',
+      icon: Users,
+      badge: 'Public Access',
+      desc: 'Access emergency hotline directories, request immediate SOS assistance, report accident sightings, and view essential first-aid guidelines for trauma victims.',
+      features: ['One-Tap SOS Emergency Dialing', 'Accident Incident Reporting', 'First-Aid & CPR Guidance', 'Nearby Trauma Hospital Finder'],
+      btnText: 'Open Citizen Portal',
+      role: 'citizen',
+    },
+    {
+      roleId: 'driver',
+      title: 'Ambulance Driver Portal',
+      subtitle: 'Paramedic Dispatch & Navigation',
+      icon: Truck,
+      badge: 'Paramedic Fleet',
+      desc: 'Receive instant emergency dispatches, review 6 visual evidence screenshots to confirm incidents, view live patient triage metrics, and follow turn-by-turn road navigation.',
+      features: ['6-Burst Visual Evidence Review', 'Accident Verification (Yes/No/Unable)', 'Turn-by-Turn Road Navigation', 'Hospital Bed Allocation Telemetry'],
+      btnText: 'Enter Paramedic Portal',
+      role: 'driver',
+    },
+    {
+      roleId: 'police',
+      title: 'Police Department Portal',
+      subtitle: 'Traffic Coordination & Green Wave',
+      icon: ShieldAlert,
+      badge: 'Traffic Division',
+      desc: 'Coordinate green light corridors along emergency routes, clear congested intersections, inspect incident telemetry, and ensure unobstructed access for emergency fleets.',
+      features: ['Green Wave Corridor Activation', 'Junction Clearance Alerts', 'Real-Time Route Telemetry', 'Multi-Agency Communication'],
+      btnText: 'Enter Police Portal',
+      role: 'police',
+    },
+    {
+      roleId: 'hospital',
+      title: 'Hospital Trauma Unit Portal',
+      subtitle: 'Emergency Bay & Bed Management',
+      icon: Building2,
+      badge: 'Trauma Centers',
+      desc: 'Manage real-time ICU and emergency bed availability, monitor inbound ambulance telemetry with live ETAs, review pre-arrival vitals, and coordinate surgical intake.',
+      features: ['Live ICU Bed Inventory Management', 'Inbound Ambulance Live ETA', 'Pre-Arrival Patient Severity Data', 'Seamless Handover Confirmation'],
+      btnText: 'Enter Hospital Portal',
+      role: 'hospital',
+    },
+    {
+      roleId: 'admin',
+      title: 'Central Admin Operations Center',
+      subtitle: 'Surveillance & Multi-Agency Dispatch',
+      icon: Shield,
+      badge: 'Operations Command',
+      desc: 'Supervise multi-camera AI optical surveillance, inspect calibrated 90% confidence thresholds, manage regional ambulance fleet allocation, and audit system logs.',
+      features: ['Live PyTorch Camera Surveillance', '90% AI Confidence Recalibration', 'Fleet-Wide Fleet Command Grid', 'Complete Audit & Incident Logging'],
+      btnText: 'Enter Admin Command',
+      role: 'admin',
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-[#070e22] text-slate-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* ----------------- Top Navigation Bar ----------------- */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#070e22]/90 border-b border-white/[0.08] shadow-lg shadow-black/25 transition-all duration-300 py-3.5 sm:py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Sleek Brand Logo */}
-          <a href="#" className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative">
-              <img
-                src="/logo.png"
-                alt="ResQRoute AI"
-                className="w-10 h-10 rounded-xl object-contain shadow-md shadow-cyan-500/20 border border-cyan-500/30 group-hover:scale-105 group-hover:border-cyan-400/60 transition-all duration-300 shrink-0"
-              />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-cyan-400 rounded-full ring-2 ring-[#070e22]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-extrabold tracking-tight text-white group-hover:text-cyan-300 transition-colors">
-                ResQRoute
-              </span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30 uppercase tracking-wider">
-                AI
-              </span>
-            </div>
+    <div className="min-h-screen bg-white text-[#171717] flex flex-col font-sans">
+      {/* ---------------- 1. Sticky Navigation Bar ---------------- */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm py-2.5 px-3 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 flex-nowrap">
+          {/* Brand Logo & Wordmark */}
+          <a href="#" className="flex items-center shrink-0">
+            <ResQRouteLogo size="sm" className="hidden sm:flex xl:hidden" />
+            <ResQRouteLogo size="md" className="sm:hidden xl:flex" />
           </a>
 
-          {/* Floating Pill Center Navigation (Desktop) */}
-          <nav className="hidden lg:flex items-center p-1 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-md shadow-inner text-xs font-medium text-slate-300">
-            <a href="#mission" className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/[0.08] transition-all">
-              Mission
+          {/* Navigation Links (Desktop) - Reduced font size and strict single-line fit */}
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 text-xs xl:text-sm font-medium text-[#666666] whitespace-nowrap shrink">
+            <a href="#" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              Home
             </a>
-            <a href="#golden-time" className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/[0.08] transition-all">
-              Golden Hour
+            <a href="#mission" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              Our Mission
             </a>
-            <a href="#coordination" className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/[0.08] transition-all">
-              Coordination
+            <a href="#golden-hour" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              The Golden Hour
             </a>
-            <a href="#pipeline" className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/[0.08] transition-all">
-              Pipeline
+            <a href="#workflow" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              How It Works
             </a>
-            <a href="#portals" className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/[0.08] transition-all">
-              Portals
+            <a href="#network" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              Emergency Network
+            </a>
+            <a href="#contact" className="px-2 xl:px-2.5 py-1.5 rounded-md hover:text-[#173B68] hover:bg-[#F7F8FA] transition whitespace-nowrap">
+              Contact
             </a>
           </nav>
 
-          {/* Right-Side Balanced Actions */}
-          <div className="flex items-center gap-2.5">
-            {/* Quick Emergency SOS Pill */}
+          {/* Header Action Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap">
+            {/* Citizen Emergency SOS Button */}
             <button
               onClick={() => setSosModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-all cursor-pointer shadow-sm hover:shadow-rose-500/20 active:scale-95"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#FDF2F2] hover:bg-[#FCE8E8] text-[#DC3545] border border-[#DC3545]/30 transition shadow-sm cursor-pointer whitespace-nowrap shrink-0"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-              </span>
-              <span className="hidden sm:inline">Citizen</span> SOS
+              <PhoneCall className="w-3.5 h-3.5 shrink-0" />
+              <span>Emergency SOS</span>
             </button>
 
             {user ? (
-              /* If User is Logged In */
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={() => onEnterDashboard()}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-cyan-600 to-cyan-500 hover:brightness-110 text-white shadow-lg shadow-cyan-500/25 border border-cyan-400/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#173B68] hover:bg-[#102A4C] text-white shadow-sm transition cursor-pointer flex items-center gap-1 whitespace-nowrap shrink-0"
                 >
-                  <Activity className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
-                  <span>Launch Operations</span>
+                  <span>Enter Operations Portal</span>
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                 </button>
                 <button
                   onClick={logout}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#666666] hover:text-[#171717] hover:bg-[#F7F8FA] border border-[#E2E8F0] transition cursor-pointer whitespace-nowrap shrink-0"
                   title="Sign Out"
                 >
-                  <Lock className="w-3.5 h-3.5" />
+                  Sign Out
                 </button>
               </div>
             ) : (
-              /* If User is Not Logged In: Both Register and Sign In */
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={() => openPortalRegister('citizen')}
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-emerald-500/20 active:scale-95"
-                  title="Create a new account"
+                  className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#173B68] hover:bg-[#EBF2FA] transition cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <UserPlus className="w-3.5 h-3.5 text-emerald-300" />
+                  <UserPlus className="w-3.5 h-3.5 shrink-0" />
                   <span>Register</span>
                 </button>
                 <button
                   onClick={() => openPortalLogin('admin')}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 border border-cyan-400/30 flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-cyan-500/40 active:scale-95"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#173B68] hover:bg-[#102A4C] text-white shadow-sm transition cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <Shield className="w-3.5 h-3.5 text-cyan-100" />
+                  <Lock className="w-3.5 h-3.5 shrink-0" />
                   <span>Sign In</span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-70" />
                 </button>
               </div>
             )}
@@ -150,255 +287,154 @@ export default function Home({ onEnterDashboard }: HomeProps) {
         </div>
       </header>
 
-      {/* ----------------- Hero Section ----------------- */}
-      <section className="relative overflow-hidden pt-12 pb-24 lg:pt-20 lg:pb-32">
-        {/* Ambient Decorative Backdrops */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-rose-600/5 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            {/* Left Column: Hero Text */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              {/* Eyebrow Pill */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-semibold tracking-wider uppercase">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 pulse-cyan" />
-                <span>INTELLIGENCE THAT RESPONDS WHEN SECONDS MATTER</span>
+      {/* ---------------- 2. Hero Section ---------------- */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#FFFFFF] to-[#F7F8FA] border-b border-[#E2E8F0] py-16 sm:py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Column: Hero Text Content */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Restrained Project Identification Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF2FA] border border-[#356FA5]/30 text-xs font-semibold text-[#173B68]">
+                <Shield className="w-3.5 h-3.5 text-[#356FA5]" />
+                <span>ResQRoute AI — Emergency Response Coordination Platform</span>
               </div>
 
-              {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.12]">
-                Every Second Counts.{' '}
-                <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400 bg-clip-text text-transparent">
-                  Give Every Second a Purpose.
-                </span>
-              </h1>
+              {/* Main Tagline & Headings */}
+              <div className="space-y-3">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#171717] tracking-tight leading-tight">
+                  Every Second Counts.{' '}
+                  <span className="text-[#173B68] block mt-1">Give Every Second a Purpose.</span>
+                </h1>
+                <p className="text-lg sm:text-xl font-medium text-[#356FA5]">
+                  Intelligent Accident Detection. Coordinated Emergency Response.
+                </p>
+              </div>
 
-              {/* Supporting Text */}
-              <p className="text-lg sm:text-xl text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto lg:mx-0">
-                When an accident happens, precious time matters. ResQRoute AI brings emergency response teams and hospitals closer together, helping turn critical moments into coordinated action.
+              {/* Official Description */}
+              <p className="text-sm sm:text-base text-[#666666] leading-relaxed max-w-2xl">
+                ResQRoute AI is an AI-powered emergency response coordination platform designed to detect suspected
+                road accidents through video analysis, capture important visual evidence, coordinate nearby ambulances,
+                connect police personnel and help hospitals prepare before patients arrive.
               </p>
 
-              {/* CTA Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              {/* Primary Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <a
+                  href="#network"
+                  className="px-5 py-3 rounded-lg text-sm font-semibold bg-[#173B68] hover:bg-[#102A4C] text-white shadow-sm transition flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Explore Emergency Network</span>
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+
                 <button
                   onClick={handlePrimaryCta}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-base bg-gradient-to-r from-blue-600 via-cyan-600 to-cyan-500 hover:brightness-110 text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 active:scale-[0.98] transition flex items-center justify-center gap-3 cursor-pointer group"
+                  className="px-5 py-3 rounded-lg text-sm font-semibold bg-white hover:bg-[#F7F8FA] text-[#173B68] border border-[#CBD5E1] shadow-sm transition flex items-center gap-2 cursor-pointer"
                 >
-                  <Activity className="w-5 h-5 text-cyan-200 group-hover:animate-pulse" />
-                  <span>Access Emergency Network</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <Lock className="w-4 h-4 text-[#356FA5]" />
+                  <span>Access Your Portal</span>
                 </button>
 
-                {!user && (
-                  <button
-                    onClick={() => openPortalRegister('citizen')}
-                    className="w-full sm:w-auto px-7 py-4 rounded-2xl font-bold text-base bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/50 active:scale-[0.98] transition flex items-center justify-center gap-2.5 cursor-pointer shadow-lg shadow-emerald-500/10"
-                  >
-                    <UserPlus className="w-5 h-5 text-emerald-400" />
-                    <span>Register Account</span>
-                  </button>
-                )}
-
                 <a
-                  href="#golden-time"
-                  className="w-full sm:w-auto px-7 py-4 rounded-2xl font-semibold text-base bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 hover:border-white/20 active:scale-[0.98] transition flex items-center justify-center gap-2"
+                  href="#mission"
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-[#666666] hover:text-[#171717] transition cursor-pointer"
                 >
-                  <Compass className="w-5 h-5 text-slate-400" />
-                  <span>Discover Our Mission</span>
+                  Discover Our Mission
                 </a>
               </div>
 
-              {/* Verified Trust & Compliance Badges */}
-              <div className="pt-6 border-t border-white/10 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0 text-left">
+              {/* Key Trust Metrics Strip */}
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#E2E8F0]">
                 <div>
-                  <div className="text-xl sm:text-2xl font-black text-white">0s</div>
-                  <div className="text-[11px] sm:text-xs text-slate-400">Dispatch Latency Delay</div>
+                  <div className="text-2xl font-bold text-[#173B68]">90%</div>
+                  <div className="text-xs text-[#666666] mt-0.5">Calibrated AI Detection Level</div>
                 </div>
                 <div>
-                  <div className="text-xl sm:text-2xl font-black text-cyan-400">100%</div>
-                  <div className="text-[11px] sm:text-xs text-slate-400">Parallel Pre-Arrival Prep</div>
+                  <div className="text-2xl font-bold text-[#173B68]">6 Frames</div>
+                  <div className="text-xs text-[#666666] mt-0.5">Burst Visual Evidence Sequence</div>
                 </div>
                 <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">5 Roles</div>
-                  <div className="text-[11px] sm:text-xs text-slate-400">Inter-Agency Network</div>
+                  <div className="text-2xl font-bold text-[#173B68]">&lt; 30ms</div>
+                  <div className="text-xs text-[#666666] mt-0.5">Deep Learning Inference Time</div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: High-Impact Visual Card */}
+            {/* Right Column: Hero Architecture Graphic Card */}
             <div className="lg:col-span-5">
-              <div className="relative rounded-3xl p-1 bg-gradient-to-b from-cyan-500/30 via-white/10 to-transparent shadow-2xl">
-                <div className="bg-[#0b1530] rounded-[22px] border border-white/10 p-5 sm:p-6 space-y-5 backdrop-blur-xl">
-                  {/* Visual Header */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-md p-6 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#198754]" />
+                    <span className="text-xs font-bold text-[#171717] uppercase tracking-wider">
+                      Live Coordination Pipeline
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#F7F8FA] text-[#356FA5] border border-[#E2E8F0]">
+                    PyTorch ResNet-18
+                  </span>
+                </div>
+
+                {/* Coordinated Flow Simulation Visualizer */}
+                <div className="space-y-3 text-xs">
+                  {/* Step A: Optical Surveillance */}
+                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                        Operational Network Telemetry
-                      </span>
+                      <div className="w-8 h-8 rounded-md bg-[#173B68] text-white grid place-items-center shrink-0">
+                        <Eye className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[#171717]">Optical Feed Monitoring</div>
+                        <div className="text-[#666666] text-[11px]">CCTV CAM-01 Central Junction</div>
+                      </div>
                     </div>
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
-                      LIVE SIMULATION
+                    <span className="px-2 py-0.5 rounded-full bg-[#F0F9F4] text-[#198754] font-semibold text-[10px]">
+                      Active 25 FPS
                     </span>
                   </div>
 
-                  {/* Simulation State Selector Tabs */}
-                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-900/80 border border-white/5 text-[11px] font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setHeroSimState('detect')}
-                      className={`py-1.5 rounded-lg transition ${
-                        heroSimState === 'detect' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      1. Detection
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroSimState('parallel')}
-                      className={`py-1.5 rounded-lg transition ${
-                        heroSimState === 'parallel' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      2. Parallel Route
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroSimState('hospital')}
-                      className={`py-1.5 rounded-lg transition ${
-                        heroSimState === 'hospital' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      3. Trauma Ready
-                    </button>
-                  </div>
-
-                  {/* Interactive Dynamic Visual Display */}
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-white/10 p-4 space-y-4 overflow-hidden">
-                    {/* Simulated SVG Road Grid Graphic */}
-                    <div className="relative h-44 rounded-xl bg-[#070e22] border border-cyan-500/20 overflow-hidden flex items-center justify-center">
-                      <svg className="w-full h-full opacity-60" viewBox="0 0 400 180">
-                        <defs>
-                          <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#06b6d4" />
-                            <stop offset="100%" stopColor="#3b82f6" />
-                          </linearGradient>
-                          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                          </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#grid)" />
-
-                        {/* Road Network Lines */}
-                        <path d="M 40 90 L 150 90 L 220 40 L 360 40" stroke="#1e293b" strokeWidth="10" strokeLinecap="round" />
-                        <path d="M 150 90 L 150 150 L 300 150" stroke="#1e293b" strokeWidth="8" strokeLinecap="round" />
-
-                        {/* Active Emergency Route Line with glowing stroke */}
-                        <path
-                          d="M 40 90 L 150 90 L 220 40 L 360 40"
-                          stroke="url(#routeGrad)"
-                          strokeWidth="4"
-                          strokeDasharray="6 3"
-                          fill="none"
-                          className="animate-pulse"
-                        />
-
-                        {/* Node: Camera Surveillance / Incident Location */}
-                        <circle cx="150" cy="90" r="10" fill="#ef4444" opacity="0.25" className="pulse-red" />
-                        <circle cx="150" cy="90" r="5" fill="#ef4444" />
-                        <text x="135" y="115" fill="#fca5a5" fontSize="9" fontWeight="bold">CAM-01 IMPACT</text>
-
-                        {/* Node: Moving Ambulance */}
-                        <circle cx="65" cy="90" r="8" fill="#06b6d4" opacity="0.3" className="pulse-cyan" />
-                        <circle cx="65" cy="90" r="4.5" fill="#38bdf8" />
-                        <text x="45" y="78" fill="#38bdf8" fontSize="9" fontWeight="bold">AMB-01 (ALS)</text>
-
-                        {/* Node: Receiving Hospital */}
-                        <circle cx="360" cy="40" r="11" fill="#10b981" opacity="0.25" />
-                        <circle cx="360" cy="40" r="6" fill="#10b981" />
-                        <text x="300" y="30" fill="#6ee7b7" fontSize="9" fontWeight="bold">TRAUMA ER</text>
-                      </svg>
-
-                      {/* Floating Telemetry Badge Overlay */}
-                      <div className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-[#0b1530]/90 border border-cyan-500/30 text-[10px] text-cyan-300 font-mono flex items-center gap-1.5 shadow-lg">
-                        <Radio className="w-3 h-3 text-cyan-400 animate-spin" />
-                        <span>ETA: 4.8 min · 3.2 km</span>
+                  {/* Step B: 6 Burst Evidence Frame Transfer */}
+                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-[#DC3545] text-white grid place-items-center shrink-0">
+                        <Siren className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[#171717]">Accident Detection Trigger</div>
+                        <div className="text-[#666666] text-[11px]">6 Evidence Frames @ 3s Interval</div>
                       </div>
                     </div>
-
-                    {/* Step-specific Telemetry Details */}
-                    {heroSimState === 'detect' && (
-                      <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-red-300 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <AlertCircle className="w-4 h-4 text-red-400" />
-                            Motion Spike Heuristic Flagged
-                          </span>
-                          <span className="font-mono text-[11px]">CAM-01 Junction</span>
-                        </div>
-                        <p className="text-slate-300 text-[11px] leading-relaxed">
-                          Visual evidence auto-captured. 4 consecutive frames logged to central dispatch. No automated false alarms—requires dispatcher verification.
-                        </p>
-                      </div>
-                    )}
-
-                    {heroSimState === 'parallel' && (
-                      <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-cyan-300 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <Truck className="w-4 h-4 text-cyan-400" />
-                            Ambulance En Route & Police Corridor Staged
-                          </span>
-                          <span className="font-mono text-[11px]">Parallel Protocol</span>
-                        </div>
-                        <p className="text-slate-300 text-[11px] leading-relaxed">
-                          AMB-01 navigating shortest simulated path. Police dashboard receives real-time crash data for traffic signal clearance.
-                        </p>
-                      </div>
-                    )}
-
-                    {heroSimState === 'hospital' && (
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-emerald-300 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4 text-emerald-400" />
-                            Receiving Trauma Center Staged
-                          </span>
-                          <span className="font-mono text-[11px]">City Central General</span>
-                        </div>
-                        <p className="text-slate-300 text-[11px] leading-relaxed">
-                          Trauma Bay 1 reserved, surgical staff notified with en-route vitals, and ICU bed count verified prior to ambulance arrival.
-                        </p>
-                      </div>
-                    )}
+                    <span className="px-2 py-0.5 rounded-full bg-[#FDF2F2] text-[#DC3545] font-semibold text-[10px]">
+                      94.2% Conf (≥90%)
+                    </span>
                   </div>
 
-                  {/* Multi-Agency Status Matrix */}
-                  <div className="space-y-2 pt-1">
-                    <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                      Simultaneous System Coordination
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span className="text-slate-300 truncate">Immediate Dispatch Trigger</span>
+                  {/* Step C: Multi-Agency Dispatch & Hospital Reservation */}
+                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-[#356FA5] text-white grid place-items-center shrink-0">
+                        <Truck className="w-4 h-4" />
                       </div>
-                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                        <span className="text-slate-300 truncate">Police Route Clearance</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300 truncate">Pre-Arrival Hospital Alert</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span className="text-slate-300 truncate">Real-Time Telemetry Feed</span>
+                      <div>
+                        <div className="font-semibold text-[#171717]">Parallel Dispatch & Bed Triage</div>
+                        <div className="text-[#666666] text-[11px]">Unit AMB-01 + City Central Hospital</div>
                       </div>
                     </div>
+                    <span className="px-2 py-0.5 rounded-full bg-[#EBF2FA] text-[#173B68] font-semibold text-[10px]">
+                      14 Beds Ready
+                    </span>
                   </div>
+                </div>
+
+                {/* Subtle Action Prompt */}
+                <div className="pt-2 text-center">
+                  <button
+                    onClick={() => onEnterDashboard('camera')}
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#173B68] hover:bg-[#102A4C] text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Launch AI Surveillance Monitor</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -406,792 +442,533 @@ export default function Home({ onEnterDashboard }: HomeProps) {
         </div>
       </section>
 
-      {/* ----------------- Section 4: The Golden Time ----------------- */}
-      <section id="golden-time" className="py-24 bg-[#09112a] border-y border-white/5 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              Impact-Driven Emergency Care
+      {/* ---------------- 3. Problem Statement & Challenge ---------------- */}
+      <section id="mission" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-bold text-[#DC3545] uppercase tracking-wider">
+              The Emergency Response Challenge
             </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              Every Delay Matters in an Emergency.
+            </h2>
+            <p className="text-sm sm:text-base text-[#666666] leading-relaxed">
+              When a severe road accident occurs, survival depends on rapid, seamless coordination. Yet traditional
+              emergency systems remain fragmented, leading to critical delays during the Golden Hour.
+            </p>
+          </div>
+
+          {/* 6 Real-World Emergency Coordination Challenges */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#DC3545]/10 text-[#DC3545] grid place-items-center font-bold text-sm">
+                01
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Delayed Accident Reporting</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Emergency dispatchers only learn about accidents after bystanders make a phone call, introducing delays of 5 to 15 critical minutes before response teams are alerted.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#173B68]/10 text-[#173B68] grid place-items-center font-bold text-sm">
+                02
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Fragmented Ambulance Allocation</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Identifying and alerting the closest available Advanced Life Support (ALS) vehicle with appropriate equipment requires manual coordination across separated call centers.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#D69E36]/15 text-[#D69E36] grid place-items-center font-bold text-sm">
+                03
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Lack of Visual Evidence</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Ambulance crews arrive at accident scenes blind, without visual verification of impact severity, vehicle deformation, or estimated casualty counts.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#356FA5]/10 text-[#356FA5] grid place-items-center font-bold text-sm">
+                04
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Siloed Police Communication</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Traffic police personnel often receive emergency notifications late, preventing them from establishing green wave corridors to clear congested arterial roads.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#198754]/10 text-[#198754] grid place-items-center font-bold text-sm">
+                05
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Unprepared Hospital Trauma Bays</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Trauma centers frequently receive patient handovers with zero advance warning, forcing surgeons, blood banks, and ICU staff to prepare only after the ambulance arrives.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#DC3545]/10 text-[#DC3545] grid place-items-center font-bold text-sm">
+                06
+              </div>
+              <h3 className="font-bold text-[#171717] text-base">Hospital Capacity Mismatch</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Ambulances frequently deliver critically injured victims to nearest facilities that have zero open ICU beds or lack specialized neurotrauma facilities, forcing secondary transfers.
+              </p>
+            </div>
+          </div>
+
+          {/* Unified Platform Solution Statement */}
+          <div className="p-6 rounded-xl bg-[#EBF2FA] border border-[#356FA5]/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center md:text-left">
+              <h4 className="font-bold text-[#173B68] text-base">
+                How ResQRoute AI Closes the Emergency Response Gap
+              </h4>
+              <p className="text-xs text-[#666666] max-w-3xl">
+                By integrating AI-powered optical surveillance with unified cross-agency communication, ResQRoute AI eliminates reporting lag, validates accidents with 6-burst evidence frames, clears routes via police coordination, and routes patients to hospitals with confirmed open ICU beds.
+              </p>
+            </div>
+            <a
+              href="#workflow"
+              className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#173B68] hover:bg-[#102A4C] text-white shadow-sm shrink-0 transition"
+            >
+              View 8-Stage Workflow
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- 4. Authentic Statistics Section ---------------- */}
+      <section className="py-16 sm:py-20 bg-[#F7F8FA] border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <span className="text-xs font-bold text-[#173B68] uppercase tracking-wider">
+              Verifiable Evidence & Research
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              Data-Driven Need for Automated Emergency Coordination
+            </h2>
+            <p className="text-xs sm:text-sm text-[#666666]">
+              Verified data from official government road safety publications and international health organizations.
+            </p>
+          </div>
+
+          {/* Authentic MoRTH & WHO Statistic Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {CREDIBLE_STATS.map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm space-y-3 flex flex-col justify-between"
+              >
+                <div className="space-y-1.5">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-[#173B68] tracking-tight">
+                    {stat.val}
+                  </div>
+                  <h3 className="font-semibold text-xs text-[#171717] leading-tight">
+                    {stat.label}
+                  </h3>
+                  <p className="text-[11px] text-[#666666] leading-relaxed">
+                    {stat.detail}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[#E2E8F0] text-[10px] text-[#666666] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-[#171717] truncate">{stat.source}</span>
+                    <span className="font-mono text-[#356FA5]">{stat.reportYear}</span>
+                  </div>
+                  <a
+                    href={stat.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[#356FA5] hover:underline font-medium"
+                  >
+                    <span>View Official Source</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <p className="text-[11px] text-[#666666] italic max-w-2xl mx-auto">
+              Statistics cited above are sourced from the Ministry of Road Transport and Highways (MoRTH), Government of India annual reports and World Health Organization global trauma response publications.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- 5. The Golden Hour Section ---------------- */}
+      <section id="golden-hour" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF9F0] border border-[#D69E36]/30 text-xs font-semibold text-[#855B14]">
+              <Clock className="w-3.5 h-3.5 text-[#D69E36]" />
+              <span>Trauma Medicine Principle</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
               Protect the Golden Time.
             </h2>
-            <p className="text-xl text-cyan-200/90 font-medium">
-              Care can begin before the patient reaches the hospital.
+            <p className="text-lg font-medium text-[#173B68]">
+              Respond Sooner. Prepare Earlier. Coordinate Better.
             </p>
-            <p className="text-slate-300 text-base sm:text-lg leading-relaxed pt-2">
-              In an emergency, the time before a patient reaches definitive medical care can be critical. By helping emergency teams coordinate sooner and giving the receiving hospital advance notice, ResQRoute AI aims to help reduce avoidable delays and give medical professionals more time to prepare.
-            </p>
-          </div>
-
-          {/* Three Concise Core Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {/* Benefit 1 */}
-            <div className="glass-card rounded-2xl p-7 space-y-4 relative group">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 grid place-items-center group-hover:scale-110 transition-transform">
-                <Clock className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Respond Sooner</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Help initiate ambulance dispatch promptly after an authorized responder verifies the incident, avoiding manual phone tree delays.
-              </p>
-              <div className="pt-2 text-xs font-semibold text-cyan-300 flex items-center gap-1">
-                <span>Autonomous Fleet Ranking</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Benefit 2 */}
-            <div className="glass-card rounded-2xl p-7 space-y-4 relative group">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center group-hover:scale-110 transition-transform">
-                <Stethoscope className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Prepare Earlier</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Give the receiving hospital advance notice so staff can prepare the emergency bay, verify ICU beds, and stage surgical assets for the patient's expected arrival.
-              </p>
-              <div className="pt-2 text-xs font-semibold text-emerald-300 flex items-center gap-1">
-                <span>Zero-Latency Handover</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="glass-card rounded-2xl p-7 space-y-4 relative group">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 grid place-items-center group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Coordinate Better</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Help police, ambulance personnel, and hospital teams share relevant information before the patient arrives, ensuring unified roadside and clinical continuity.
-              </p>
-              <div className="pt-2 text-xs font-semibold text-blue-300 flex items-center gap-1">
-                <span>Synchronized Inter-Agency Data</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Visual Comparison: Traditional vs ResQRoute AI Parallel Coordination */}
-          <div className="rounded-3xl p-6 sm:p-8 bg-[#0b1530] border border-cyan-500/20 space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold text-white">
-                  Parallel Preparation vs. Traditional Sequential Latency
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  How preparation can begin while the ambulance is actively travelling
-                </p>
-              </div>
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 self-start sm:self-auto">
-                System Workflow Objective
-              </span>
-            </div>
-
-            <div className="space-y-6">
-              {/* Traditional Linear Timeline */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                  <span className="flex items-center gap-1.5 text-rose-400">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    Traditional Process (Sequential Latency)
-                  </span>
-                  <span className="text-rose-300/80">Preparation starts ONLY after arrival</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 text-slate-300">
-                    <span className="text-[10px] text-rose-400 font-bold block">PHASE 1</span>
-                    Late crash report via phone
-                  </div>
-                  <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 text-slate-300">
-                    <span className="text-[10px] text-rose-400 font-bold block">PHASE 2</span>
-                    Ambulance searches for location
-                  </div>
-                  <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 text-slate-300">
-                    <span className="text-[10px] text-rose-400 font-bold block">PHASE 3</span>
-                    Transport without hospital pre-alert
-                  </div>
-                  <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200">
-                    <span className="text-[10px] text-rose-400 font-bold block">PHASE 4</span>
-                    ER scrambles team AFTER arrival
-                  </div>
-                </div>
-              </div>
-
-              {/* ResQRoute AI Parallel Timeline */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                  <span className="flex items-center gap-1.5 text-cyan-400">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 pulse-cyan" />
-                    ResQRoute AI (Parallel Coordination Architecture)
-                  </span>
-                  <span className="text-cyan-300 font-semibold">Immediate multi-agency synchronization</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200">
-                    <span className="text-[10px] text-cyan-400 font-bold block">STEP 1</span>
-                    Instant AI Camera Detection
-                  </div>
-                  <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200">
-                    <span className="text-[10px] text-blue-400 font-bold block">STEP 2</span>
-                    Dispatch verified & initiated instantly
-                  </div>
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-950/40 to-emerald-950/40 border border-emerald-500/30 text-emerald-200 sm:col-span-2">
-                    <span className="text-[10px] text-emerald-400 font-bold block">PARALLEL TRANSIT & CLINICAL STAGING</span>
-                    While ambulance travels, Police clear route AND Hospital stages trauma bay + verifies ICU beds
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 text-[11px] text-slate-400 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>
-                Note: System impact represents intended architectural capabilities on simulated municipal road networks; clinical handovers comply with authorized medical protocols.
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- Section 5: One Coordinated Response ----------------- */}
-      <section id="coordination" className="py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              Synchronized Multi-Agency Action
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              One Coordinated Response. A More Prepared Arrival.
-            </h2>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              ResQRoute AI connects incident identification, field dispatch, law enforcement, and medical care into one uninterrupted chain of preparedness.
+            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed max-w-2xl mx-auto">
+              In emergency trauma medicine, the 'Golden Hour' is the first 60 minutes after severe traumatic injury during which rapid medical intervention dramatically increases the probability of survival.
             </p>
           </div>
 
-          {/* Three Connected Visual Cards */}
-          <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Connected progress line (desktop) */}
-            <div className="hidden lg:block absolute top-1/2 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-cyan-500/20 via-blue-500/40 to-emerald-500/20 -translate-y-8 z-0" />
-
-            {/* Card 1 */}
-            <div className="relative z-10 glass-card rounded-3xl p-8 space-y-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 grid place-items-center shadow-lg shadow-cyan-500/10">
-                    <Radio className="w-7 h-7" />
-                  </div>
-                  <span className="text-xs font-mono font-bold text-cyan-300 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                    01 · DETECTION & AUTO-DISPATCH
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Automated Nearest Unit Allocation</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Upon AI camera motion-spike detection, 6 evidence frames (3s interval) are captured automatically. The nearest ambulance is immediately offered the dispatch call with a 60-second response window.
-                </p>
+          {/* 3 Core Pillars of the Golden Hour */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-3 text-center md:text-left">
+              <div className="w-10 h-10 rounded-lg bg-[#173B68] text-white grid place-items-center mb-2 mx-auto md:mx-0">
+                <Zap className="w-5 h-5" />
               </div>
-              <div className="pt-4 border-t border-white/10 text-xs text-slate-400 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                <span>6 optical evidence frames · Instant automated dispatch</span>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="relative z-10 glass-card rounded-3xl p-8 space-y-5 flex flex-col justify-between border-cyan-500/30 shadow-xl shadow-cyan-500/5">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 grid place-items-center shadow-lg shadow-blue-500/10">
-                    <Zap className="w-7 h-7" />
-                  </div>
-                  <span className="text-xs font-mono font-bold text-blue-300 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    02 · VERIFICATION & CASCADE
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Paramedic Verification & Fleet Cascade</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  The primary paramedic inspects the 6 frames, verifies the accident, and estimates casualty volume. If multiple ambulances are required, the system automatically cascades calls to additional nearest units with a live multi-fleet feed.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-white/10 text-xs text-slate-400 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                <span>Multi-choice verification & automated multi-unit cascade</span>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="relative z-10 glass-card rounded-3xl p-8 space-y-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center shadow-lg shadow-emerald-500/10">
-                    <Building2 className="w-7 h-7" />
-                  </div>
-                  <span className="text-xs font-mono font-bold text-emerald-300 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                    03 · POLICE CORRIDOR & BED SYNC
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Police Green Corridor & Live Bed Sync</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Ambulance and hospital details are instantly dispatched to Traffic Police for route clearance and legal coordination on the Live Tactical Map. Admitted patients automatically decrement bed counts, prompting hourly bed verification.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-white/10 text-xs text-slate-400 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Green Corridor traffic preemption · Dynamic bed deduction</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- Section 6: More Than Detection ----------------- */}
-      <section className="py-24 bg-[#09112a] border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              Transformative Impact
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              More Than Detection. A Connected Emergency Response.
-            </h2>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Detecting an incident is only the opening second. How emergency agencies communicate determines how quickly care reaches the person in need.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Benefit Card 1 */}
-            <div className="glass-card rounded-2xl p-6 space-y-4 hover:-translate-y-1 transition">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 grid place-items-center">
-                <Clock className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Time Matters</h3>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Support a faster transition from incident verification to ambulance dispatch, reducing idle downtime and procedural bottlenecks.
+              <h3 className="font-bold text-[#171717] text-base">Respond Sooner</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Autonomous AI video surveillance flags accidents instantaneously upon impact at a 90% confidence threshold, removing the critical 5-15 minute latency of traditional bystander reporting.
               </p>
             </div>
 
-            {/* Benefit Card 2 */}
-            <div className="glass-card rounded-2xl p-6 space-y-4 hover:-translate-y-1 transition">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center">
-                <Building2 className="w-6 h-6" />
+            <div className="p-6 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-3 text-center md:text-left">
+              <div className="w-10 h-10 rounded-lg bg-[#356FA5] text-white grid place-items-center mb-2 mx-auto md:mx-0">
+                <Eye className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white">Better Preparedness</h3>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Give the receiving hospital an opportunity to prepare before the ambulance arrives, ensuring trauma rooms and surgical teams are ready.
+              <h3 className="font-bold text-[#171717] text-base">Prepare Earlier</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Emergency crews receive 6 high-resolution burst evidence screenshots captured at 3-second intervals directly in their vehicle cockpit, validating collision severity before scene arrival.
               </p>
             </div>
 
-            {/* Benefit Card 3 */}
-            <div className="glass-card rounded-2xl p-6 space-y-4 hover:-translate-y-1 transition">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 grid place-items-center">
-                <Shield className="w-6 h-6" />
+            <div className="p-6 rounded-xl bg-[#F7F8FA] border border-[#E2E8F0] space-y-3 text-center md:text-left">
+              <div className="w-10 h-10 rounded-lg bg-[#198754] text-white grid place-items-center mb-2 mx-auto md:mx-0">
+                <Building2 className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white">Connected Responders</h3>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Help ambulance teams and police coordinate with the hospital using relevant incident information and synchronized routes.
-              </p>
-            </div>
-
-            {/* Benefit Card 4 */}
-            <div className="glass-card rounded-2xl p-6 space-y-4 hover:-translate-y-1 transition">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 grid place-items-center">
-                <Radio className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Clearer Communication</h3>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Make essential incident and response details easier for authorized personnel to access in a clean, unified dashboard.
+              <h3 className="font-bold text-[#171717] text-base">Coordinate Better</h3>
+              <p className="text-xs text-[#666666] leading-relaxed">
+                Real-time integration with police traffic signals enables green wave routes, while trauma centers reserve ICU beds and prepare blood units ahead of the ambulance arrival.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ----------------- Section 7: Animated Timeline (8 Steps) ----------------- */}
-      <section id="pipeline" className="py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              Interactive Incident Lifecycle
+      {/* ---------------- 6. The 8-Stage Interactive Workflow ---------------- */}
+      <section id="workflow" className="py-16 sm:py-20 bg-[#F7F8FA] border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-bold text-[#173B68] uppercase tracking-wider">
+              End-to-End Operational Pipeline
             </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Visualizing the Coordinated Response Pipeline
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              The 8-Stage ResQRoute AI Coordinated Workflow
             </h2>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Ambulance dispatch and police–hospital coordination operate as parallel streams after verification—eliminating sequential delays.
+            <p className="text-xs sm:text-sm text-[#666666]">
+              From visual collision detection to hospital handover: explore how every second is given purpose.
             </p>
           </div>
 
-          {/* Stepper Selection Buttons (Desktop) */}
-          <div className="hidden lg:grid grid-cols-8 gap-2 mb-8">
-            {[
-              { num: 1, title: 'AI Detection' },
-              { num: 2, title: 'Evidence Feed' },
-              { num: 3, title: 'Verification' },
-              { num: 4, title: 'Fast Dispatch' },
-              { num: 5, title: 'Police Sync' },
-              { num: 6, title: 'Parallel Transit' },
-              { num: 7, title: 'Crew Triage' },
-              { num: 8, title: 'Hospital Intake' },
-            ].map(s => {
-              const active = activeStep === s.num
+          {/* Interactive Stage Selector Tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {WORKFLOW_STAGES.map((s, idx) => {
+              const active = activeWorkflowStage === idx + 1
               return (
                 <button
                   key={s.num}
-                  type="button"
-                  onClick={() => setActiveStep(s.num)}
-                  className={`p-3 rounded-xl border text-center transition cursor-pointer ${
-                    active
-                      ? 'bg-cyan-500/20 border-cyan-500 text-white shadow-lg shadow-cyan-500/20'
-                      : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white hover:bg-white/[0.06]'
-                  }`}
+                  onClick={() => setActiveWorkflowStage(idx + 1)}
+                  className={`p-2.5 rounded-lg text-center transition cursor-pointer border ${active
+                    ? 'bg-[#173B68] text-white border-[#173B68] shadow-sm'
+                    : 'bg-white text-[#171717] border-[#E2E8F0] hover:border-[#CBD5E1]'
+                    }`}
                 >
-                  <span className="text-xs font-mono font-bold block mb-0.5">0{s.num}</span>
-                  <span className="text-[11px] font-semibold leading-tight line-clamp-1">{s.title}</span>
+                  <div className={`font-mono text-xs font-bold ${active ? 'text-white' : 'text-[#356FA5]'}`}>
+                    {s.num}
+                  </div>
+                  <div className="text-[11px] font-semibold truncate mt-0.5">{s.tag}</div>
                 </button>
               )
             })}
           </div>
 
-          {/* Detailed Stepper Card */}
-          <div className="rounded-3xl p-6 sm:p-10 bg-[#0b1530] border border-cyan-500/20 shadow-2xl relative">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-8 space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    SEQUENCE STEP 0{activeStep} OF 08
-                  </span>
-                  {activeStep === 4 && (
-                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse">
-                      CRITICAL DISPATCH MILESTONE
-                    </span>
-                  )}
-                  {(activeStep === 5 || activeStep === 6) && (
-                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                      PARALLEL CO-EXECUTION
-                    </span>
-                  )}
+          {/* Active Stage Detailed Display Card */}
+          {(() => {
+            const current = WORKFLOW_STAGES[activeWorkflowStage - 1]
+            const CurrentIcon = current.icon
+            return (
+              <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-xl bg-[#173B68] text-white grid place-items-center shrink-0">
+                      <CurrentIcon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-mono font-bold text-[#356FA5] uppercase">
+                        Stage {current.num} of 08 · {current.tag}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-[#171717]">{current.title}</h3>
+                    </div>
+                  </div>
+                  <div className="text-xs font-mono text-[#666666] bg-[#F7F8FA] px-3 py-1.5 rounded-lg border border-[#E2E8F0]">
+                    {current.telemetry}
+                  </div>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-bold text-white">
-                  {activeStep === 1 && '1. A suspected road accident is detected'}
-                  {activeStep === 2 && "2. Incident evidence and details are delivered to responders"}
-                  {activeStep === 3 && '3. The incident is promptly verified by authorized personnel'}
-                  {activeStep === 4 && '4. Immediately after verification, ambulance dispatch begins without delay'}
-                  {activeStep === 5 && '5. Incident details stream simultaneously to police and hospital teams'}
-                  {activeStep === 6 && '6. Ambulance travels towards incident while police coordinate green corridors'}
-                  {activeStep === 7 && '7. Ambulance crew assesses patient and initiates transport'}
-                  {activeStep === 8 && '8. Hospital receives patient and completes immediate handover'}
-                </h3>
-
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                  {activeStep === 1 &&
-                    'Roadside surveillance cameras equipped with motion heuristic analysis detect sudden abnormal deceleration and impact trajectories, generating a suspected incident flag with timestamped coordinates.'}
-                  {activeStep === 2 &&
-                    'Four high-resolution sequential video frames captured six seconds apart are securely uploaded to the system to provide visual telemetry and prevent blind dispatches.'}
-                  {activeStep === 3 &&
-                    'To protect public resources against automated false positives, authorized responders review evidence frames and verify the incident status in one click.'}
-                  {activeStep === 4 &&
-                    'The system does not wait for bureaucratic delays. Immediately following verification, an automated ranking engine scores available fleet units by simulated ETA and tenders the offer to the closest ambulance.'}
-                  {activeStep === 5 &&
-                    'Simultaneously, complete incident telemetry is routed to the police department dashboard—including accident location, estimated impact severity, assigned ambulance unit, and target hospital corridor.'}
-                  {activeStep === 6 &&
-                    'As the ambulance drives along its calculated route, police clear traffic junctions and coordinate arrival protocols with the receiving medical center.'}
-                  {activeStep === 7 &&
-                    'Upon arrival at the scene, paramedics perform clinical triage (patient count, severity, ALS/BLS needs), enabling the algorithm to recommend the optimal receiving hospital based on live ICU bed capacity.'}
-                  {activeStep === 8 &&
-                    'The ambulance arrives at a fully pre-alerted emergency bay where doctors, blood supplies, and diagnostic equipment are already staged—protecting the Golden Time.'}
+                <p className="text-sm text-[#171717] leading-relaxed">
+                  {current.desc}
                 </p>
 
-                {/* Important Real-World Protocol Disclaimer */}
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-white/10 text-xs text-slate-400 flex items-start gap-2.5">
-                  <ShieldAlert className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Protocol Note:</strong> The system does not suggest that police paperwork, hospital formalities, or dashboard acknowledgements must be completed before the ambulance can leave or the patient can receive urgent medical care. Real-world procedures remain subject to applicable emergency protocols.
-                  </span>
-                </div>
-              </div>
+                {/* Workflow Stepper Navigation Buttons */}
+                <div className="flex items-center justify-between pt-2">
+                  <button
+                    disabled={activeWorkflowStage === 1}
+                    onClick={() => setActiveWorkflowStage(p => Math.max(1, p - 1))}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#171717] hover:bg-[#F7F8FA] border border-[#E2E8F0] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    ← Previous Stage
+                  </button>
 
-              {/* Right Side Step Controls / Preview */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="p-5 rounded-2xl bg-slate-950/80 border border-white/10 space-y-3">
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Stakeholder Actions at this Step
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">Ambulance Unit</span>
-                      <span className="text-cyan-400 font-mono">
-                        {activeStep < 4 ? 'Standby' : activeStep < 7 ? 'En Route Scene' : 'Patient Transport'}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">Police Command</span>
-                      <span className="text-blue-400 font-mono">
-                        {activeStep < 5 ? 'Awaiting Alert' : 'Active Traffic Sync'}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">Receiving Hospital</span>
-                      <span className="text-emerald-400 font-mono">
-                        {activeStep < 5 ? 'Standard Standby' : activeStep < 8 ? 'Staging Trauma Bay' : 'Handover Complete'}
-                      </span>
-                    </div>
+                  <div className="text-xs font-medium text-[#666666]">
+                    Step {activeWorkflowStage} of 8
                   </div>
 
-                  {/* Navigation buttons */}
-                  <div className="flex items-center gap-2 pt-2">
-                    <button
-                      type="button"
-                      disabled={activeStep === 1}
-                      onClick={() => setActiveStep(prev => Math.max(1, prev - 1))}
-                      className="flex-1 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 transition cursor-pointer"
-                    >
-                      Previous Step
-                    </button>
-                    <button
-                      type="button"
-                      disabled={activeStep === 8}
-                      onClick={() => setActiveStep(prev => Math.min(8, prev + 1))}
-                      className="flex-1 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-30 transition cursor-pointer"
-                    >
-                      Next Step
-                    </button>
-                  </div>
+                  <button
+                    disabled={activeWorkflowStage === 8}
+                    onClick={() => setActiveWorkflowStage(p => Math.min(8, p + 1))}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#173B68] hover:bg-[#102A4C] text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    Next Stage →
+                  </button>
                 </div>
               </div>
-            </div>
-          </div>
+            )
+          })()}
         </div>
       </section>
 
-      {/* ----------------- Section 8: Behind Every Alert Is a Human Life ----------------- */}
-      <section id="mission" className="py-24 bg-[#09112a] border-y border-white/5 relative overflow-hidden">
-        {/* Ambient Heartbeat Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-rose-500/5 rounded-full blur-[140px] pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold tracking-wide">
-            <Heart className="w-4 h-4 text-rose-400 animate-heartbeat" />
-            <span>THE HUMAN PURPOSE</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-            “Behind Every Alert Is a Human Life.”
-          </h2>
-
-          <p className="text-xl sm:text-2xl text-slate-200 leading-relaxed max-w-3xl mx-auto font-light">
-            “An emergency is more than an incident on a screen. It is a person who needs help, a family waiting for news, a responder racing against time, and a medical team preparing to care. ResQRoute AI is designed around one purpose: helping these people work together when every moment matters.”
-          </p>
-
-          {/* Compassionate Perspectives Carousel / Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 text-left">
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-red-500/20 grid place-items-center text-red-400">
-                  <Truck className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white">Paramedic Fleet</div>
-                  <div className="text-[10px] text-slate-400">On The Road</div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed italic">
-                “Knowing the receiving hospital is already staging beds before we even arrive lets us focus completely on keeping the patient stable.”
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-emerald-500/20 grid place-items-center text-emerald-400">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white">Emergency Trauma Surgeon</div>
-                  <div className="text-[10px] text-slate-400">Receiving Hospital</div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed italic">
-                “Having 10 minutes of advance notice to prepare the surgical theater changes the entire outcome compared to wheeling in unannounced.”
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-500/20 grid place-items-center text-blue-400">
-                  <ShieldAlert className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white">Traffic Control Officer</div>
-                  <div className="text-[10px] text-slate-400">Police Division</div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed italic">
-                “Clear communication means we can secure the scene, divert rush-hour congestion, and keep the ambulance corridor moving smoothly.”
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- Section 9: Dedicated Role Portals Showcase ----------------- */}
-      <section id="portals" className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              Stakeholder Architecture
+      {/* ---------------- 7. The 5 Stakeholder Emergency Portals ---------------- */}
+      <section id="network" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-bold text-[#173B68] uppercase tracking-wider">
+              Connected Stakeholder Network
             </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Unified Portals for Every Emergency Stakeholder
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              Specialized Portals for Every Emergency Agency
             </h2>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Log in directly as any persona to explore specialized views crafted for citizens, hospitals, law enforcement, dispatchers, and ambulance drivers.
+            <p className="text-xs sm:text-sm text-[#666666]">
+              Secure role-based interfaces uniting public citizens, paramedics, traffic police, hospital trauma units, and central dispatch controllers.
             </p>
           </div>
 
+          {/* 5 Distinct Portal Access Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PORTAL_ROLES.map(role => {
-              const Icon = role.icon
+            {PORTAL_CARDS.map((p, idx) => {
+              const IconComp = p.icon
               return (
                 <div
-                  key={role.id}
-                  className="glass-card rounded-3xl p-7 space-y-5 flex flex-col justify-between group hover:border-cyan-500/40 transition-all duration-300"
+                  key={idx}
+                  className="bg-[#FFFFFF] rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] p-6 shadow-sm hover:shadow transition flex flex-col justify-between space-y-5"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${role.color} border grid place-items-center shadow-lg group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-6 h-6" />
+                      <div className="w-10 h-10 rounded-lg bg-[#EBF2FA] text-[#173B68] grid place-items-center">
+                        <IconComp className="w-5 h-5" />
                       </div>
-                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10">
-                        {role.badge}
+                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#F7F8FA] text-[#356FA5] border border-[#E2E8F0]">
+                        {p.badge}
                       </span>
                     </div>
 
                     <div>
-                      <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
-                        {role.label}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">{role.subtitle}</p>
+                      <h3 className="font-bold text-base text-[#171717]">{p.title}</h3>
+                      <div className="text-xs font-medium text-[#356FA5] mt-0.5">{p.subtitle}</div>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                      {role.desc}
+                    <p className="text-xs text-[#666666] leading-relaxed">
+                      {p.desc}
                     </p>
+
+                    <div className="space-y-1.5 pt-2">
+                      {p.features.map((feat, fIdx) => (
+                        <div key={fIdx} className="flex items-center gap-2 text-xs text-[#171717]">
+                          <Check className="w-3.5 h-3.5 text-[#198754] shrink-0" />
+                          <span>{feat}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                    <div className="text-[11px] font-mono text-slate-400">
-                      ID: <span className="text-slate-200">{role.u}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openPortalRegister(role.id)}
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition cursor-pointer"
-                        title={`Register as new ${role.label}`}
-                      >
-                        <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Register</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openPortalLogin(role.id)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <span>Sign In</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  <div className="pt-4 border-t border-[#E2E8F0]">
+                    <button
+                      onClick={() => openPortalLogin(p.roleId)}
+                      className="w-full py-2.5 px-4 rounded-lg bg-[#173B68] hover:bg-[#102A4C] text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>{p.btnText}</span>
+                    </button>
                   </div>
                 </div>
               )
             })}
-
-            {/* Quick Demo Exploration Card for Hackathon Judges */}
-            <div className="glass-card rounded-3xl p-7 space-y-5 flex flex-col justify-between bg-gradient-to-br from-cyan-950/40 via-blue-950/20 to-slate-900 border-cyan-500/30">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 grid place-items-center">
-                    <Sparkles className="w-6 h-6 animate-pulse" />
-                  </div>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    Jury & Evaluation
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Full Operations Center</h3>
-                  <p className="text-xs text-cyan-300/80 mt-0.5">Instant One-Click Entry</p>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Evaluate the full system immediately as Central Dispatch Administrator. Access camera monitoring, incident verification, live map routing, and tracking.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handlePrimaryCta}
-                className="w-full py-3 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-cyan-500 hover:brightness-110 text-white shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition cursor-pointer"
-              >
-                <span>Launch Operations Center</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ----------------- Section 10: Final Call to Action ----------------- */}
-      <section className="py-24 bg-[#09112a] border-t border-white/5 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white grid place-items-center mx-auto shadow-xl shadow-cyan-500/25 border border-cyan-400/30">
-            <Siren className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              A faster response starts with better coordination.
+      {/* ---------------- 8. Citizen Emergency Information & Help ---------------- */}
+      <section className="py-16 sm:py-20 bg-[#F7F8FA] border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <span className="text-xs font-bold text-[#DC3545] uppercase tracking-wider">
+              Citizen Support & Public Guidance
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              Emergency Numbers & Golden Hour First-Aid
             </h2>
-            <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto font-normal">
-              Discover how ResQRoute AI brings emergency response and hospital preparedness closer together.
+            <p className="text-xs sm:text-sm text-[#666666]">
+              Immediate actions and emergency contact hotlines for citizens witnessing a road collision.
             </p>
           </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={handlePrimaryCta}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-base bg-gradient-to-r from-blue-600 via-cyan-600 to-cyan-500 hover:brightness-110 text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 active:scale-[0.98] transition flex items-center justify-center gap-3 cursor-pointer"
-            >
-              <Activity className="w-5 h-5 text-cyan-200" />
-              <span>Launch Operations Center</span>
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] text-center space-y-1.5 shadow-sm">
+              <div className="text-2xl font-black text-[#DC3545]">112</div>
+              <div className="font-bold text-xs text-[#171717]">National Emergency Helpline</div>
+              <div className="text-[11px] text-[#666666]">All-in-one emergency service across India</div>
+            </div>
 
-            <button
-              onClick={() => openPortalLogin('driver')}
-              className="w-full sm:w-auto px-7 py-4 rounded-2xl font-semibold text-base bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 hover:border-white/20 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Truck className="w-5 h-5 text-slate-400" />
-              <span>Ambulance Driver Portal</span>
-            </button>
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] text-center space-y-1.5 shadow-sm">
+              <div className="text-2xl font-black text-[#173B68]">108</div>
+              <div className="font-bold text-xs text-[#171717]">Emergency Ambulance Helpline</div>
+              <div className="text-[11px] text-[#666666]">Government emergency medical transit</div>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] text-center space-y-1.5 shadow-sm">
+              <div className="text-2xl font-black text-[#356FA5]">103 / 100</div>
+              <div className="font-bold text-xs text-[#171717]">Traffic & City Police</div>
+              <div className="text-[11px] text-[#666666]">Scene protection & traffic management</div>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] text-center space-y-1.5 shadow-sm">
+              <div className="text-2xl font-black text-[#198754]">102</div>
+              <div className="font-bold text-xs text-[#171717]">Maternity & Child Health</div>
+              <div className="text-[11px] text-[#666666]">Specialized maternal emergency support</div>
+            </div>
+          </div>
+
+          {/* Bystander First-Aid Protocols */}
+          <div className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-4">
+            <h3 className="font-bold text-sm text-[#171717]">
+              Essential Good Samaritan Bystander Protocols
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-[#666666]">
+              <div className="space-y-1">
+                <span className="font-semibold text-[#171717]">1. Secure the Incident Zone</span>
+                <p>Do not put yourself in danger. Turn on vehicle hazard lights and warn oncoming traffic before approaching.</p>
+              </div>
+              <div className="space-y-1">
+                <span className="font-semibold text-[#171717]">2. Do Not Move Injured Victims</span>
+                <p>Unless there is active fire or imminent hazard, avoid moving neck/spine to prevent permanent paralysis.</p>
+              </div>
+              <div className="space-y-1">
+                <span className="font-semibold text-[#171717]">3. Control Severe Hemorrhage</span>
+                <p>Apply firm, direct pressure on bleeding wounds using a clean cloth while waiting for emergency ambulance arrival.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ----------------- Footer ----------------- */}
-      <footer className="bg-[#050b1a] border-t border-white/10 py-12 text-slate-400 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="ResQRoute AI"
-                className="w-10 h-10 rounded-xl object-contain shadow-md shadow-cyan-500/20 border border-cyan-500/30 shrink-0"
-              />
-              <div>
-                <span className="text-base font-bold text-white">ResQRoute AI</span>
-                <p className="text-[11px] text-slate-400">
-                  AI-Powered Accident Detection, Police Coordination, Smart Ambulance Dispatch & Hospital Navigation
-                </p>
+      {/* ---------------- 9. Contact Section ---------------- */}
+      <section id="contact" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center space-y-4">
+            <span className="text-xs font-bold text-[#173B68] uppercase tracking-wider">
+              Network Support & Institutional Coordination
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+              Contact ResQRoute AI Operations Command
+            </h2>
+            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
+              For emergency service integration, traffic surveillance camera connectivity, or hospital network onboarding, reach out to our emergency technical team.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- 10. Comprehensive Enterprise Footer ---------------- */}
+      <footer className="bg-[#173B68] text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Identity Column */}
+            <div className="space-y-3 md:col-span-1">
+              <ResQRouteLogo size="md" inverted={true} />
+              <p className="text-xs text-slate-300 leading-relaxed mt-2">
+                Rescue, Quick Response and Intelligent Routing using Artificial Intelligence.
+              </p>
+              <div className="text-[11px] text-slate-400 font-mono">
+                Tagline: Every Second Counts. Give Every Second a Purpose.
               </div>
             </div>
 
-            <div className="text-left md:text-right">
-              <div className="font-semibold text-cyan-300">Detect Faster. Dispatch Smarter. Respond Sooner.</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Connecting Responders · Ambulance Units · Receiving Hospitals
+            {/* Quick Portals Links */}
+            <div className="space-y-2.5 text-xs">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Emergency Portals</h4>
+              <ul className="space-y-1.5 text-slate-300">
+                <li><button onClick={() => openPortalLogin('citizen')} className="hover:text-white transition cursor-pointer">Citizen Emergency Information</button></li>
+                <li><button onClick={() => openPortalLogin('driver')} className="hover:text-white transition cursor-pointer">Ambulance Driver Cockpit</button></li>
+                <li><button onClick={() => openPortalLogin('police')} className="hover:text-white transition cursor-pointer">Police Traffic Coordination</button></li>
+                <li><button onClick={() => openPortalLogin('hospital')} className="hover:text-white transition cursor-pointer">Hospital Trauma Units</button></li>
+                <li><button onClick={() => openPortalLogin('admin')} className="hover:text-white transition cursor-pointer">Central Operations Command</button></li>
+              </ul>
+            </div>
+
+            {/* Core Capabilities */}
+            <div className="space-y-2.5 text-xs">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Core Architecture</h4>
+              <ul className="space-y-1.5 text-slate-300">
+                <li>PyTorch ResNet-18 Vision Model</li>
+                <li>Calibrated 90% Confidence Threshold</li>
+                <li>6 Burst Evidence Screenshots</li>
+                <li>OSRM Road-Network Navigation</li>
+                <li>Real-Time ICU Bed Triage</li>
+              </ul>
+            </div>
+
+            {/* Emergency Hotline Notice */}
+            <div className="space-y-2.5 text-xs">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Emergency Notice</h4>
+              <p className="text-slate-300 text-xs leading-relaxed">
+                If you are witnessing an active accident emergency right now, dial <b>112</b> or <b>108</b> immediately.
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={() => setSosModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#DC3545] hover:bg-[#BB2D3B] text-white transition cursor-pointer"
+                >
+                  View Emergency Directory
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5 text-[11px] text-slate-400">
-            <span>© 2026 ResQRoute AI Project. Built for advanced AI emergency management.</span>
-            <div className="flex items-center gap-6">
-              <a href="#mission" className="hover:text-slate-300">Mission</a>
-              <a href="#golden-time" className="hover:text-slate-300">The Golden Time</a>
-              <a href="#portals" className="hover:text-slate-300">Portals</a>
-              <button onClick={() => openPortalLogin('admin')} className="hover:text-slate-300 underline cursor-pointer">
-                Authorized Sign In
-              </button>
+          <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-4">
+            <div>
+              © {new Date().getFullYear()} ResQRoute AI. All rights reserved.
+            </div>
+            <div className="flex gap-4">
+              <a href="#mission" className="hover:text-white transition">Mission</a>
+              <a href="#golden-hour" className="hover:text-white transition">The Golden Hour</a>
+              <a href="#workflow" className="hover:text-white transition">Workflow</a>
+              <a href="#contact" className="hover:text-white transition">Contact</a>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* ----------------- Citizen SOS Modal ----------------- */}
-      {sosModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-          <div className="bg-[#0b1530] border border-red-500/40 rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 text-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-red-600/20 text-red-400 grid place-items-center border border-red-500/30">
-                  <PhoneCall className="w-5 h-5 text-red-400 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Citizen Emergency Quick-Dial</h3>
-                  <p className="text-xs text-slate-400">Immediate roadside assistance and public helpline directory</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSosModalOpen(false)}
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/30 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold text-red-300 uppercase">Emergency Ambulance</div>
-                  <div className="text-2xl font-black text-white font-mono">108 / 112</div>
-                  <div className="text-[11px] text-slate-400">Immediate dispatch & ALS/BLS responder</div>
-                </div>
-                <a
-                  href="tel:108"
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition"
-                >
-                  Call 108
-                </a>
-              </div>
-
-              <div className="p-4 rounded-xl bg-blue-950/30 border border-blue-500/30 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold text-blue-300 uppercase">Traffic Police Coordination</div>
-                  <div className="text-2xl font-black text-white font-mono">103 / 100</div>
-                  <div className="text-[11px] text-slate-400">Corridor clearance & incident perimeter</div>
-                </div>
-                <a
-                  href="tel:103"
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition"
-                >
-                  Call 103
-                </a>
-              </div>
-
-              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold text-emerald-300 uppercase">City General Hospital Trauma ER</div>
-                  <div className="text-sm font-bold text-white">+91-44-2800-1001</div>
-                  <div className="text-[11px] text-slate-400">Trauma Bay & ICU Staging Desk</div>
-                </div>
-                <button
-                  onClick={() => {
-                    setSosModalOpen(false)
-                    openPortalLogin('citizen')
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30"
-                >
-                  Citizen Portal
-                </button>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-slate-400 text-center">
-              ResQRoute AI prioritizes automated telemetry while keeping direct voice channels open.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ----------------- Multi-Role Login Modal ----------------- */}
+      {/* ---------------- 11. Login & Registration Modal ---------------- */}
       {loginModalOpen && (
         <Login
           isModal={true}
@@ -1203,6 +980,78 @@ export default function Home({ onEnterDashboard }: HomeProps) {
             onEnterDashboard()
           }}
         />
+      )}
+
+      {/* ---------------- 12. Citizen SOS Helpline Modal ---------------- */}
+      {sosModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xl max-w-md w-full p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2 text-[#DC3545]">
+                <PhoneCall className="w-5 h-5" />
+                <h3 className="font-bold text-base text-[#171717]">Emergency SOS Contacts</h3>
+              </div>
+              <button
+                onClick={() => setSosModalOpen(false)}
+                className="text-[#666666] hover:text-[#171717] text-sm font-semibold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#FDF2F2] border border-[#DC3545]/20 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-[#DC3545] text-sm">112</div>
+                  <div className="text-[#171717]">National All-Emergency Helpline</div>
+                </div>
+                <a
+                  href="tel:112"
+                  className="px-3 py-1.5 rounded-lg bg-[#DC3545] text-white font-semibold text-xs"
+                >
+                  Call 112
+                </a>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#EBF2FA] border border-[#356FA5]/20 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-[#173B68] text-sm">108</div>
+                  <div className="text-[#171717]">Emergency Medical Ambulance Service</div>
+                </div>
+                <a
+                  href="tel:108"
+                  className="px-3 py-1.5 rounded-lg bg-[#173B68] text-white font-semibold text-xs"
+                >
+                  Call 108
+                </a>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#F7F8FA] border border-[#E2E8F0] flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-[#171717] text-sm">103 / 100</div>
+                  <div className="text-[#171717]">Traffic & City Police Control</div>
+                </div>
+                <a
+                  href="tel:100"
+                  className="px-3 py-1.5 rounded-lg bg-[#356FA5] text-white font-semibold text-xs"
+                >
+                  Call Police
+                </a>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#666666] leading-relaxed">
+              When reporting, speak clearly, provide your exact street landmark, describe vehicle types involved, and mention estimated victim count.
+            </p>
+
+            <button
+              onClick={() => setSosModalOpen(false)}
+              className="w-full py-2.5 rounded-lg bg-[#F7F8FA] hover:bg-[#EEF1F5] text-[#171717] text-xs font-semibold border border-[#E2E8F0] transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

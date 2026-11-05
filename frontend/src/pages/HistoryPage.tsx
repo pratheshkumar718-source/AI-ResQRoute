@@ -14,10 +14,10 @@ export default function HistoryPage() {
   const done = incidents.filter(i => CLOSED.includes(i.status))
 
   return (
-    <div className="space-y-6 text-slate-100">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Archived Incident & Audit History</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+    <div className="space-y-6 text-[#171717]">
+      <div className="pb-2 border-b border-[#E2E8F0]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Archived Incident & Audit History</h1>
+        <p className="text-xs text-[#666666] mt-0.5">
           Permanent chronological log of closed emergency dispatches, dispatcher verification actions, and system telemetry.
         </p>
       </div>
@@ -30,10 +30,10 @@ export default function HistoryPage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-sm border-collapse">
               <thead>
-                <tr className="text-left text-slate-400 border-b border-white/10 text-xs uppercase tracking-wider">
-                  <th className="py-3 px-2">Incident #</th>
+                <tr className="text-left text-[#666666] border-b border-[#E2E8F0] text-xs uppercase tracking-wider">
+                  <th className="py-2.5 px-2">Incident #</th>
                   <th>Location Landmark</th>
                   <th>Timestamp</th>
                   <th>Telemetry Source</th>
@@ -42,17 +42,17 @@ export default function HistoryPage() {
                   <th>Final Outcome</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[#E2E8F0]">
                 {done.map(i => {
                   const a = i.assignments.find(x => x.status === 'completed')
                   return (
-                    <tr key={i.id} className="hover:bg-white/[0.02] transition">
-                      <td className="py-3 px-2 font-mono font-bold text-cyan-300">#{i.id}</td>
-                      <td className="font-medium text-white">{i.location_name}</td>
-                      <td className="text-xs text-slate-400">{fmtDT(i.created_at)}</td>
-                      <td className="text-xs font-mono capitalize text-slate-300">{i.source}</td>
-                      <td className="font-mono text-cyan-400 font-bold">{a?.ambulance_code ?? '—'}</td>
-                      <td className="text-slate-300">
+                    <tr key={i.id} className="hover:bg-[#F7F8FA] transition">
+                      <td className="py-2.5 px-2 font-mono font-bold text-[#173B68]">#{i.id}</td>
+                      <td className="font-semibold text-[#171717]">{i.location_name}</td>
+                      <td className="text-xs text-[#666666]">{fmtDT(i.created_at)}</td>
+                      <td className="text-xs font-mono capitalize text-[#171717]">{i.source}</td>
+                      <td className="font-mono text-[#173B68] font-bold">{a?.ambulance_code ?? '—'}</td>
+                      <td className="text-[#171717]">
                         {hospitals.find(x => x.id === i.selected_hospital_id)?.name ?? '—'}
                       </td>
                       <td>
@@ -74,28 +74,24 @@ export default function HistoryPage() {
           <Empty text="No audit entries logged" />
         ) : (
           <div className="max-h-96 overflow-y-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs border-collapse">
               <thead>
-                <tr className="text-left text-slate-400 border-b border-white/10 uppercase tracking-wider text-[11px]">
-                  <th className="py-2.5 px-2">Timestamp</th>
-                  <th>Authorized Actor</th>
-                  <th>Action Triggered</th>
+                <tr className="text-left text-[#666666] border-b border-[#E2E8F0] uppercase tracking-wider text-[11px]">
+                  <th className="py-2 px-2">Timestamp</th>
+                  <th>Actor ID</th>
+                  <th>Action</th>
                   <th>Target Entity</th>
                   <th>Operational Detail</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 font-mono">
-                {(h.audit || []).map((l: any) => (
-                  <tr key={l.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-2.5 px-2 text-slate-400 whitespace-nowrap">{fmtDT(l.ts)}</td>
-                    <td className="text-cyan-400 font-bold">{l.actor}</td>
-                    <td className="text-slate-200 capitalize">{String(l.action || '').replace(/_/g, ' ')}</td>
-                    <td className="text-amber-300">
-                      {l.entity} {l.entity_id ?? ''}
-                    </td>
-                    <td className="text-slate-400 max-w-md truncate" title={l.detail}>
-                      {l.detail}
-                    </td>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {h.audit.map((a: any) => (
+                  <tr key={a.id} className="hover:bg-[#F7F8FA] transition font-mono">
+                    <td className="py-2 px-2 text-[#666666]">{fmtDT(a.ts)}</td>
+                    <td className="font-bold text-[#173B68]">{a.actor}</td>
+                    <td className="font-bold text-[#171717]">{a.action}</td>
+                    <td className="text-[#666666]">{a.entity} #{a.entity_id}</td>
+                    <td className="text-[#171717] truncate max-w-md">{a.detail}</td>
                   </tr>
                 ))}
               </tbody>

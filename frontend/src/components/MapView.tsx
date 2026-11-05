@@ -11,12 +11,12 @@ interface Props {
   focusIncident?: Incident | null; height?: number | string; onSelectIncident?: (id: number) => void
 }
 const CENTER: [number, number] = [13.085, 80.26]
-const AMB_COLOR: Record<string, string> = { available: '#16a34a', busy: '#2563eb', offline: '#6b7280', maintenance: '#ca8a04' }
+const AMB_COLOR: Record<string, string> = { available: '#198754', busy: '#173B68', offline: '#666666', maintenance: '#D69E36' }
 const OPEN = ['suspected', 'confirmed', 'dispatching', 'en_route', 'on_scene', 'assessed', 'transporting', 'at_hospital', 'no_ambulance']
 
-const incIcon = L.divIcon({ className: '', iconSize: [28, 28], iconAnchor: [14, 14], html: '<div class="pulse-red" style="width:28px;height:28px;border-radius:50%;background:#dc2626;border:3px solid #fff;color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px">!</div>' })
-const ambIcon = (c: string, code: string) => L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17], html: `<div style="width:34px;height:34px;border-radius:8px;background:${c};border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.4)" title="${code}">🚑<br/>${code.replace('AMB-', '')}</div>` })
-const hospIcon = L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15], html: '<div style="width:30px;height:30px;border-radius:6px;background:#1d4ed8;border:2px solid #fff;color:#fff;font-weight:800;display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.4)">H</div>' })
+const incIcon = L.divIcon({ className: '', iconSize: [28, 28], iconAnchor: [14, 14], html: '<div class="pulse-emergency" style="width:28px;height:28px;border-radius:50%;background:#DC3545;border:2.5px solid #FFFFFF;color:#FFFFFF;font-weight:800;display:grid;place-items:center;font-size:13px;box-shadow:0 2px 5px rgba(0,0,0,0.25)">!</div>' })
+const ambIcon = (c: string, code: string) => L.divIcon({ className: '', iconSize: [32, 32], iconAnchor: [16, 16], html: `<div style="width:32px;height:32px;border-radius:8px;background:${c};border:2px solid #FFFFFF;color:#FFFFFF;font-size:9px;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.25)" title="${code}">🚑<br/>${code.replace('AMB-', '')}</div>` })
+const hospIcon = L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15], html: '<div style="width:30px;height:30px;border-radius:8px;background:#173B68;border:2px solid #FFFFFF;color:#FFFFFF;font-weight:800;display:grid;place-items:center;font-size:13px;box-shadow:0 2px 5px rgba(0,0,0,0.25)">H</div>' })
 
 const AmbInfo = ({ a }: { a: Ambulance }) => <div className="text-sm space-y-1"><b>{a.code}</b> <Badge s={a.status} /><div>Driver: {a.driver_name} · {a.crew_level}</div><div>{a.phone}</div><div className="text-xs text-slate-500">Simulated GPS: {a.lat.toFixed(4)}, {a.lng.toFixed(4)}</div></div>
 const HospInfo = ({ h }: { h: Hospital }) => <div className="text-sm space-y-1"><b>{h.name}</b> <Badge s={h.receiving ? 'receiving' : 'diverted'}>{h.receiving ? 'receiving' : 'not receiving'}</Badge><div>Beds: {h.available_beds}/{h.total_beds} · ICU {h.icu_beds}</div><div>{h.capabilities.join(', ')}</div><div className="text-xs text-slate-500">Fictional demo data</div></div>
@@ -73,7 +73,9 @@ export default function MapView(p: Props) {
   const swap = (m: 'auto' | 'offline') => { localStorage.setItem('resq_map_mode', m); window.location.reload() }
   const banner: ReactNode = (
     <div className="absolute bottom-2 left-2 z-[1000] flex gap-2 items-center text-[11px]">
-      <span className="bg-white/90 rounded px-2 py-1 shadow text-slate-600">{mode === 'svg' ? 'Offline SVG demo map (simulated roads)' : 'OpenStreetMap © contributors'} · routes are SIMULATED estimates</span>
+      <span className="bg-white/95 rounded px-2.5 py-1 shadow text-slate-700 font-medium">
+        {mode === 'svg' ? 'Offline SVG Tactical Map (Simulated Roads)' : 'OpenStreetMap Roads (OSRM)'} · Live map optical detection: Developing Stage (Traffic API Keys Required)
+      </span>
       <button className="bg-white/90 rounded px-2 py-1 shadow text-slate-700 flex items-center gap-1" onClick={() => swap(mode === 'svg' ? 'auto' : 'offline')}>{mode === 'svg' ? <><Globe className="w-3 h-3" />Try OSM</> : <><WifiOff className="w-3 h-3" />Offline map</>}</button>
     </div>
   )

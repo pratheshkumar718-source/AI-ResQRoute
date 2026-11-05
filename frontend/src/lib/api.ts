@@ -3,6 +3,24 @@ import { handleMockRequest } from './mockEngine'
 export const TOKEN_KEY = 'resq_token'
 export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
+function prefixEvidence(val: any): any {
+  if (!API_BASE) return val
+  if (typeof val === 'string') {
+    return val.startsWith('/evidence/') ? `${API_BASE}${val}` : val
+  }
+  if (Array.isArray(val)) {
+    return val.map(prefixEvidence)
+  }
+  if (val && typeof val === 'object') {
+    const res: Record<string, any> = {}
+    for (const k of Object.keys(val)) {
+      res[k] = prefixEvidence(val[k])
+    }
+    return res
+  }
+  return val
+}
+
 async function req(method: string, url: string, body?: any, form?: FormData) {
   try {
     const targetUrl = url.startsWith('http') ? url : (API_BASE ? `${API_BASE}${url}` : url)
@@ -31,7 +49,8 @@ async function req(method: string, url: string, body?: any, form?: FormData) {
         } catch {}
         throw new Error(msg)
       }
-      return await res.json()
+      const data = await res.json()
+      return prefixEvidence(data)
     }
   } catch (err: any) {
     if (err.message && !err.message.includes('fetch') && !err.message.includes('Failed to fetch') && !err.message.includes('NetworkError') && !err.message.includes('Cannot reach')) {

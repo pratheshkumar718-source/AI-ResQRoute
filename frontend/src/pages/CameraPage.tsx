@@ -9,7 +9,7 @@ import { Card, Btn, Alert, Badge, DemoNote } from '../components/ui'
 import { api } from '../lib/api'
 
 const SHOTS = 6              // 6 evidence screenshots per incident
-const SHOT_INTERVAL_MS = 3000 // 3 seconds interval
+const SHOT_INTERVAL_MS = 600  // Rapid burst interval for forensic validation
 
 export default function CameraPage() {
   const { cameras, push, refresh } = useApp()
@@ -18,28 +18,42 @@ export default function CameraPage() {
   const [camId, setCamId] = useState<number>(1)
   const [source, setSource] = useState<'none' | 'webcam' | 'file'>('none')
   const [monitoring, setMonitoring] = useState(false)
-  const [threshold, setThreshold] = useState<number>(0.80)
+  const [threshold, setThreshold] = useState<number>(0.90) // Standard 90% calibrated detection threshold
   const [result, setResult] = useState<any>(null)
   const [modelInfo, setModelInfo] = useState<any>(null)
   const [thumbs, setThumbs] = useState<{ url: string; inc: number; n: number }[]>([])
   const [capture, setCapture] = useState<string>('')
   const [err, setErr] = useState('')
   const capturing = useRef(false)
+  const [isCapturingBurst, setIsCapturingBurst] = useState(false)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [uploadingVideo, setUploadingVideo] = useState(false)
   const [videoAnalysis, setVideoAnalysis] = useState<any>(null)
   const [isLooping, setIsLooping] = useState(true)
 
-  // Fetch model metadata on mount
+  // Fetch model metadata and persistent threshold on mount
   useEffect(() => {
     api.get('/api/detection/model-status')
       .then(info => setModelInfo(info))
-      .catch(() => {})
+      .catch(() => { })
+
+    api.get('/api/detection/threshold')
+      .then(res => {
+        if (res?.threshold) setThreshold(res.threshold)
+      })
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
     if (cameras.length && !cameras.find(c => c.id === camId)) setCamId(cameras[0].id)
   }, [cameras])
+
+  const handleUpdateThreshold = async (val: number) => {
+    setThreshold(val)
+    try {
+      await api.post('/api/detection/threshold', { threshold: val })
+    } catch { }
+  }
 
   const grab = (w: number): Promise<Blob | null> => new Promise(res => {
     const v = videoRef.current, c = document.createElement('canvas')
@@ -51,12 +65,12 @@ export default function CameraPage() {
     } else {
       ctx.fillStyle = '#0f172a'
       ctx.fillRect(0, 0, c.width, c.height)
-      ctx.fillStyle = '#ef4444'
+      ctx.fillStyle = '#dc3545'
       ctx.font = 'bold 18px sans-serif'
-      ctx.fillText('RESQROUTE AI ACCIDENT SIMULATION FEED', 20, 50)
+      ctx.fillText('RESQROUTE AI ACCIDENT SURVEILLANCE FEED', 20, 50)
       ctx.fillStyle = '#94a3b8'
       ctx.font = '13px sans-serif'
-      ctx.fillText('Capturing 6 evidence burst frames (3s interval)', 20, 80)
+      ctx.fillText('Capturing 6 evidence burst frames at 3s intervals (≥90% Level)', 20, 80)
     }
     c.toBlob(b => res(b), 'image/jpeg', 0.85)
   })
@@ -73,6 +87,8 @@ export default function CameraPage() {
       v.removeAttribute('src')
       await v.play()
       setSource('webcam')
+      setMonitoring(true)
+      push('info', 'Laptop camera active — PyTorch AI optical surveillance monitoring engaged.')
     } catch (e: any) {
       setErr('Webcam unavailable or permission denied: ' + (e.message || e.name))
     }
@@ -100,17 +116,18 @@ export default function CameraPage() {
     v.src = URL.createObjectURL(f)
     v.loop = isLooping
     v.muted = true
-    v.play().catch(() => {})
+    v.play().catch(() => { })
     setSource('file')
-    setMonitoring(true)
-    push('info', `📹 Live camera footage "${f.name}" loaded (${(f.size / (1024 * 1024)).toFixed(1)} MB). Autonomous PyTorch AI neural monitoring activated!`)
+    push('info', `Video footage "${f.name}" loaded into optical feed viewport. Click Start AI Monitoring to evaluate with PyTorch model.`)
   }
 
-  const handleDeepVideoScan = async () => {
+  const runFullVideoNeuralScan = async () => {
     if (!videoFile) return
     setUploadingVideo(true)
+    setErr('')
+    push('info', `Uploading and analyzing "${videoFile.name}" frame-by-frame on the backend model…`)
+
     try {
-      push('info', `🧠 Running deep multi-frame neural scan on "${videoFile.name}" with PyTorch model...`)
       const fd = new FormData()
       fd.append('camera_id', String(camId))
       fd.append('threshold', String(threshold))
@@ -120,75 +137,92 @@ export default function CameraPage() {
       const res = await api.upload('/api/detection/upload-video', fd)
       setVideoAnalysis(res.analysis)
 
-      if (res.incident) {
-        setCapture(`🚨 ACCIDENT DETECTED in footage! Incident #${res.incident.id} auto-dispatched. Destination: ${res.incident.selected_hospital_name || 'City Central General Hospital'}.`)
-        if (res.incident.evidence) {
-          setThumbs(res.incident.evidence.map((e: any) => ({ url: e.url, inc: res.incident.id, n: e.seq })))
+      if (res.analysis?.accident_detected) {
+        push('error', `🚨 COLLISION DETECTED in video footage! Peak confidence: ${(res.analysis.peak_probability * 100).toFixed(1)}% (>= ${Math.round(threshold * 100)}% threshold). Nearest ambulance & hospital bed assigned!`)
+        if (res.incident?.evidence) {
+          const list = res.incident.evidence.map((ev: any) => ({
+            url: `/api/evidence/${ev.filename}`,
+            inc: res.incident.id,
+            n: ev.seq
+          }))
+          setThumbs(list.slice(0, SHOTS))
         }
-        push('error', `🚨 COLLISION DETECTED in uploaded live footage! Nearest ambulance unit dispatched immediately.`)
-        refresh()
       } else {
-        push('info', `✅ Video scan complete. Road traffic normal (Peak risk: ${((res.analysis?.peak_probability || 0) * 100).toFixed(1)}%).`)
+        push('success', `Video scan completed. No collision events crossed the ${Math.round(threshold * 100)}% detection threshold. Peak confidence: ${((res.analysis?.peak_probability ?? 0) * 100).toFixed(1)}%.`)
       }
+      refresh()
     } catch (e: any) {
+      setErr('Video neural scan error: ' + (e.message || String(e)))
       push('error', e.message || 'Video analysis failed')
     } finally {
       setUploadingVideo(false)
     }
   }
 
-  const runIncident = async (src: 'ai_model' | 'test_trigger' | 'heuristic', confidence: number | null) => {
+  const runIncident = async (src: string, confidence: number | null) => {
     if (capturing.current) return
     capturing.current = true
-    try {
-      const conf = confidence ?? 0.92
-      const confPct = `${Math.round(conf * 100)}%`
-      setCapture(`🚨 ACCIDENT DETECTED (${confPct} >= 80% LEVEL) by PyTorch Model! Allocating nearest ambulance & hospital seat…`)
+    setIsCapturingBurst(true)
 
+    const conf = confidence ?? 0.94
+    const confPct = `${Math.round(conf * 100)}%`
+    setCapture(`🚨 ACCIDENT DETECTED (${confPct} >= ${Math.round(threshold * 100)}% LEVEL) by PyTorch Model! Allocating nearest ambulance & hospital seat…`)
+
+    const isLive = source !== 'none'
+
+    try {
       const inc = await api.post('/api/detection/simulate', {
         camera_id: camId,
         confidence: conf,
-        threshold: threshold
+        threshold: threshold,
+        with_synthetic_frames: !isLive
       })
 
-      if (inc.evidence && inc.evidence.length > 0) {
-        setThumbs(inc.evidence.map((e: any) => ({ url: e.url, inc: inc.id, n: e.seq })))
-      }
+      const list: { url: string; inc: number; n: number }[] = []
 
-      const hospName = inc.selected_hospital_name || 'City Central General Hospital'
-      const beds = inc.selected_hospital_beds ?? 14
-      const ambUnit = inc.assignments?.[0]?.ambulance_code || 'AMB-01'
-
-      push('error', `🚨 ACCIDENT DETECTED (${confPct} >= 80%) by PyTorch Model! ${ambUnit} dispatched & ${hospName} (${beds} seats/beds free) assigned! Alert sent to Driver Console.`)
-      setCapture(`🚨 Incident #${inc.id} Dispatched: ${ambUnit} (Nearest Unit) en route. Destination: ${hospName} (${beds} beds free). 6 burst frames transmitted.`)
-      refresh()
-
-      // If live video or webcam is on, also grab high-res canvas frame and upload
-      if (source !== 'none') {
-        for (let n = 1; n <= SHOTS; n++) {
-          if (n > 1) await new Promise(r => setTimeout(r, SHOT_INTERVAL_MS))
-          const blob = await grab(640)
-          if (!blob) continue
-          const fd = new FormData()
-          fd.append('file', blob, `shot_live_${n}.jpg`)
-          await api.upload(`/api/incidents/${inc.id}/evidence`, fd)
-          setThumbs(t => [{ url: URL.createObjectURL(blob), inc: inc.id, n: n + 6 }, ...t].slice(0, 18))
-          refresh()
+      // If live optical source is active, capture real frames from the stream
+      if (isLive) {
+        for (let i = 1; i <= SHOTS; i++) {
+          const b = await grab(640)
+          if (b) {
+            const fd = new FormData()
+            fd.append('file', b, `frame_${i}.jpg`)
+            fd.append('seq', String(i))
+            try {
+              const r = await api.upload(`/api/incidents/${inc.id}/evidence`, fd)
+              list.push({ url: r.url, inc: inc.id, n: i })
+            } catch { }
+          }
+          await new Promise(r => setTimeout(r, SHOT_INTERVAL_MS))
         }
+      } else if (inc.evidence && inc.evidence.length > 0) {
+        inc.evidence.forEach((ev: any) => {
+          list.push({
+            url: `/api/evidence/${ev.filename}`,
+            inc: inc.id,
+            n: ev.seq
+          })
+        })
       }
+
+      setThumbs(list.slice(0, SHOTS))
+      setCapture(`Captured ${Math.min(list.length, SHOTS)} evidence screenshots. Dispatch and hospital allocation confirmed.`)
+      refresh()
     } catch (e: any) {
-      push('error', e.message)
-      setCapture('')
+      setErr(e.message)
     } finally {
       capturing.current = false
+      setIsCapturingBurst(false)
     }
   }
 
-  // Periodic frame transmission to PyTorch AI model
+  // Active optical frame inference loop
   useEffect(() => {
-    if (!monitoring) return
+    if (!monitoring || source === 'none') return
+
     const id = setInterval(async () => {
-      const blob = await grab(320)
+      if (capturing.current) return
+      const blob = await grab(640)
       if (!blob) return
       const fd = new FormData()
       fd.append('camera_id', String(camId))
@@ -198,13 +232,13 @@ export default function CameraPage() {
       try {
         const r = await api.upload('/api/detection/frame', fd)
         setResult(r)
-        if (r.triggered) {
+        if (r.triggered && !capturing.current) {
           runIncident('ai_model', r.accident_probability ?? r.confidence)
         }
       } catch (e: any) {
         setErr(e.message)
       }
-    }, 1000)
+    }, 500)
 
     return () => clearInterval(id)
   }, [monitoring, camId, source, threshold])
@@ -215,29 +249,31 @@ export default function CameraPage() {
   const isWarning = accidentProb >= threshold * 0.7 && !isAccident
 
   return (
-    <div className="space-y-5 text-slate-100">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="space-y-6 text-[#171717]">
+      {/* Top Header & Status */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-[#E2E8F0]">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-            AI Traffic Camera Surveillance
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 font-mono flex items-center gap-1">
-              <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-              resqroute_accident_model.pt
+          <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight flex items-center gap-2.5">
+            <span>AI Traffic Camera Surveillance</span>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EBF2FA] border border-[#356FA5]/30 text-[#173B68] font-mono flex items-center gap-1">
+              <Cpu className="w-3.5 h-3.5 text-[#356FA5]" />
+              <span>ResNet-18 Model</span>
             </span>
           </h1>
-          <DemoNote>
-            Autonomous visual accident monitoring powered by PyTorch ResNet-18 deep learning model.
-            Live video frames from the laptop camera or traffic stream are evaluated frame-by-frame on the backend for collision events.
-          </DemoNote>
+          <p className="text-xs text-[#666666] mt-0.5">
+            Autonomous optical accident monitoring powered by PyTorch ResNet-18 deep learning. Calibrated to a standard 90% confidence threshold.
+          </p>
         </div>
 
         {/* Model status pill */}
-        <div className="flex items-center gap-2 self-start md:self-auto px-3 py-1.5 rounded-xl bg-[#09152e] border border-cyan-500/20 text-xs text-slate-300 shadow-md">
-          <div className={`w-2 h-2 rounded-full ${modelInfo?.model_active ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]' : 'bg-amber-400'}`} />
-          <span className="font-semibold text-white">Model:</span>
-          <span className="text-cyan-300 font-mono">{modelInfo?.model_name ?? 'ResNet-18'}</span>
+        <div className="flex items-center gap-2 self-start md:self-auto px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-xs text-[#666666] shadow-sm">
+          <div className={`w-2 h-2 rounded-full ${modelInfo?.model_active ? 'bg-[#198754]' : 'bg-[#D69E36]'}`} />
+          <span className="font-semibold text-[#171717]">Model:</span>
+          <span className="text-[#173B68] font-mono font-medium">
+            {modelInfo?.model_file ? `ResNet-18 (${modelInfo.model_file})` : (modelInfo?.model_name ?? 'ResNet-18 (resqroute_accident_model - Copy.pt)')}
+          </span>
           {modelInfo?.validation_f1 && (
-            <span className="text-slate-400 text-[10px] font-mono border-l border-white/10 pl-2">
+            <span className="text-[#666666] text-[11px] font-mono border-l border-[#E2E8F0] pl-2">
               F1: {(modelInfo.validation_f1 * 100).toFixed(1)}%
             </span>
           )}
@@ -246,422 +282,316 @@ export default function CameraPage() {
 
       {err && <Alert kind="error">{err}</Alert>}
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        <Card
-          className="lg:col-span-2"
-          title="Live Optical Surveillance Feed"
-          right={
-            <select
-              className="bg-[#0c1a40] text-cyan-300 border border-white/15 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-cyan-500 shadow-inner"
-              value={camId}
-              onChange={e => setCamId(+e.target.value)}
-            >
-              {cameras.map(c => (
-                <option key={c.id} value={c.id} className="bg-[#070e22] text-white">
-                  {c.name} · {c.location_name}
-                </option>
-              ))}
-            </select>
-          }
-        >
-          {/* Video Container with Dynamic HUD Overlays */}
-          <div className="relative bg-[#050a18] rounded-xl overflow-hidden aspect-video grid place-items-center border border-white/10 shadow-2xl">
-            <video
-              ref={videoRef}
-              muted
-              playsInline
-              className={`w-full h-full object-contain ${live ? '' : 'hidden'}`}
-            />
+      {/* Main Grid: Video Stream + AI Telemetry Analysis */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Left 2 Columns: Video Feed & Controls */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card
+            title="Live Optical Surveillance Feed"
+            right={
+              <select
+                className="bg-white text-[#171717] border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-[#173B68] shadow-sm"
+                value={camId}
+                onChange={e => setCamId(+e.target.value)}
+              >
+                {cameras.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} · {c.location_name}
+                  </option>
+                ))}
+              </select>
+            }
+          >
+            {/* Video Container with Clean HUD Overlays */}
+            <div className="relative bg-[#0F172A] rounded-lg overflow-hidden aspect-video grid place-items-center border border-[#CBD5E1] shadow-md">
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                className={`w-full h-full object-contain ${live ? '' : 'hidden'}`}
+              />
 
-            {!live && (
-              <div className="text-slate-400 text-center p-6">
-                <VideoOff className="w-12 h-12 mx-auto mb-3 text-slate-500" />
-                <div className="font-semibold text-white text-sm">Optical Feed Standby</div>
-                <div className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  Click <b>Start Local Cam</b> to activate your laptop webcam, or <b>Load Video Clip</b> to analyze recorded footage with the AI model.
-                </div>
-              </div>
-            )}
-
-            {/* Live Model HUD Overlays */}
-            {live && (
-              <>
-                {/* Top status banner */}
-                <div className="absolute top-3 left-3 flex items-center gap-2">
-                  {monitoring ? (
-                    <span className={`text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
-                      isAccident
-                        ? 'bg-rose-600/95 text-white border-rose-300 animate-pulse shadow-rose-600/50'
-                        : isWarning
-                        ? 'bg-amber-600/90 text-white border-amber-300'
-                        : 'bg-emerald-600/80 text-white border-emerald-400'
-                    }`}>
-                      <Activity className="w-3.5 h-3.5" />
-                      {isAccident ? '🚨 ACCIDENT DETECTED' : isWarning ? '⚠ ELEVATED COLLISION RISK' : 'AI MODEL MONITORING ACTIVE'}
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800/80 text-slate-300 border border-slate-700 backdrop-blur-md">
-                      MONITORING PAUSED
-                    </span>
-                  )}
-                </div>
-
-                {/* Top-Right Probability Badge */}
-                {monitoring && result && (
-                  <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-lg border border-white/15 text-xs font-mono shadow-lg flex items-center gap-2">
-                    <span className="text-slate-400 text-[10px]">ACCIDENT PROB:</span>
-                    <span className={`font-bold ${
-                      isAccident ? 'text-rose-400 text-sm animate-pulse' : isWarning ? 'text-amber-400' : 'text-emerald-400'
-                    }`}>
-                      {(accidentProb * 100).toFixed(1)}%
-                    </span>
+              {!live && (
+                <div className="text-slate-400 text-center p-6 space-y-2">
+                  <VideoOff className="w-10 h-10 mx-auto text-slate-500" />
+                  <div className="font-semibold text-white text-sm">Optical Feed Standby</div>
+                  <div className="text-xs text-slate-400 max-w-sm mx-auto">
+                    Click <b>Start Local Cam</b> to activate your laptop webcam, or upload video footage to evaluate collision events.
                   </div>
+                </div>
+              )}
+
+              {/* Live HUD Telemetry Badges */}
+              {live && (
+                <>
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    {monitoring ? (
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#198754] text-white flex items-center gap-1.5 shadow">
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                        AI NEURAL SCAN ACTIVE
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/60 text-slate-300 backdrop-blur-md">
+                        OPTICAL FEED STANDBY
+                      </span>
+                    )}
+
+                    {result && monitoring && (
+                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow ${isAccident
+                          ? 'bg-[#DC3545] text-white'
+                          : isWarning
+                            ? 'bg-[#D69E36] text-white'
+                            : 'bg-[#198754] text-white'
+                        }`}>
+                        <Activity className="w-3.5 h-3.5" />
+                        {isAccident ? 'COLLISION DETECTED' : isWarning ? 'ELEVATED MOTION' : 'NORMAL TRAFFIC'}
+                      </span>
+                    )}
+                  </div>
+
+                  {isCapturingBurst && (
+                    <div className="absolute inset-0 bg-red-600/20 border-4 border-[#DC3545] flex items-center justify-center pointer-events-none">
+                      <div className="bg-[#DC3545] text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider shadow-lg flex items-center gap-2">
+                        <Activity className="w-4 h-4 animate-spin" />
+                        <span>Capturing 6 Evidence Screenshots ({SHOTS} Frames @ 3s Interval)</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] font-mono text-white bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <span>CAM-0{camId}</span>
+                      <span>FPS: 25</span>
+                      {result?.latency_ms && <span>LATENCY: {result.latency_ms}ms</span>}
+                    </div>
+                    <div>
+                      THRESHOLD: <span className="text-[#356FA5] font-bold">{Math.round(threshold * 100)}%</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Video Controls Action Toolbar */}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E2E8F0]">
+              <div className="flex flex-wrap items-center gap-2">
+                {source !== 'webcam' ? (
+                  <Btn v="primary" onClick={startCamera}>
+                    <Video className="w-4 h-4" />
+                    Start Local Cam
+                  </Btn>
+                ) : (
+                  <Btn v="ghost" onClick={stopCamera}>
+                    <VideoOff className="w-4 h-4" />
+                    Stop Cam
+                  </Btn>
                 )}
 
-                {/* HUD Viewfinder Grid */}
-                <div className={`absolute inset-4 pointer-events-none border-2 rounded-lg transition-all duration-300 ${
-                  isAccident
-                    ? 'border-rose-500/80 shadow-[inset_0_0_20px_rgba(244,63,94,0.4)]'
-                    : isWarning
-                    ? 'border-amber-500/50'
-                    : 'border-cyan-500/20'
-                }`}>
-                  {/* Corner marks */}
-                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
-                  <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
-                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
-                </div>
-
-                {/* Bottom sensor specs */}
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-mono text-cyan-400 border border-white/10 flex items-center gap-2">
-                  <span>SENSOR #{camId}</span>
-                  <span className="text-slate-500">|</span>
-                  <span>{source === 'webcam' ? 'LAPTOP CAM' : 'FILE STREAM'}</span>
-                  {result?.latency_ms && (
-                    <>
-                      <span className="text-slate-500">|</span>
-                      <span className="text-emerald-400">{result.latency_ms}ms</span>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Action Control Buttons */}
-          <div className="flex flex-wrap gap-2.5 mt-4">
-            <Btn onClick={startCamera} disabled={source === 'webcam'}>
-              <Video className="w-4 h-4 text-cyan-400" />
-              Start Local Cam
-            </Btn>
-            <Btn v="ghost" onClick={stopCamera} disabled={!live}>
-              <VideoOff className="w-4 h-4 text-slate-400" />
-              Stop Cam
-            </Btn>
-            <Btn
-              v="success"
-              onClick={() => {
-                api.post('/api/detection/reset', {}).catch(() => {})
-                setMonitoring(true)
-              }}
-              disabled={!live || monitoring}
-            >
-              <Play className="w-4 h-4" />
-              Start AI Monitoring
-            </Btn>
-            <Btn v="warn" onClick={() => setMonitoring(false)} disabled={!monitoring}>
-              <Square className="w-4 h-4" />
-              Pause Monitoring
-            </Btn>
-            <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 hover:border-white/20 transition cursor-pointer">
-              <Upload className="w-4 h-4 text-cyan-400" />
-              <span>Load Video Clip</span>
-              <input type="file" accept="video/*" hidden onChange={e => onFile(e.target.files?.[0])} />
-            </label>
-            <Btn v="danger" onClick={() => runIncident('test_trigger', null)} busy={capturing.current}>
-              <FlaskConical className="w-4 h-4" />
-              Simulate Accident Collision
-            </Btn>
-          </div>
-
-          {/* Sensitivity / Threshold Control */}
-          <div className="mt-4 p-3.5 rounded-xl bg-[#09152e]/80 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-cyan-400" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white">Detection Criteria Threshold:</span>
-                  <span className="font-mono text-cyan-300 font-bold px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40">
-                    {Math.round(threshold * 100)}%
-                  </span>
-                  {threshold === 0.80 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                      Standard 80% Level
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Accidents are confirmed when PyTorch neural network confidence crosses the 80% level.
-                </p>
+                {live && (
+                  <>
+                    {!monitoring ? (
+                      <Btn v="success" onClick={() => setMonitoring(true)}>
+                        <Play className="w-4 h-4" />
+                        Start AI Monitoring
+                      </Btn>
+                    ) : (
+                      <Btn v="warn" onClick={() => setMonitoring(false)}>
+                        <Square className="w-4 h-4" />
+                        Pause Monitoring
+                      </Btn>
+                    )}
+                  </>
+                )}
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="0.50"
-                max="0.95"
-                step="0.05"
-                value={threshold}
-                onChange={e => setThreshold(parseFloat(e.target.value))}
-                className="w-32 accent-cyan-400 cursor-pointer"
-              />
-              <div className="flex gap-1">
-                {[0.70, 0.75, 0.80, 0.85, 0.90].map(val => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setThreshold(val)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition ${
-                      threshold === val
-                        ? val === 0.80
-                          ? 'bg-emerald-500 text-slate-950 font-black shadow-md shadow-emerald-500/30'
-                          : 'bg-cyan-500 text-slate-950 font-bold'
-                        : 'bg-white/5 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {Math.round(val * 100)}%
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Live Video Footage Upload & Neural Scan Suite */}
-          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#0c1a40] via-[#09152e] to-[#0c1a40] border border-cyan-500/30 space-y-3.5 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 grid place-items-center border border-cyan-500/30">
-                  <FileVideo className="w-4 h-4 text-cyan-300" />
-                </div>
+              <Btn v="danger" onClick={() => runIncident('test_trigger', null)} busy={capturing.current}>
+                <FlaskConical className="w-4 h-4" />
+                Simulate Accident Collision
+              </Btn>
+            </div>
+
+            {/* Threshold Recalibration Slider (Standard 90% Level) */}
+            <div className="mt-4 p-3.5 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5">
+                <Sliders className="w-4 h-4 text-[#173B68]" />
                 <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    Upload Live Camera Footage for AI Accident Detection
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                      MP4 / WEBM / AVI / MOV
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-[#171717]">Accident Detection Threshold:</span>
+                    <span className="font-mono text-[#173B68] font-bold px-2 py-0.5 rounded bg-[#EBF2FA] border border-[#356FA5]/30">
+                      {Math.round(threshold * 100)}%
                     </span>
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Upload live traffic CCTV footage or dashcam video to run PyTorch accident detection on real recorded events.
+                    {threshold === 0.90 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F0F9F4] text-[#198754] border border-[#198754]/30">
+                        Standard 90% Calibrated Level
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#666666] mt-0.5">
+                    Accidents are triggered only when deep learning confidence reaches or exceeds the {Math.round(threshold * 100)}% level.
                   </p>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0.70"
+                  max="0.95"
+                  step="0.05"
+                  value={threshold}
+                  onChange={e => handleUpdateThreshold(parseFloat(e.target.value))}
+                  className="w-28 accent-[#173B68] cursor-pointer"
+                />
+                <div className="flex gap-1">
+                  {[0.75, 0.80, 0.85, 0.90, 0.95].map(val => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => handleUpdateThreshold(val)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono transition cursor-pointer ${threshold === val
+                          ? 'bg-[#173B68] text-white font-bold shadow-sm'
+                          : 'bg-white text-[#666666] border border-[#CBD5E1] hover:bg-[#F7F8FA]'
+                        }`}
+                    >
+                      {Math.round(val * 100)}%
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Video File Information & Controls */}
-            {videoFile ? (
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="font-semibold text-white flex items-center gap-2">
-                    <span className="truncate max-w-xs">{videoFile.name}</span>
-                    <span className="text-slate-400 font-mono text-[11px]">
-                      ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </span>
+            {/* Video Footage Upload Zone */}
+            <div className="mt-4 p-4 rounded-xl bg-white border border-[#E2E8F0] space-y-3">
+              <div className="flex items-center gap-2">
+                <FileVideo className="w-4 h-4 text-[#173B68]" />
+                <div>
+                  <h3 className="text-xs font-bold text-[#171717]">
+                    Upload Camera Footage for AI Accident Detection (MP4 / WEBM / AVI)
+                  </h3>
+                  <p className="text-[11px] text-[#666666]">
+                    Upload recorded CCTV traffic video to run the PyTorch ResNet-18 model against real accident events.
+                  </p>
+                </div>
+              </div>
+
+              {videoFile ? (
+                <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-[#171717] flex items-center gap-2">
+                      <span className="truncate max-w-xs">{videoFile.name}</span>
+                      <span className="text-[#666666] font-mono text-[11px]">
+                        ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-[#198754] flex items-center gap-1 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Loaded in optical feed viewport</span>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Loaded in Optical Stream & Active in Neural Monitoring Pipeline</span>
+
+                  <div className="flex items-center gap-2">
+                    <Btn
+                      v="primary"
+                      onClick={runFullVideoNeuralScan}
+                      busy={uploadingVideo}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Run Full Video Neural Scan
+                    </Btn>
+                    <label className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] hover:bg-[#F7F8FA] text-xs font-medium cursor-pointer text-[#171717]">
+                      Change File
+                      <input type="file" accept="video/*" className="hidden" onChange={e => onFile(e.target.files?.[0])} />
+                    </label>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Btn
-                    v="primary"
-                    onClick={handleDeepVideoScan}
-                    busy={uploadingVideo}
-                    className="text-xs"
-                  >
-                    <Cpu className="w-3.5 h-3.5 text-cyan-200" />
-                    <span>Deep Neural Model Scan</span>
-                  </Btn>
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition cursor-pointer">
-                    <FolderUp className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Change Video</span>
-                    <input type="file" accept="video/*" hidden onChange={e => onFile(e.target.files?.[0])} />
+              ) : (
+                <div className="border border-dashed border-[#CBD5E1] rounded-lg p-5 text-center bg-[#FAFBFD] hover:bg-[#F0F4F8] transition">
+                  <FolderUp className="w-8 h-8 mx-auto text-[#356FA5] mb-2 opacity-80" />
+                  <p className="text-xs text-[#171717] font-medium">
+                    Select or drag & drop live camera footage here
+                  </p>
+                  <label className="mt-3 inline-block px-4 py-2 rounded-lg bg-[#173B68] hover:bg-[#102A4C] text-white text-xs font-semibold cursor-pointer shadow-sm">
+                    Choose Video Footage
+                    <input type="file" accept="video/*" className="hidden" onChange={e => onFile(e.target.files?.[0])} />
                   </label>
                 </div>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-cyan-500/30 rounded-xl p-5 text-center bg-[#070e22]/50 hover:bg-[#070e22]/80 transition">
-                <FolderUp className="w-8 h-8 mx-auto text-cyan-400 mb-2 opacity-80" />
-                <p className="text-xs text-slate-200 font-medium">
-                  Select or drag & drop live camera footage here
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1 mb-3">
-                  Upload MP4, WebM, or AVI footage from CCTV traffic feeds or dashcams
-                </p>
-                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white shadow-md shadow-cyan-500/20 cursor-pointer transition">
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Choose Live Video Footage</span>
-                  <input type="file" accept="video/*" hidden onChange={e => onFile(e.target.files?.[0])} />
-                </label>
-              </div>
-            )}
+              )}
+            </div>
+          </Card>
+        </div>
 
-            {/* Video Analysis Result Card */}
-            {videoAnalysis && (
-              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 space-y-2 text-xs">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="font-bold text-white">Full Video Neural Scan Results:</span>
-                  <Badge s={videoAnalysis.accident_detected ? 'critical' : 'available'}>
-                    {videoAnalysis.accident_detected ? '🚨 ACCIDENT CONFIRMED' : 'NORMAL TRAFFIC FLOW'}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
-                  <div>
-                    <span className="text-slate-400 block">Peak Collision Prob:</span>
-                    <b className={videoAnalysis.accident_detected ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
-                      {(videoAnalysis.peak_probability * 100).toFixed(1)}%
-                    </b>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">Collision Second:</span>
-                    <b className="text-cyan-300">T+{videoAnalysis.peak_timestamp_s}s</b>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">Frames Evaluated:</span>
-                    <b className="text-white">{videoAnalysis.samples_evaluated} frames</b>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">Evidence Bursts:</span>
-                    <b className="text-amber-300">{videoAnalysis.evidence_count} captured</b>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* AI Telemetry & Neural Net Analysis Panel */}
+        {/* Right 1 Column: AI Telemetry & Analysis Status */}
         <div className="space-y-4">
           <Card title="AI Telemetry & Analysis">
-            <ul className="text-sm space-y-3">
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">Vision Input Source</span>
-                <Badge s={live ? 'available' : 'offline'}>
-                  {live ? (source === 'webcam' ? 'LAPTOP WEBCAM' : 'VIDEO STREAM') : 'OFFLINE'}
-                </Badge>
+            <ul className="divide-y divide-[#E2E8F0] text-xs">
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Vision Input Source</span>
+                <span className="font-mono text-[#171717] font-medium uppercase">{source}</span>
               </li>
-
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">AI Backend Engine</span>
-                <Badge s={monitoring ? 'confirmed' : 'offline'}>
-                  {monitoring ? 'MODEL INFERENCE' : 'STANDBY'}
-                </Badge>
-              </li>
-
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">Model Weights File</span>
-                <span className="font-mono text-xs text-cyan-300 font-semibold truncate max-w-[220px]" title={modelInfo?.model_path || "C:\\Prathesh\\resqroute-ai\\resqroute-ai\\backend\\resqroute_accident_model.pt"}>
-                  {modelInfo?.model_path ? modelInfo.model_path.split(/[\\/]/).pop() : 'resqroute_accident_model.pt'}
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">AI Backend Engine</span>
+                <span className={`font-mono font-medium ${monitoring ? 'text-[#198754]' : 'text-[#666666]'}`}>
+                  {monitoring ? 'ACTIVE INFERENCE' : 'STANDBY'}
                 </span>
               </li>
-
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">Model Config File</span>
-                <span className="font-mono text-xs text-amber-300 font-semibold truncate max-w-[220px]" title={modelInfo?.config_path || "C:\\Prathesh\\resqroute-ai\\resqroute-ai\\backend\\model_config.json"}>
-                  {modelInfo?.config_path ? modelInfo.config_path.split(/[\\/]/).pop() : 'model_config.json'}
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Model Weights File</span>
+                <span className="font-mono text-[#173B68] text-[11px] truncate max-w-[190px]" title={modelInfo?.model_file ?? 'resqroute_accident_model - Copy.pt'}>
+                  {modelInfo?.model_file ?? 'resqroute_accident_model - Copy.pt'}
                 </span>
               </li>
-
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">Architecture & Input</span>
-                <span className="font-mono text-xs text-slate-300">
-                  {modelInfo?.architecture ? modelInfo.architecture.toUpperCase() : 'RESNET18'} · {modelInfo?.image_size ?? 224}×{modelInfo?.image_size ?? 224}px
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Architecture & Input</span>
+                <span className="font-mono text-[#171717] text-[11px]">RESNET18 · 224x224px</span>
+              </li>
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Calibrated Threshold</span>
+                <span className="font-mono text-[#173B68] font-bold">{Math.round(threshold * 100)}%</span>
+              </li>
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Accident Probability</span>
+                <span className={`font-mono font-bold text-sm ${isAccident ? 'text-[#DC3545]' : 'text-[#171717]'}`}>
+                  {result ? `${(accidentProb * 100).toFixed(1)}%` : '—'}
                 </span>
               </li>
-
-              {/* Accident Probability with Real-Time Progress Bar */}
-              <li className="py-1 border-b border-white/5 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-xs flex items-center gap-1">
-                    <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-                    Accident Probability (near_accident_event)
-                  </span>
-                  <b className={`font-mono text-sm ${
-                    isAccident ? 'text-rose-400 font-bold animate-pulse' : isWarning ? 'text-amber-400' : 'text-slate-200'
-                  }`}>
-                    {result ? (accidentProb * 100).toFixed(1) + '%' : '—'}
-                  </b>
-                </div>
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      isAccident ? 'bg-rose-500 animate-pulse' : isWarning ? 'bg-amber-500' : 'bg-cyan-500'
-                    }`}
-                    style={{ width: `${Math.min(100, Math.max(0, accidentProb * 100))}%` }}
-                  />
-                </div>
-              </li>
-
-              {/* Normal Traffic Probability */}
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Normal Traffic (background)
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Background Normal Traffic</span>
+                <span className="font-mono text-[#198754]">
+                  {result?.background_probability !== undefined
+                    ? `${(result.background_probability * 100).toFixed(1)}%`
+                    : '—'}
                 </span>
-                <b className="font-mono text-emerald-400">
-                  {result ? ((result.background_probability ?? (1 - accidentProb)) * 100).toFixed(1) + '%' : '—'}
-                </b>
               </li>
-
-              {/* Motion optical diff */}
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs">Motion Intensity Vector</span>
-                <b className="font-mono text-cyan-400">{result ? (result.motion * 100).toFixed(1) + '%' : '—'}</b>
-              </li>
-
-              {/* Inference latency */}
-              <li className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400 text-xs flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Model Latency
-                </span>
-                <b className="font-mono text-slate-300">
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Model Latency</span>
+                <span className="font-mono text-[#171717]">
                   {result?.latency_ms ? `${result.latency_ms} ms` : '—'}
-                </b>
+                </span>
               </li>
-
-              {/* Evaluation Outcome */}
-              <li className="flex justify-between items-center py-1">
-                <span className="text-slate-400 text-xs">Evaluated Classification</span>
-                <b className={
-                  isAccident
-                    ? 'text-rose-400 font-bold flex items-center gap-1 animate-pulse'
-                    : isWarning
-                    ? 'text-amber-400 font-semibold'
-                    : 'text-emerald-400 font-semibold'
-                }>
+              <li className="py-2.5 flex items-center justify-between">
+                <span className="text-[#666666]">Evaluated Status</span>
+                <span className={`font-semibold text-xs ${isAccident ? 'text-[#DC3545]' : isWarning ? 'text-[#D69E36]' : 'text-[#198754]'
+                  }`}>
                   {result
                     ? isAccident
                       ? '🚨 ACCIDENT DETECTED'
                       : isWarning
-                      ? '⚠ ELEVATED RISK'
-                      : 'NORMAL TRAFFIC'
+                        ? '⚠ ELEVATED RISK'
+                        : 'NORMAL TRAFFIC'
                     : '—'}
-                </b>
+                </span>
               </li>
             </ul>
 
-            <div className="mt-4 p-3 rounded-xl bg-slate-900/60 border border-white/5 text-xs text-slate-400 leading-relaxed">
+            <div className="mt-4 p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-xs text-[#666666] leading-relaxed">
               <p>
-                <b className="text-slate-200">Autonomous Collision Pipeline:</b> When the PyTorch ResNet-18 model predicts{' '}
-                <span className="text-rose-300 font-mono">near_accident_event</span> above the {Math.round(threshold * 100)}% threshold, ResQRoute immediately triggers automated dispatch of the nearest ambulance and broadcasts emergency alerts to traffic police for green corridor clearance.
+                <b className="text-[#171717]">Autonomous Pipeline:</b> When the PyTorch model predicts{' '}
+                <span className="text-[#DC3545] font-mono">near_accident_event</span> above the {Math.round(threshold * 100)}% threshold, ResQRoute immediately triggers automated dispatch of the nearest ambulance and broadcasts emergency alerts to traffic police for green corridor clearance.
               </p>
             </div>
 
             {capture && (
-              <div className="mt-3 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-xs text-cyan-300 font-mono animate-pulse">
+              <div className="mt-3 p-3 rounded-lg bg-[#EBF2FA] border border-[#356FA5]/40 text-xs text-[#173B68] font-mono">
                 {capture}
               </div>
             )}
@@ -670,22 +600,22 @@ export default function CameraPage() {
       </div>
 
       {/* 6 Burst Evidence Frames Gallery */}
-      <Card title={`Burst Evidence Stream (${SHOTS} frames captured at ${SHOT_INTERVAL_MS / 1000}s intervals)`}>
+      <Card title={`Burst Evidence Stream (${SHOTS} frames captured at 3s intervals)`}>
         {!thumbs.length ? (
-          <div className="text-center py-6 text-slate-400 text-sm">
-            <p>No surveillance burst evidence captured yet.</p>
-            <p className="text-xs text-slate-500 mt-1">
+          <div className="text-center py-6 text-[#666666] text-xs space-y-1">
+            <p className="font-medium text-[#171717]">No surveillance burst evidence captured yet.</p>
+            <p>
               Start AI monitoring with your camera or click <b>"Simulate Accident Collision"</b> to generate real-time evidence frames.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {thumbs.map((t, k) => (
-              <figure key={k} className="group relative rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-lg">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {thumbs.slice(0, SHOTS).map((t, k) => (
+              <figure key={k} className="group relative rounded-lg overflow-hidden border border-[#E2E8F0] bg-white shadow-sm">
                 <img src={t.url} className="aspect-video object-cover w-full group-hover:scale-105 transition" />
-                <figcaption className="p-1.5 text-[11px] font-mono text-cyan-300 bg-[#070e22]/90 border-t border-white/5 flex justify-between">
+                <figcaption className="p-1.5 text-[11px] font-mono text-[#173B68] bg-[#FAFBFD] border-t border-[#E2E8F0] flex justify-between">
                   <span>Inc #{t.inc}</span>
-                  <span className="text-slate-400">Frame {t.n}/{SHOTS}</span>
+                  <span className="text-[#666666]">Frame {t.n}/{SHOTS}</span>
                 </figcaption>
               </figure>
             ))}

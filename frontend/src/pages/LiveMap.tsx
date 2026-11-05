@@ -1,3 +1,4 @@
+import { Radio, KeyRound } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Empty, SystemNote } from '../components/ui'
 import MapView from '../components/MapView'
@@ -22,16 +23,42 @@ export default function LiveMap() {
   const eta = sel ? tracking[sel.id]?.remaining_eta ?? a?.remaining_eta : null
 
   return (
-    <div className="space-y-6 text-slate-100">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Live Telemetry & Navigation Map</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
-          Real-time tracking of ambulance locations, incident coordinates, and receiving trauma hospitals on local road network.
+    <div className="space-y-6 text-[#171717]">
+      <div className="pb-2 border-b border-[#E2E8F0]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Live Telemetry & Tactical Map</h1>
+        <p className="text-xs text-[#666666] mt-0.5">
+          Real-time tracking of ambulance locations, collision coordinates, and receiving trauma hospitals on local street networks.
         </p>
       </div>
 
-      <div className="grid xl:grid-cols-4 gap-5">
-        <div className="xl:col-span-3 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+      {/* Live Map Collision Detection Status Notice */}
+      <div className="p-4 rounded-xl bg-white border border-[#CBD5E1] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 grid place-items-center shrink-0 mt-0.5">
+            <Radio className="w-4 h-4 animate-pulse text-[#DC3545]" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-bold text-sm text-[#171717]">Live Map Optical Detection & CCTV Feed Integration</span>
+              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/40">
+                DEVELOPING STAGE · API KEYS REQUIRED
+              </span>
+            </div>
+            <p className="text-xs text-[#666666] leading-relaxed max-w-3xl">
+              Live automated collision detection across street-level streaming cameras is currently in the active development / pilot stage. Connecting real-world municipal optical feeds requires external <b>Traffic Department GIS API keys</b> and <b>CCTV Media Streaming Gateway tokens</b>. Tactical map currently operates with calibrated road network geometry (OSRM) and verified AI camera coordinates.
+            </p>
+          </div>
+        </div>
+        <div className="flex sm:flex-col items-end gap-1.5 shrink-0 text-right">
+          <span className="text-[10px] uppercase font-mono font-bold text-[#666666]">Street Network Routing</span>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#198754] bg-[#F0F9F4] border border-[#198754]/30 px-2 py-0.5 rounded-md font-mono">
+            ● OSRM ROAD ROUTING ACTIVE
+          </span>
+        </div>
+      </div>
+
+      <div className="grid xl:grid-cols-4 gap-6">
+        <div className="xl:col-span-3 rounded-xl overflow-hidden border border-[#CBD5E1] shadow-sm bg-white">
           <MapView
             ambulances={ambulances}
             hospitals={hospitals}
@@ -50,7 +77,7 @@ export default function LiveMap() {
             ) : (
               <div className="space-y-3.5">
                 <select
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 font-medium"
+                  className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#173B68]"
                   value={sel?.id}
                   onChange={e => setSelectedId(+e.target.value)}
                 >
@@ -62,21 +89,20 @@ export default function LiveMap() {
                 </select>
 
                 {sel && (
-                  <div className="text-sm space-y-3 text-slate-200">
+                  <div className="text-xs sm:text-sm space-y-3 text-[#171717]">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-400">Response Phase</span>
+                      <span className="text-xs text-[#666666]">Response Phase</span>
                       <Badge s={sel.status} />
                     </div>
 
                     {/* Police Traffic & Green Corridor Panel */}
-                    <div className={`p-3 rounded-xl border space-y-2 ${
-                      sel.green_corridor
-                        ? 'bg-blue-950/40 border-blue-500/40 text-blue-100 shadow-lg shadow-blue-500/10'
-                        : 'bg-slate-900/80 border-white/10 text-slate-300'
-                    }`}>
+                    <div className={`p-3 rounded-lg border space-y-2 ${sel.green_corridor
+                        ? 'bg-[#F0F9F4] border-[#198754]/40 text-[#166534]'
+                        : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#171717]'
+                      }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold flex items-center gap-1.5">
-                          <span className={`w-2.5 h-2.5 rounded-full ${sel.green_corridor ? 'bg-blue-400 animate-ping' : 'bg-slate-500'}`} />
+                          <span className={`w-2.5 h-2.5 rounded-full ${sel.green_corridor ? 'bg-[#198754]' : 'bg-[#94A3B8]'}`} />
                           <span>Green Corridor Signal Preemption</span>
                         </span>
                         {(user?.role === 'police' || user?.role === 'admin') && (
@@ -85,52 +111,51 @@ export default function LiveMap() {
                             onClick={async () => {
                               await api.post(`/api/incidents/${sel.id}/police-corridor`)
                             }}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
-                              sel.green_corridor
-                                ? 'bg-blue-500 hover:bg-blue-400 text-white'
-                                : 'bg-white/10 hover:bg-white/20 text-slate-300 border border-white/10'
-                            }`}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${sel.green_corridor
+                                ? 'bg-[#DC3545] text-white hover:bg-[#BB2D3B]'
+                                : 'bg-[#173B68] text-white hover:bg-[#102A4C]'
+                              }`}
                           >
-                            {sel.green_corridor ? 'Deactivate Corridor' : 'Activate Green Corridor'}
+                            {sel.green_corridor ? 'Deactivate' : 'Activate'}
                           </button>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-300 leading-tight">
+                      <p className="text-[11px] text-[#666666] leading-tight">
                         {sel.green_corridor
                           ? 'Priority traffic signal preemption is ACTIVE. Police escort coordinated; intersections prioritized.'
                           : 'Standard traffic flow. Police can activate Green Corridor above.'}
                       </p>
                     </div>
 
-                    {/* Assigned Paramedic Driver Details */}
+                    {/* Allocated Paramedic Driver Details */}
                     {a && (
-                      <div className="p-3 rounded-xl bg-slate-900/90 border border-white/10 space-y-2">
-                        <div className="text-[11px] uppercase tracking-wider font-bold text-cyan-400 flex justify-between">
+                      <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] space-y-1.5">
+                        <div className="text-[11px] uppercase tracking-wider font-bold text-[#173B68] flex justify-between">
                           <span>Allocated Paramedic Fleet</span>
-                          <span className="font-mono">{sel.required_ambulances || 1} Unit(s) Required</span>
+                          <span className="font-mono text-[10px]">{sel.required_ambulances || 1} Unit(s) Required</span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Unit Code & Driver:</span>
-                          <b className="text-white font-mono">{a.ambulance_code} · {a.driver_name}</b>
+                          <span className="text-[#666666]">Unit Code & Driver:</span>
+                          <b className="font-mono text-[#171717]">{a.ambulance_code} · {a.driver_name}</b>
                         </div>
                         {a.driver_phone && (
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-slate-400">Driver Contact:</span>
-                            <a href={`tel:${a.driver_phone}`} className="text-cyan-300 font-mono hover:underline font-bold">
+                            <span className="text-[#666666]">Driver Contact:</span>
+                            <a href={`tel:${a.driver_phone}`} className="text-[#173B68] font-mono hover:underline font-bold">
                               {a.driver_phone}
                             </a>
                           </div>
                         )}
                         {route && (
                           <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Calculated Route:</span>
-                            <b className="text-white">{route.distance_km} km</b>
+                            <span className="text-[#666666]">Calculated Route:</span>
+                            <b>{route.distance_km} km</b>
                           </div>
                         )}
                         {eta != null && (
                           <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Simulated Transit ETA:</span>
-                            <b className="text-cyan-400 font-mono font-bold">{Number(eta).toFixed(1)} min</b>
+                            <span className="text-[#666666]">Road Transit ETA:</span>
+                            <b className="text-[#173B68] font-mono font-bold">{Number(eta).toFixed(1)} min</b>
                           </div>
                         )}
                       </div>
@@ -141,19 +166,19 @@ export default function LiveMap() {
                       const hosp = hospitals.find(h => h.id === sel.selected_hospital_id)
                       if (!hosp) return null
                       return (
-                        <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1.5">
-                          <div className="text-[11px] uppercase tracking-wider font-bold text-emerald-400">
+                        <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30 space-y-1.5">
+                          <div className="text-[11px] uppercase tracking-wider font-bold text-[#198754]">
                             Allocated Receiving Trauma Center
                           </div>
-                          <div className="text-xs font-bold text-white">{hosp.name}</div>
-                          <div className="text-[11px] text-slate-300 flex justify-between">
-                            <span>Available Beds: <b className="text-emerald-400">{hosp.available_beds}</b> / {hosp.total_beds}</span>
-                            <span>ICU: <b className="text-rose-300">{hosp.icu_beds}</b></span>
+                          <div className="text-xs font-bold text-[#171717]">{hosp.name}</div>
+                          <div className="text-[11px] text-[#666666] flex justify-between">
+                            <span>Available Beds: <b className="text-[#198754]">{hosp.available_beds}</b> / {hosp.total_beds}</span>
+                            <span>ICU: <b className="text-[#DC3545]">{hosp.icu_beds}</b></span>
                           </div>
                           {hosp.phone && (
-                            <div className="text-[11px] text-slate-400 flex justify-between pt-1 border-t border-emerald-500/20">
+                            <div className="text-[11px] text-[#666666] flex justify-between pt-1 border-t border-[#198754]/20">
                               <span>Trauma Bay Desk:</span>
-                              <a href={`tel:${hosp.phone}`} className="text-emerald-300 font-mono font-bold hover:underline">
+                              <a href={`tel:${hosp.phone}`} className="text-[#198754] font-mono font-bold hover:underline">
                                 {hosp.phone}
                               </a>
                             </div>
@@ -163,15 +188,15 @@ export default function LiveMap() {
                     })()}
 
                     {/* Police Legal Registration Note */}
-                    <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 text-[11px] text-slate-400 space-y-1">
-                      <div className="font-semibold text-slate-300">Police Division Legal Coordination</div>
+                    <div className="p-2.5 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-[11px] text-[#666666] space-y-1">
+                      <div className="font-semibold text-[#171717]">Police Division Legal Coordination</div>
                       <p>
-                        Case diary incident #{sel.id} synchronized under Section 134 Motor Vehicles Act. Destination hospital and escort notified.
+                        Case incident #{sel.id} synchronized under Section 134 Motor Vehicles Act. Destination hospital and escort notified.
                       </p>
                     </div>
 
                     {sel.hospital_warning && (
-                      <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs">
+                      <div className="p-2.5 rounded-lg bg-[#FDF2F2] border border-[#DC3545]/30 text-[#DC3545] text-xs">
                         {sel.hospital_warning}
                       </div>
                     )}
@@ -182,32 +207,64 @@ export default function LiveMap() {
           </Card>
 
           <Card title="Tactical Map Legend">
-            <ul className="text-xs space-y-2 text-slate-300">
+            <ul className="text-xs space-y-2 text-[#666666]">
               <li className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500 pulse-red" />
-                <span>Verified Collision Location</span>
+                <span className="w-3 h-3 rounded-full bg-[#DC3545] pulse-emergency" />
+                <span className="text-[#171717]">Verified Collision Location</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span>Receiving Trauma Hospital (H)</span>
+                <span className="w-3 h-3 rounded-full bg-[#173B68]" />
+                <span className="text-[#171717]">Receiving Trauma Hospital (H)</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-emerald-400" />
-                <span>Ambulance Available (Ready)</span>
+                <span className="w-3 h-3 rounded bg-[#198754]" />
+                <span className="text-[#171717]">Ambulance Available (Ready)</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-rose-400" />
-                <span>Ambulance Busy (En Route)</span>
+                <span className="w-3 h-3 rounded bg-[#173B68]" />
+                <span className="text-[#171717]">Ambulance En Route (Active)</span>
               </li>
-              <li className="flex items-center gap-2 pt-1 border-t border-white/5">
-                <span className="h-1 w-5 rounded bg-cyan-400" />
-                <span>Ambulance → Incident Scene Route</span>
+              <li className="flex items-center gap-2 pt-1 border-t border-[#E2E8F0]">
+                <span className="h-1.5 w-5 rounded bg-[#173B68]" />
+                <span className="text-[#171717]">Stage 1: Unit → Accident Route</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="h-1 w-5 rounded bg-emerald-400" />
-                <span>Scene → Hospital Transit Route</span>
+                <span className="h-1.5 w-5 rounded bg-[#198754]" />
+                <span className="text-[#171717]">Stage 2: Accident → Hospital Route</span>
               </li>
             </ul>
+          </Card>
+
+          <Card title="Traffic & Map API Integration Status">
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
+                <div>
+                  <div className="font-semibold text-[#171717]">Municipal CCTV Stream API</div>
+                  <div className="text-[11px] text-[#666666]">Live optical surveillance feed</div>
+                </div>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/30 font-semibold shrink-0">
+                  Key Required
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
+                <div>
+                  <div className="font-semibold text-[#171717]">Traffic Department GIS Token</div>
+                  <div className="text-[11px] text-[#666666]">Live congestion & signal preemption</div>
+                </div>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/30 font-semibold shrink-0">
+                  Developing Stage
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-[#171717]">OSRM Road Corridor Engine</div>
+                  <div className="text-[11px] text-[#666666]">Street network route geometry</div>
+                </div>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#F0F9F4] text-[#198754] border border-[#198754]/30 font-semibold shrink-0">
+                  Connected (Active)
+                </span>
+              </div>
+            </div>
           </Card>
         </div>
       </div>

@@ -14,14 +14,18 @@ import cv2
 import numpy as np
 from PIL import Image
 
-LABEL = "PyTorch Deep Learning Model (ResNet-18 · resqroute_accident_model.pt)"
+LABEL = "PyTorch Deep Learning Model (ResNet-18 · resqroute_accident_model.pt / resqroute_accident_model - Copy.pt)"
 
 # Model and configuration paths explicitly configured
-ENV_MODEL_PATH = os.environ.get("ACCIDENT_MODEL_PATH", r"C:\Prathesh\resqroute-ai\resqroute-ai\backend\resqroute_accident_model.pt")
+ENV_MODEL_PATH = os.environ.get("ACCIDENT_MODEL_PATH", r"C:\Prathesh\resqroute-ai\resqroute-ai\backend\resqroute_accident_model - Copy.pt")
 ENV_CONFIG_PATH = os.environ.get("MODEL_CONFIG_PATH", r"C:\Prathesh\resqroute-ai\resqroute-ai\backend\model_config.json")
 
 POSSIBLE_PATHS = [
     Path(ENV_MODEL_PATH),
+    Path(r"C:\Prathesh\resqroute-ai\resqroute-ai\backend\resqroute_accident_model - Copy.pt"),
+    Path(__file__).resolve().parent.parent / "resqroute_accident_model - Copy.pt",
+    Path.cwd() / "backend" / "resqroute_accident_model - Copy.pt",
+    Path.cwd() / "resqroute_accident_model - Copy.pt",
     Path(r"c:\Prathesh\resqroute-ai\resqroute-ai\backend\resqroute_accident_model.pt"),
     Path(__file__).resolve().parent.parent / "resqroute_accident_model.pt",
     Path.cwd() / "backend" / "resqroute_accident_model.pt",
@@ -56,7 +60,7 @@ class AccidentDetector:
         self.model_path = None
         self.config_path = None
         self.model_loaded = False
-        self.cooldown_s = 30  # seconds between auto-dispatches per camera
+        self.cooldown_s = 15  # seconds between auto-dispatches per camera (responsive for live tests)
         self.state: Dict[int, Dict[str, Any]] = {}
 
         self._load_config()
@@ -158,7 +162,7 @@ class AccidentDetector:
         else:
             self.state.pop(camera_id, None)
 
-    def analyse(self, camera_id: int, jpeg: bytes, threshold: float = 0.80) -> dict:
+    def analyse(self, camera_id: int, jpeg: bytes, threshold: float = 0.90) -> dict:
         arr = np.frombuffer(jpeg, dtype=np.uint8)
         img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         if img is None:
@@ -222,7 +226,9 @@ class AccidentDetector:
 
         if accident_prob >= threshold:
             st["consecutive"] += 1
-            if cooldown_left <= 0:
+            # High confidence (>= 0.85) triggers immediately; between threshold and 0.84 requires 2 consecutive frames to reject momentary lighting/glare
+            needs_frames = 1 if accident_prob >= 0.85 else 2
+            if st["consecutive"] >= needs_frames and cooldown_left <= 0:
                 triggered = True
                 st["last_trigger"] = time.time()
                 st["consecutive"] = 0
@@ -231,9 +237,11 @@ class AccidentDetector:
 
         predicted_class = self.class_names[self.accident_idx] if accident_prob >= threshold else self.class_names[self.bg_idx]
 
+        model_name = Path(self.model_path).name if self.model_path else "resqroute_accident_model - Copy.pt"
+
         return {
             "model_active": self.model_loaded,
-            "model_name": "ResNet-18 (resqroute_accident_model.pt)",
+            "model_name": f"ResNet-18 ({model_name})",
             "method": LABEL if self.model_loaded else "Optical Motion Heuristic (Fallback)",
             "predicted_class": predicted_class,
             "accident_probability": round(accident_prob, 4),
@@ -392,7 +400,7 @@ def generate_accident_evidence_frames(camera_id: int = 1, confidence: float = 0.
     return frames
 
 
-def process_video_file(video_bytes: bytes, camera_id: int = 1, threshold: float = 0.80, max_sample_frames: int = 30) -> dict:
+def process_video_file(video_bytes: bytes, camera_id: int = 1, threshold: float = 0.90, max_sample_frames: int = 30) -> dict:
     """Analyze uploaded live video footage frame-by-frame with the PyTorch ResNet-18 model."""
     import tempfile
 

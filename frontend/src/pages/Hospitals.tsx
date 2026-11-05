@@ -31,8 +31,8 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
     <Card
       title={
         <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-cyan-400 shrink-0" />
-          <span className="font-bold text-white text-base">{h.name}</span>
+          <Building2 className="w-5 h-5 text-[#173B68] shrink-0" />
+          <span className="font-bold text-[#171717] text-base">{h.name}</span>
         </div>
       }
       right={
@@ -46,27 +46,27 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
           )}
         </div>
       }
-      className={h.status === 'pending_verification' ? 'border-amber-500/40 ring-1 ring-amber-500/20' : ''}
+      className={h.status === 'pending_verification' ? 'border-[#D69E36]/40' : ''}
     >
-      <div className="space-y-4 text-sm text-slate-200">
+      <div className="space-y-4 text-xs sm:text-sm text-[#171717]">
         {/* Verification Alert Banner if Pending */}
         {h.status === 'pending_verification' && (
-          <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between">
+          <div className="p-3 rounded-lg bg-[#FDF9F0] border border-[#D69E36]/30 text-[#855B14] text-xs flex items-center justify-between">
             <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-amber-400" />
+              <Clock className="w-4 h-4 text-[#D69E36]" />
               Pending verification approval to join network
             </span>
             {isAdmin && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleVerify}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-md bg-[#198754] text-white font-bold text-[11px] transition cursor-pointer"
                 >
                   Verify & Approve
                 </button>
                 <button
                   onClick={handleReject}
-                  className="px-2.5 py-1 rounded-lg bg-rose-600/30 hover:bg-rose-600 text-rose-200 font-bold text-[11px] border border-rose-500/40 transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-md bg-[#FDF2F2] hover:bg-[#FCE8E8] text-[#DC3545] font-bold text-[11px] border border-[#DC3545]/40 transition cursor-pointer"
                 >
                   Reject
                 </button>
@@ -76,199 +76,150 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
         )}
 
         {/* Emergency Contact Number Banner */}
-        <div className="p-3 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
+        <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase font-bold text-slate-400">Trauma Desk & Emergency Hotline</div>
-            <div className="text-base font-black text-cyan-300 font-mono tracking-wide">{h.phone}</div>
+            <div className="text-[10px] uppercase font-bold text-[#666666]">Trauma Desk & Emergency Hotline</div>
+            <div className="text-base font-black text-[#173B68] font-mono tracking-wide">{h.phone}</div>
           </div>
           <a
             href={`tel:${h.phone}`}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EBF2FA] hover:bg-[#DDEBFA] text-[#173B68] border border-[#356FA5]/30 flex items-center gap-1.5 transition"
           >
             <PhoneCall className="w-3.5 h-3.5" />
             <span>Call Desk</span>
           </a>
         </div>
 
-        {/* Urgent Bed Update Prompt within 1 hour */}
-        {h.last_admission_at && (
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-red-950/30 to-amber-950/40 border border-amber-500/40 text-amber-200 text-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-amber-300 flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
-                <span>Patient Admitted — Bed Count Decreased by 1</span>
-              </span>
-              <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
-                Update Required (within 1 hr)
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-tight">
-              A collision victim was admitted to this trauma facility. Hospital staff are requested to verify and update available bed counts within 1 hour.
-            </p>
-            {canEdit && (
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setBeds(b => Math.max(0, b - 1))}
-                  className="px-2 py-1 rounded-lg bg-rose-600/30 hover:bg-rose-600 text-rose-200 text-[11px] font-bold border border-rose-500/30 cursor-pointer"
-                >
-                  -1 Bed
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBeds(b => Math.min(h.total_beds, b + 1))}
-                  className="px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 text-[11px] font-bold border border-emerald-500/30 cursor-pointer"
-                >
-                  +1 Bed
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    act(
-                      () => api.patch(`/api/hospitals/${h.id}`, { available_beds: beds, icu_beds: icu }),
-                      'Hospital bed count verified & saved'
-                    )
-                  }
-                  className="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-bold ml-auto cursor-pointer"
-                >
-                  Confirm & Sync Beds
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Real-Time Bed Availability Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-end">
-            <span className="text-xs text-slate-400">General Trauma Free Beds</span>
-            <span className="text-sm font-bold text-white">
-              <b className="text-emerald-400 text-base">{h.available_beds}</b> / {h.total_beds} available
-            </span>
-          </div>
-          <div className="h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/5">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                pct < 20 ? 'bg-rose-500' : pct < 50 ? 'bg-amber-500' : 'bg-emerald-500'
-              }`}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-
-        {/* ICU Bed Availability */}
-        <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
-          <span className="flex items-center gap-2 text-xs text-slate-300">
-            <HeartPulse className="w-4 h-4 text-rose-400" />
-            <span>Critical ICU Available Beds:</span>
-          </span>
-          <span className="font-mono text-base font-extrabold text-white">
-            {h.icu_beds} <span className="text-xs text-slate-400 font-normal">beds ready</span>
-          </span>
-        </div>
-
-        {/* Medical Capabilities */}
-        <div>
-          <div className="text-[11px] text-slate-400 uppercase font-semibold mb-1.5">Accredited Trauma Capabilities</div>
-          <div className="flex flex-wrap gap-1.5">
-            {h.capabilities.map(c => (
-              <span
-                key={c}
-                className="px-2.5 py-0.5 bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-lg text-xs font-semibold capitalize"
-              >
-                {c}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Incoming Patients Alert */}
+        {/* Patient Inflow & Telemetry */}
         {incoming.length > 0 && (
-          <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-bold text-cyan-300">
+          <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30 space-y-2">
+            <div className="flex items-center justify-between text-xs font-bold text-[#198754]">
               <span className="flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-                Incoming Emergency Telemetry ({incoming.length})
+                <Radio className="w-3.5 h-3.5 animate-pulse" />
+                <span>INCOMING TRAUMA INTAKE ({incoming.length})</span>
               </span>
-              <span className="font-mono text-[10px]">PREPARE ER BAY</span>
+              <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-[#198754]/20">
+                Live Pre-Arrival
+              </span>
             </div>
             {incoming.map(inc => (
-              <div key={inc.id} className="text-xs text-slate-200 flex justify-between pt-1 border-t border-cyan-500/20">
-                <span>Incident #{inc.id} · {inc.location_name}</span>
-                <span className="text-cyan-400 font-bold uppercase">{inc.status.replace(/_/g, ' ')}</span>
+              <div key={inc.id} className="p-2 rounded bg-white border border-[#198754]/20 text-xs flex justify-between items-center">
+                <div>
+                  <span className="font-semibold text-[#171717]">Incident #{inc.id}</span>
+                  <span className="text-[#666666] text-[11px] block">{inc.location_name}</span>
+                </div>
+                <Badge s={inc.status} />
               </div>
             ))}
           </div>
         )}
 
-        {/* Capacity Edit Controls (Authorized staff or Admin) */}
+        {/* Bed Capacity Meters */}
+        <div className="space-y-3 pt-1">
+          <div>
+            <div className="flex justify-between items-center text-xs mb-1">
+              <span className="text-[#666666] font-medium flex items-center gap-1.5">
+                <Bed className="w-4 h-4 text-[#173B68]" />
+                <span>Available Emergency Beds</span>
+              </span>
+              <span className="font-bold text-[#171717]">
+                {h.available_beds} / {h.total_beds} ({pct}% Free)
+              </span>
+            </div>
+            <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  pct > 30 ? 'bg-[#198754]' : pct > 10 ? 'bg-[#D69E36]' : 'bg-[#DC3545]'
+                }`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0]">
+            <span className="text-[#666666] font-medium flex items-center gap-1.5">
+              <HeartPulse className="w-4 h-4 text-[#DC3545]" />
+              <span>Available ICU Bays</span>
+            </span>
+            <span className="font-extrabold text-[#171717] font-mono text-sm">
+              {h.icu_beds} Bays
+            </span>
+          </div>
+
+          <div className="text-xs text-[#666666]">
+            <span>Capabilities: </span>
+            <span className="font-mono text-[#173B68] font-medium">
+              {Array.isArray(h.capabilities) ? h.capabilities.join(' · ') : (h.capabilities || 'General Trauma')}
+            </span>
+          </div>
+        </div>
+
+        {/* Edit Bed Inventory (Hospital Staff or Admin) */}
         {canEdit && (
-          <div className="border-t border-white/10 pt-4 space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Live Bed Count & Admission Controls
+          <div className="pt-3 border-t border-[#E2E8F0] space-y-3">
+            <div className="text-xs font-bold text-[#171717] uppercase tracking-wider">
+              Update Bed Inventory & Status
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Free General Beds</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min={0}
-                    max={h.total_beds}
-                    value={beds}
-                    onChange={e => setBeds(+e.target.value)}
-                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-white font-bold text-center"
-                  />
-                </div>
+                <label className="text-[11px] text-[#666666] block mb-1">Available Beds</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={h.total_beds}
+                  value={beds}
+                  onChange={e => setBeds(+e.target.value)}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs text-[#171717] font-bold"
+                />
               </div>
 
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Free ICU Beds</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min={0}
-                    value={icu}
-                    onChange={e => setIcu(+e.target.value)}
-                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-white font-bold text-center"
-                  />
-                </div>
+                <label className="text-[11px] text-[#666666] block mb-1">ICU Bays</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={icu}
+                  onChange={e => setIcu(+e.target.value)}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs text-[#171717] font-bold"
+                />
               </div>
             </div>
 
-            <div className="flex gap-2 pt-1">
+            <div className="flex items-center justify-between gap-2 pt-1">
               <Btn
-                className="flex-1 py-2"
+                v="primary"
+                className="flex-1 text-xs py-2"
                 onClick={() =>
                   act(
                     () => api.patch(`/api/hospitals/${h.id}`, { available_beds: beds, icu_beds: icu }),
-                    'Hospital capacity updated live'
+                    `Hospital ${h.name} bed inventory updated!`
                   )
                 }
               >
-                Save Free Beds
+                Save Bed Inventory
               </Btn>
 
-              <Btn
-                v={h.receiving ? 'warn' : 'success'}
-                className="py-2"
+              <button
+                type="button"
                 onClick={() =>
                   act(
                     () => api.patch(`/api/hospitals/${h.id}`, { receiving: !h.receiving }),
-                    h.receiving ? 'Admission diverted' : 'Now receiving incoming emergency patients'
+                    `Hospital ${h.name} set to ${!h.receiving ? 'RECEIVING' : 'DIVERTED'}`
                   )
                 }
+                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+                  h.receiving
+                    ? 'bg-[#FDF2F2] hover:bg-[#FCE8E8] text-[#DC3545] border-[#DC3545]/30'
+                    : 'bg-[#F0F9F4] hover:bg-[#E2F4E9] text-[#198754] border-[#198754]/30'
+                }`}
               >
-                {h.receiving ? 'Divert Intake' : 'Resume Intake'}
-              </Btn>
+                {h.receiving ? 'Divert Intake' : 'Resume Receiving'}
+              </button>
             </div>
           </div>
         )}
-
-        <div className="text-[11px] text-slate-500 pt-1 text-right">
-          Telemetry synchronized: {fmtTime(h.updated_at)}
-        </div>
       </div>
     </Card>
   )
@@ -278,30 +229,27 @@ export default function Hospitals() {
   const { hospitals, user } = useApp()
   const act = useAct()
   const [registerOpen, setRegisterOpen] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    total_beds: 80,
-    available_beds: 15,
-    icu_beds: 4,
-    capabilities: ['trauma', 'icu'],
-    username: '',
-    password: '',
-  })
   const [busy, setBusy] = useState(false)
   const [regMsg, setRegMsg] = useState('')
+
+  const [form, setForm] = useState({
+    name: '',
+    lat: 13.0805,
+    lng: 80.2770,
+    phone: '+91-44-',
+    total_beds: 100,
+    available_beds: 15,
+    icu_beds: 4,
+    capabilities: 'trauma,icu,neuro',
+  })
 
   const isAdmin = user?.role === 'admin'
   const isHospitalStaff = user?.role === 'hospital'
 
-  // HOSPITAL MULTI-TENANCY & ISOLATION:
-  // If logged in as Hospital Staff, they can ONLY see their own hospital!
-  // If logged in as Admin, they see ALL hospitals.
   const displayedHospitals = isHospitalStaff
     ? hospitals.filter(h => h.id === user?.hospital_id)
     : hospitals
 
-  // For Admin: Count pending verifications
   const pendingCount = hospitals.filter(h => h.status === 'pending_verification').length
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -323,23 +271,23 @@ export default function Hospitals() {
   }
 
   return (
-    <div className="space-y-6 text-slate-100">
+    <div className="space-y-6 text-[#171717]">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0b1739]/90 border border-white/10 shadow-xl backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              {isHospitalStaff ? 'Hospital Trauma Admission Console' : 'Municipal Hospital Network'}
+            <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">
+              {isHospitalStaff ? 'Hospital Trauma Admission Console' : 'Regional Hospital Trauma Network'}
             </h1>
             {isHospitalStaff && (
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-[#F0F9F4] text-[#198754] border border-[#198754]/30">
                 Facility Portal
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             {isHospitalStaff
-              ? 'Private hospital console: Manage free trauma beds, ICU readiness, and incoming ambulance admissions.'
+              ? 'Private hospital console: Manage open trauma beds, ICU readiness, and incoming ambulance admissions.'
               : 'Central health authority command: Real-time bed oversight, capability triage, and hospital approvals.'}
           </p>
         </div>
@@ -348,7 +296,7 @@ export default function Hospitals() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setRegisterOpen(true)}
-            className="px-4 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition cursor-pointer"
+            className="px-4 py-2.5 rounded-lg font-bold text-xs bg-[#173B68] hover:bg-[#102A4C] text-white shadow-sm flex items-center gap-2 transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Register Facility</span>
@@ -360,27 +308,27 @@ export default function Hospitals() {
       {isAdmin && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat
-            label="Total Municipal Hospitals"
+            label="Total Network Hospitals"
             value={hospitals.length}
-            color="bg-blue-600"
+            color="bg-[#173B68]"
             icon={<Building2 className="w-5 h-5" />}
           />
           <Stat
             label="Active Receiving Centers"
             value={`${hospitals.filter(h => h.receiving && h.status !== 'pending_verification').length}/${hospitals.length}`}
-            color="bg-emerald-600"
+            color="bg-[#198754]"
             icon={<CheckCircle2 className="w-5 h-5" />}
           />
           <Stat
-            label="Available ICU Beds City-Wide"
+            label="Available ICU Beds Network-Wide"
             value={hospitals.reduce((acc, h) => acc + (h.icu_beds || 0), 0)}
-            color="bg-purple-600"
+            color="bg-[#356FA5]"
             icon={<HeartPulse className="w-5 h-5" />}
           />
           <Stat
             label="Pending Facility Approvals"
             value={pendingCount}
-            color={pendingCount > 0 ? 'bg-amber-600 animate-pulse' : 'bg-slate-700'}
+            color={pendingCount > 0 ? 'bg-[#D69E36]' : 'bg-[#94A3B8]'}
             icon={<ShieldCheck className="w-5 h-5" />}
           />
         </div>
@@ -389,158 +337,116 @@ export default function Hospitals() {
       {/* Hospital Privacy / Isolation Notice for Staff */}
       {isHospitalStaff && (
         <Alert kind="info">
-          <b>Facility Privacy Protection:</b> You are authenticated as {user.name}. You have exclusive access to manage your facility's bed inventory and patient admissions. Other hospital facilities in the municipal network cannot view your private operational records.
+          <b>Facility Privacy Protection:</b> You are authenticated as {user.name}. You have exclusive access to manage your facility's bed inventory and patient admissions.
         </Alert>
       )}
 
       {/* Hospital Cards Grid */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         {displayedHospitals.map(h => (
           <HospCard
             key={h.id + '-' + h.updated_at}
             h={h}
-            canEdit={isAdmin || user?.hospital_id === h.id}
+            canEdit={isAdmin || (isHospitalStaff && user?.hospital_id === h.id)}
             isAdmin={isAdmin}
           />
         ))}
       </div>
 
-      {displayedHospitals.length === 0 && (
-        <Card>
-          <div className="text-center py-10 space-y-2">
-            <Building2 className="w-10 h-10 text-slate-500 mx-auto" />
-            <div className="text-sm font-semibold text-slate-300">No hospital facilities found</div>
-            <p className="text-xs text-slate-500">Register a new hospital to join the emergency network.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Register New Hospital Modal */}
+      {/* Register Facility Modal */}
       {registerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-          <div className="bg-[#0b1739] border border-cyan-500/30 rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-5 text-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-cyan-600/20 text-cyan-400 grid place-items-center border border-cyan-500/30">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Register Hospital Facility</h3>
-                  <p className="text-xs text-slate-400">Join the ResQRoute AI Emergency Trauma Network</p>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <h3 className="font-bold text-base text-[#171717] flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#173B68]" />
+                <span>Register Emergency Trauma Center</span>
+              </h3>
               <button
                 onClick={() => setRegisterOpen(false)}
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white"
+                className="text-[#666666] hover:text-[#171717] text-sm font-semibold"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <form onSubmit={handleRegisterSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Hospital / Medical Center Name</label>
+                <label className="font-semibold text-[#171717] block mb-1">Hospital Facility Name *</label>
                 <input
-                  type="text"
-                  required
-                  placeholder="e.g. Apex Multi-Specialty Trauma Center"
+                  className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717] focus:outline-none focus:border-[#173B68]"
+                  placeholder="e.g. Apollo Trauma & Emergency Center"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#171717] block mb-1">Hotline Phone *</label>
+                  <input
+                    className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
+                    value={form.phone}
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-[#171717] block mb-1">Total Bed Capacity</label>
+                  <input
+                    type="number"
+                    className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
+                    value={form.total_beds}
+                    onChange={e => setForm({ ...form, total_beds: +e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#171717] block mb-1">Available ER Beds</label>
+                  <input
+                    type="number"
+                    className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
+                    value={form.available_beds}
+                    onChange={e => setForm({ ...form, available_beds: +e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-[#171717] block mb-1">Available ICU Beds</label>
+                  <input
+                    type="number"
+                    className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
+                    value={form.icu_beds}
+                    onChange={e => setForm({ ...form, icu_beds: +e.target.value })}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Emergency Trauma Hotline Phone</label>
+                <label className="font-semibold text-[#171717] block mb-1">Clinical Specialties (comma-separated)</label>
                 <input
-                  type="text"
-                  required
-                  placeholder="+91-44-2800-XXXX"
-                  value={form.phone}
-                  onChange={e => setForm({ ...form, phone: e.target.value })}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none font-mono"
+                  className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
+                  value={form.capabilities}
+                  onChange={e => setForm({ ...form, capabilities: e.target.value })}
+                  placeholder="trauma,icu,neuro,pediatric,burns"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">Total Beds</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={form.total_beds}
-                    onChange={e => setForm({ ...form, total_beds: +e.target.value })}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white text-center font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">Available Free</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.available_beds}
-                    onChange={e => setForm({ ...form, available_beds: +e.target.value })}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white text-center font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">ICU Beds</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.icu_beds}
-                    onChange={e => setForm({ ...form, icu_beds: +e.target.value })}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white text-center font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-3">
-                <div className="text-xs font-semibold text-cyan-300">Staff Portal Account Credentials</div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] text-slate-400 block mb-1">Username</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. apex_staff"
-                      value={form.username}
-                      onChange={e => setForm({ ...form, username: e.target.value })}
-                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-slate-400 block mb-1">Password</label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={form.password}
-                      onChange={e => setForm({ ...form, password: e.target.value })}
-                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs text-slate-300">
-                Notice: All registrations are submitted with <b>Pending Verification</b> status. The Chief Dispatch Controller must review and approve your facility before patient admissions are automatically routed.
-              </div>
-
-              <div className="flex gap-3 pt-2">
+              <div className="pt-3 flex gap-3">
+                <Btn v="primary" className="flex-1 py-2.5" busy={busy}>
+                  Submit Facility Registration
+                </Btn>
                 <button
                   type="button"
                   onClick={() => setRegisterOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2.5 rounded-lg border border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-cyan-500/25"
-                >
-                  {busy ? 'Registering...' : 'Submit for Verification'}
                 </button>
               </div>
             </form>

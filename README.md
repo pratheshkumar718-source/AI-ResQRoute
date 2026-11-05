@@ -94,6 +94,22 @@ run.bat  run.sh  .env.example
 | Want a clean slate | Settings → *Reset demo data* (admin), or delete `backend/data`. |
 | Ambulance never moves | Backend must run with `RESQ_AUTOSIM` unset/1; check the WebSocket indicator (bottom of sidebar). |
 
+## Render Deployment
+ResQRoute AI is fully pre-configured for Render deployment via the included `render.yaml` Blueprint or manual service setup:
+
+- **Frontend (Render Static Site):**
+  - **Root Directory:** `frontend`
+  - **Build Command:** `npm install && npm run build`
+  - **Publish Directory:** `dist`
+  - **SPA Rewrite Rule:** `/*` -> `/index.html` (Rewrite)
+  - **Environment Variables:** `VITE_API_URL` (backend Render URL), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+
+- **Backend (Render Web Service):**
+  - **Root Directory:** `backend`
+  - **Build Command:** `pip install -r requirements.txt && python -m app.model_download`
+  - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+  - **Environment Variables:** `DATABASE_URL` (Supabase Pooler), `DIRECT_URL`, `SUPABASE_SECRET_KEY`, `RESQ_SECRET_SALT`, `FRONTEND_URL`.
+
 ## Known limitations
 - Detection is a heuristic, not a trained model (`detection.py::Detector.analyse` is the extension point).
 - Routes/ETAs are simulated on a generated grid; demo speeds are accelerated (a leg takes ~12–40 s).

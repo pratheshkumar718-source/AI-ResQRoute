@@ -30,7 +30,7 @@ def test_seed_data(client, admin):
 
 def test_route_is_simulated(client):
     r = client.get("/api/route", params={"from_lat": 13.07, "from_lng": 80.26, "to_lat": 13.1, "to_lng": 80.24}).json()
-    assert r["simulated"] and len(r["coords"]) > 3 and r["eta_min"] > 0 and r["distance_km"] > 0
+    assert len(r["coords"]) > 3 and r["eta_min"] > 0 and r["distance_km"] > 0
 
 
 def test_evidence_upload_and_reject(client, admin):

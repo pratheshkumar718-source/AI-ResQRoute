@@ -571,7 +571,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       hospital_warning: null,
       created_at: new Date().toISOString(),
       completed_at: null,
-      evidence: [
+      evidence: body?.with_synthetic_frames === false ? [] : [
         { id: 1, url: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80', seq: 1, captured_at: new Date().toISOString() },
         { id: 2, url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80', seq: 2, captured_at: new Date().toISOString() },
         { id: 3, url: 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=600&q=80', seq: 3, captured_at: new Date().toISOString() },
@@ -851,7 +851,16 @@ export async function handleMockRequest(method: string, url: string, body?: any,
     const action = parts[4]
     const inc = incs.find(i => i.id === incId)
     if (inc) {
-      if (action === 'police-corridor') {
+      if (action === 'tracking') {
+        const events = [
+          { id: 1, event: 'detected', message: `Incident #${inc.id} detected by PyTorch Model (resqroute_accident_model.pt)`, ts: inc.created_at },
+          { id: 2, event: 'dispatched', message: 'Nearest ambulance unit allocated and dispatched to location', ts: inc.created_at },
+        ]
+        if (inc.green_corridor) {
+          events.push({ id: 3, event: 'police_corridor', message: 'Traffic Police: Green Corridor priority preemption ACTIVE', ts: new Date().toISOString() })
+        }
+        return events
+      } else if (action === 'police-corridor') {
         inc.green_corridor = !inc.green_corridor
       } else if (action === 'verify') {
         inc.status = 'dispatching'

@@ -22,3 +22,9 @@ backend/data/
 # OS & IDE
 .DS_Store
 Thumbs.db
+
+# PyTorch Model Weights
+*.pt
+*.pth
+
+

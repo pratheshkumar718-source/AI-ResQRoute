@@ -19,27 +19,27 @@ export default function Overview({ go }: { go: (p: string) => void }) {
   const totalFreeIcu = hospitals.reduce((acc, h) => acc + (h.icu_beds || 0), 0)
 
   return (
-    <div className="space-y-6 text-slate-100">
+    <div className="space-y-6 text-[#171717]">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0b1739]/90 border border-white/10 shadow-xl backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Central Operations Command</h1>
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Operations Command Grid</h1>
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30">
               SYNCHRONIZED RADAR
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Real-time cross-stakeholder oversight: AI surveillance cameras, ambulance units, police corridors, and hospital emergency trauma bays.
+          <p className="text-xs text-[#666666] mt-0.5">
+            Real-time cross-agency oversight: AI optical cameras, paramedic fleet units, police green corridors, and hospital trauma bays.
           </p>
         </div>
 
         {suspected.length > 0 && (
           <button
             onClick={() => go('incidents')}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 flex items-center gap-2 transition animate-pulse cursor-pointer"
+            className="px-3.5 py-2 rounded-lg text-xs font-bold bg-[#FDF9F0] text-[#855B14] border border-[#D69E36]/40 hover:bg-[#FAF3E0] flex items-center gap-2 transition cursor-pointer"
           >
-            <Clock className="w-4 h-4 text-amber-400" />
+            <Clock className="w-4 h-4 text-[#D69E36]" />
             <span>{suspected.length} Incident(s) Awaiting Dispatcher Verification</span>
           </button>
         )}
@@ -50,37 +50,37 @@ export default function Overview({ go }: { go: (p: string) => void }) {
         <Stat
           label="Active Emergencies"
           value={open.length}
-          color="bg-red-600"
+          color="bg-[#DC3545]"
           icon={<Siren className="w-5 h-5" />}
         />
         <Stat
           label="Awaiting Verification"
           value={suspected.length}
-          color="bg-amber-500"
+          color="bg-[#D69E36]"
           icon={<Clock className="w-5 h-5" />}
         />
         <Stat
           label="Available Fleet Units"
           value={`${availableAmbs.length}/${ambulances.length}`}
-          color="bg-emerald-600"
+          color="bg-[#198754]"
           icon={<Truck className="w-5 h-5" />}
         />
         <Stat
           label="Free Trauma Beds (ICU)"
           value={`${totalFreeBeds} (${totalFreeIcu})`}
-          color="bg-blue-600"
+          color="bg-[#173B68]"
           icon={<Building2 className="w-5 h-5" />}
         />
       </div>
 
       {/* Main Grid: Map & Live Incident Queue */}
-      <div className="grid lg:grid-cols-5 gap-5">
+      <div className="grid lg:grid-cols-5 gap-6">
         <Card
           className="lg:col-span-3"
           title="Live Emergency Map Radar"
           right={
             <button
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-[#173B68] hover:text-[#102A4C] flex items-center gap-1 cursor-pointer"
               onClick={() => go('map')}
             >
               <span>Full Screen Map</span>
@@ -88,7 +88,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
             </button>
           }
         >
-          <div className="rounded-xl overflow-hidden border border-white/10">
+          <div className="rounded-lg overflow-hidden border border-[#E2E8F0]">
             <MapView
               ambulances={ambulances}
               hospitals={hospitals}
@@ -106,7 +106,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
           title="Incident Activity Stream"
           right={
             <button
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-[#173B68] hover:text-[#102A4C] flex items-center gap-1 cursor-pointer"
               onClick={() => go('incidents')}
             >
               <span>Manage All</span>
@@ -120,21 +120,21 @@ export default function Overview({ go }: { go: (p: string) => void }) {
               hint="Go to AI Surveillance → Start Local Cam and enable AI Monitoring to test PyTorch model detection."
             />
           ) : (
-            <ul className="divide-y divide-white/10 max-h-[400px] overflow-y-auto pr-1">
+            <ul className="divide-y divide-[#E2E8F0] max-h-[400px] overflow-y-auto pr-1">
               {incidents.slice(0, 8).map(i => (
                 <li
                   key={i.id}
-                  className="py-3 px-2 flex items-center justify-between gap-3 cursor-pointer hover:bg-white/[0.04] rounded-xl transition"
+                  className="py-3 px-2 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F7F8FA] rounded-lg transition"
                   onClick={() => {
                     setSelectedId(i.id)
                     go('incidents')
                   }}
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-sm text-white truncate">
+                    <div className="font-semibold text-xs sm:text-sm text-[#171717] truncate">
                       #{i.id} · {i.location_name}
                     </div>
-                    <div className="text-xs text-slate-400 mt-0.5">{fmtDT(i.created_at)}</div>
+                    <div className="text-[11px] text-[#666666] mt-0.5">{fmtDT(i.created_at)}</div>
                   </div>
                   <Badge s={i.status} />
                 </li>
@@ -144,15 +144,15 @@ export default function Overview({ go }: { go: (p: string) => void }) {
         </Card>
       </div>
 
-      {/* Multi-Persona Cross-Fleet Overview Card for Admin */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* Multi-Persona Cross-Fleet Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Ambulance Fleet Quick Matrix */}
         <Card
           title="Ambulance Fleet Status"
           right={
             <button
               onClick={() => go('ambulances')}
-              className="text-xs text-cyan-400 hover:underline cursor-pointer"
+              className="text-xs text-[#173B68] hover:underline cursor-pointer font-medium"
             >
               Manage Units
             </button>
@@ -162,20 +162,19 @@ export default function Overview({ go }: { go: (p: string) => void }) {
             {ambulances.slice(0, 5).map(a => (
               <div
                 key={a.id}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-white/5 text-xs"
+                className="flex items-center justify-between p-2 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-xs"
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      a.status === 'available'
-                        ? 'bg-emerald-400 animate-pulse'
+                    className={`w-2 h-2 rounded-full ${a.status === 'available'
+                        ? 'bg-[#198754]'
                         : a.status === 'busy'
-                        ? 'bg-rose-400'
-                        : 'bg-slate-500'
-                    }`}
+                          ? 'bg-[#DC3545]'
+                          : 'bg-[#94A3B8]'
+                      }`}
                   />
-                  <b className="text-white font-mono">{a.code}</b>
-                  <span className="text-slate-400 truncate max-w-[120px]">{a.driver_name}</span>
+                  <b className="text-[#171717] font-mono">{a.code}</b>
+                  <span className="text-[#666666] truncate max-w-[120px]">{a.driver_name}</span>
                 </div>
                 <Badge s={a.status} />
               </div>
@@ -189,7 +188,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
           right={
             <button
               onClick={() => go('hospitals')}
-              className="text-xs text-cyan-400 hover:underline cursor-pointer"
+              className="text-xs text-[#173B68] hover:underline cursor-pointer font-medium"
             >
               All Facilities
             </button>
@@ -199,12 +198,12 @@ export default function Overview({ go }: { go: (p: string) => void }) {
             {hospitals.slice(0, 5).map(h => (
               <div
                 key={h.id}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-white/5 text-xs"
+                className="flex items-center justify-between p-2 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-xs"
               >
                 <div className="min-w-0 pr-2">
-                  <div className="text-white font-semibold truncate">{h.name}</div>
-                  <div className="text-[11px] text-slate-400">
-                    Free Beds: <b className="text-emerald-400">{h.available_beds}</b> · ICU: <b>{h.icu_beds}</b>
+                  <div className="text-[#171717] font-semibold truncate">{h.name}</div>
+                  <div className="text-[11px] text-[#666666]">
+                    Free Beds: <b className="text-[#198754]">{h.available_beds}</b> · ICU: <b>{h.icu_beds}</b>
                   </div>
                 </div>
                 <Badge s={h.receiving ? 'receiving' : 'diverted'} />
@@ -219,7 +218,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
           right={
             <button
               onClick={() => go('camera')}
-              className="text-xs text-cyan-400 hover:underline cursor-pointer"
+              className="text-xs text-[#173B68] hover:underline cursor-pointer font-medium"
             >
               Launch Feeds
             </button>
@@ -229,14 +228,14 @@ export default function Overview({ go }: { go: (p: string) => void }) {
             {cameras.slice(0, 4).map(c => (
               <div
                 key={c.id}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-white/5 text-xs"
+                className="flex items-center justify-between p-2 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-xs"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <Camera className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span className="text-white font-medium truncate">{c.name}</span>
+                  <Camera className="w-3.5 h-3.5 text-[#173B68] shrink-0" />
+                  <span className="text-[#171717] font-medium truncate">{c.name}</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  ONLINE
+                <span className="text-[10px] font-mono font-bold text-[#198754] bg-[#F0F9F4] px-2 py-0.5 rounded border border-[#198754]/30">
+                  ONLINE (90%)
                 </span>
               </div>
             ))}

@@ -19,22 +19,22 @@ def seed(reset=False):
         if db.query(User).count():
             return
         ambs = [
-            Ambulance(code="AMB-01", driver_name="Paramedic Arun Kumar", phone="+91-98401-10001", lat=13.0720, lng=80.2600, status="available", crew_level="ALS"),
-            Ambulance(code="AMB-02", driver_name="Paramedic Bala Sundaram", phone="+91-98401-10002", lat=13.0900, lng=80.2800, status="available", crew_level="ALS"),
-            Ambulance(code="AMB-03", driver_name="Paramedic Charu Latha", phone="+91-98401-10003", lat=13.0600, lng=80.2300, status="busy", crew_level="BLS", note="En route to hospital transfer"),
-            Ambulance(code="AMB-04", driver_name="Paramedic Dev Anand", phone="+91-98401-10004", lat=13.1100, lng=80.3000, status="offline", crew_level="BLS", note="Scheduled maintenance inspection"),
-            Ambulance(code="AMB-05", driver_name="Paramedic Esha Sharma", phone="+91-98401-10005", lat=13.0450, lng=80.3100, status="available", crew_level="ALS", note="South Zone Highway Patrol"),
+            Ambulance(code="AMB-01", driver_name="Paramedic Arun Kumar", phone="+91-98401-10001", lat=13.0780, lng=80.2590, status="available", crew_level="ALS"),
+            Ambulance(code="AMB-02", driver_name="Paramedic Bala Sundaram", phone="+91-98401-10002", lat=13.0830, lng=80.2750, status="available", crew_level="ALS"),
+            Ambulance(code="AMB-03", driver_name="Paramedic Charu Latha", phone="+91-98401-10003", lat=13.0670, lng=80.2410, status="busy", crew_level="BLS", note="En route to hospital transfer"),
+            Ambulance(code="AMB-04", driver_name="Paramedic Dev Anand", phone="+91-98401-10004", lat=13.1020, lng=80.2580, status="offline", crew_level="BLS", note="Scheduled maintenance inspection"),
+            Ambulance(code="AMB-05", driver_name="Paramedic Esha Sharma", phone="+91-98401-10005", lat=13.0360, lng=80.2670, status="available", crew_level="ALS", note="South Zone Highway Patrol"),
         ]
         hosps = [
-            Hospital(name="City Central General Hospital", lat=13.0780, lng=80.2650, phone="+91-44-2800-1001", total_beds=120, available_beds=14, icu_beds=3, capabilities="trauma,icu,neuro"),
-            Hospital(name="Riverside Emergency Medical Centre", lat=13.1050, lng=80.2400, phone="+91-44-2800-1002", total_beds=80, available_beds=6, icu_beds=0, capabilities="trauma,pediatric"),
-            Hospital(name="Lakeview Trauma & Specialty Hospital", lat=13.0550, lng=80.3000, phone="+91-44-2800-1003", total_beds=60, available_beds=9, icu_beds=2, capabilities="icu,burns,neuro,pediatric,trauma"),
+            Hospital(name="City Central General Hospital", lat=13.0805, lng=80.2770, phone="+91-44-2800-1001", total_beds=120, available_beds=14, icu_beds=3, capabilities="trauma,icu,neuro"),
+            Hospital(name="Riverside Emergency Medical Centre", lat=13.0785, lng=80.2440, phone="+91-44-2800-1002", total_beds=80, available_beds=6, icu_beds=0, capabilities="trauma,pediatric"),
+            Hospital(name="Lakeview Trauma & Specialty Hospital", lat=13.0545, lng=80.2620, phone="+91-44-2800-1003", total_beds=60, available_beds=9, icu_beds=2, capabilities="icu,burns,neuro,pediatric,trauma"),
         ]
         cams = [
-            Camera(name="CAM-01 Central Junction", location_name="Central Junction, Sector 4", lat=13.0690, lng=80.2520),
-            Camera(name="CAM-02 North Ring Flyover", location_name="North Ring Express Flyover", lat=13.0990, lng=80.2680),
-            Camera(name="CAM-03 Market Arterial Road", location_name="Market Road Intersect", lat=13.0560, lng=80.2780),
-            Camera(name="CAM-04 Riverfront Bridge", location_name="Riverfront Expressway Bridge", lat=13.0850, lng=80.3050),
+            Camera(name="CAM-01 Central Junction", location_name="Central Junction, Sector 4", lat=13.0820, lng=80.2730),
+            Camera(name="CAM-02 North Ring Flyover", location_name="North Ring Express Flyover", lat=13.0980, lng=80.2660),
+            Camera(name="CAM-03 Market Arterial Road", location_name="Market Road Intersect", lat=13.0410, lng=80.2330),
+            Camera(name="CAM-04 Riverfront Bridge", location_name="Riverfront Expressway Bridge", lat=13.0690, lng=80.2820),
         ]
         db.add_all(ambs + hosps + cams)
         db.flush()

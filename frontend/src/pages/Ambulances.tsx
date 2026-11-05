@@ -11,48 +11,48 @@ export default function Ambulances() {
   )
 
   return (
-    <div className="space-y-6 text-slate-100">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Municipal Emergency Ambulance Fleet</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+    <div className="space-y-6 text-[#171717]">
+      <div className="pb-2 border-b border-[#E2E8F0]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Ambulance Fleet Status & Readiness</h1>
+        <p className="text-xs text-[#666666] mt-0.5">
           Real-time fleet readiness, paramedic crew assignment, telemetry tracking, and dispatch eligibility.
         </p>
       </div>
 
       <Card title="Active Emergency Fleet Units">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="text-left text-slate-400 border-b border-white/10 text-xs uppercase tracking-wider">
-                <th className="py-3 px-2">Unit Code</th>
+              <tr className="text-left text-[#666666] border-b border-[#E2E8F0] text-xs uppercase tracking-wider">
+                <th className="py-2.5 px-2">Unit Code</th>
                 <th>Assigned Paramedic</th>
                 <th>Emergency Contact</th>
                 <th>Crew Capability</th>
-                <th>Simulated Telemetry</th>
+                <th>Road Telemetry</th>
                 <th>Duty Status</th>
                 <th>Dispatcher Overwrite</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[#E2E8F0]">
               {ambulances.map(a => (
-                <tr key={a.id} className="hover:bg-white/[0.02] transition">
-                  <td className="py-3 px-2 font-mono font-bold text-cyan-300">{a.code}</td>
-                  <td className="font-medium text-white">{a.driver_name}</td>
-                  <td className="font-mono text-xs text-slate-400">{a.phone}</td>
+                <tr key={a.id} className="hover:bg-[#F7F8FA] transition">
+                  <td className="py-3 px-2 font-mono font-bold text-[#173B68]">{a.code}</td>
+                  <td className="font-semibold text-[#171717]">{a.driver_name}</td>
+                  <td className="font-mono text-xs text-[#666666]">{a.phone}</td>
                   <td>
-                    <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 text-xs font-mono font-bold">
+                    <span className="px-2 py-0.5 rounded bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 text-xs font-mono font-bold">
                       {a.crew_level}
                     </span>
                   </td>
-                  <td className="text-xs text-slate-400 font-mono">
+                  <td className="text-xs text-[#666666] font-mono">
                     {a.lat.toFixed(4)}, {a.lng.toFixed(4)}
                   </td>
                   <td>
                     <Badge s={a.status} />
                     {busyIds.has(a.id) && (
-                      <span className="text-xs text-cyan-400 font-bold ml-1.5 animate-pulse">ON SCENE</span>
+                      <span className="text-xs text-[#DC3545] font-bold ml-1.5">ACTIVE LEG</span>
                     )}
-                    {a.note && <div className="text-[11px] text-slate-400 mt-0.5">{a.note}</div>}
+                    {a.note && <div className="text-[11px] text-[#666666] mt-0.5">{a.note}</div>}
                   </td>
                   <td className="space-x-1.5 whitespace-nowrap">
                     {(['available', 'busy', 'offline', 'maintenance'] as const)
@@ -78,9 +78,16 @@ export default function Ambulances() {
         </div>
       </Card>
 
-      <div className="rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-        <MapView ambulances={ambulances} hospitals={hospitals} incidents={incidents} height={420} />
-      </div>
+      <Card title="Live Ambulance Telemetry Map">
+        <div className="rounded-lg overflow-hidden border border-[#E2E8F0]">
+          <MapView
+            ambulances={ambulances}
+            hospitals={hospitals}
+            incidents={incidents}
+            height={360}
+          />
+        </div>
+      </Card>
 
       <SystemNote />
     </div>

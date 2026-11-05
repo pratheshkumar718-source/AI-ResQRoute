@@ -1,4 +1,5 @@
-import asyncio, hashlib, json, secrets, uuid
+import asyncio, hashlib, json, secrets, uuid, os
+from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Header
@@ -58,10 +59,19 @@ async def lifespan(app):
     yield
 
 
-app = FastAPI(title="ResQRoute AI — local prototype API", lifespan=lifespan)
+frontend_env = os.environ.get("FRONTEND_URL", os.environ.get("ALLOWED_ORIGINS", "*"))
+if frontend_env and frontend_env != "*":
+    cors_origins = [o.strip() for o in frontend_env.split(",") if o.strip()]
+    for local_origin in ["http://localhost:5173", "http://127.0.0.1:5173"]:
+        if local_origin not in cors_origins:
+            cors_origins.append(local_origin)
+else:
+    cors_origins = ["*"]
+
+app = FastAPI(title="ResQRoute AI — Emergency Response API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -288,7 +298,7 @@ def create_incident(b: IncidentIn, db: Session = Depends(get_db), u: User = Depe
     db.refresh(inc)
     unit_str = asg.ambulance.code if asg and asg.ambulance else "nearest unit"
     emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-          "message": f"🚨 ACCIDENT DETECTED by AI Model at {inc.location_name}! Confidence: {conf_str} (>= 80% Threshold). Nearest ambulance ({unit_str}) dispatched & Nearest hospital assigned based on seat availability: {hosp_name} ({hosp_beds} beds free)."})
+          "message": f"🚨 ACCIDENT DETECTED by AI Model at {inc.location_name}! Confidence: {conf_str} (>= 90% Threshold). Nearest ambulance ({unit_str}) dispatched & Nearest hospital assigned based on seat availability: {hosp_name} ({hosp_beds} beds free)."})
     return ser_inc(inc)
 
 
@@ -323,7 +333,7 @@ class Verify(BaseModel):
 
 
 @app.post("/api/incidents/{iid}/verify")
-def verify(iid: int, b: Verify, db: Session = Depends(get_db), u: User = Depends(need())):
+def verify(iid: int, b: Verify, db: Session = Depends(get_db), u: User = Depends(need("police"))):
     inc = get_or_404(db, Incident, iid)
     if inc.status not in ("suspected", "dispatching"):
         raise HTTPException(409, f"Incident is '{inc.status}', cannot be verified")
@@ -355,7 +365,7 @@ def verify(iid: int, b: Verify, db: Session = Depends(get_db), u: User = Depends
 
 
 @app.post("/api/incidents/{iid}/dispatch")
-def redispatch(iid: int, db: Session = Depends(get_db), u: User = Depends(need())):
+def redispatch(iid: int, db: Session = Depends(get_db), u: User = Depends(need("police"))):
     inc = get_or_404(db, Incident, iid)
     if inc.status not in ("no_ambulance", "dispatching"):
         raise HTTPException(409, f"Cannot (re)dispatch an incident that is '{inc.status}'")
@@ -832,8 +842,9 @@ def history(db: Session = Depends(get_db), u: User = Depends(user_dep)):
 
 class SimulateAccidentIn(BaseModel):
     camera_id: int = 1
-    confidence: float = 0.92
-    threshold: float = 0.80
+    confidence: float = 0.94
+    threshold: float = 0.90
+    with_synthetic_frames: bool = True
 
 
 @app.post("/api/detection/simulate")
@@ -854,12 +865,13 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
     )
     db.add(inc); db.flush()
 
-    # Generate 6 burst evidence frames and attach them
-    frames = detection.generate_accident_evidence_frames(cam.id, confidence=b.confidence, location_name=loc_name, num_frames=6)
-    for seq, frame_bytes in enumerate(frames, start=1):
-        fn = f"inc{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
-        (EVIDENCE / fn).write_bytes(frame_bytes)
-        db.add(Evidence(incident_id=inc.id, filename=fn, seq=seq))
+    # Generate 6 burst evidence frames and attach them only when requested
+    if b.with_synthetic_frames:
+        frames = detection.generate_accident_evidence_frames(cam.id, confidence=b.confidence, location_name=loc_name, num_frames=6)
+        for seq, frame_bytes in enumerate(frames, start=1):
+            fn = f"inc{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
+            (EVIDENCE / fn).write_bytes(frame_bytes)
+            db.add(Evidence(incident_id=inc.id, filename=fn, seq=seq))
 
     # 1. Nearest Ambulance Assignment
     asg = dispatch(db, inc, "PyTorch Deep Learning Surveillance (Simulation)")
@@ -883,12 +895,12 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
 
     audit(db, u.username, "accident_detected_simulated", "incident", inc.id, f"source=PyTorch AI Model confidence={conf_str}")
     track(db, inc.id, asg.id if asg else None, "detected",
-          f"PyTorch Deep Learning Model (resqroute_accident_model.pt) detected collision with {conf_str} confidence (crosses 80% threshold). 6 evidence screenshots generated.")
+          f"PyTorch Deep Learning Model (resqroute_accident_model.pt) detected collision with {conf_str} confidence (crosses 90% threshold). 6 evidence screenshots generated.")
     db.commit()
     db.refresh(inc)
 
     emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-          "message": f"🚨 ACCIDENT DETECTED by PyTorch AI Model ({conf_str} >= 80% Threshold) at {loc_name}! Nearest Ambulance ({unit_str}) dispatched & Nearest Hospital by Seat Availability ({hosp_name} - {hosp_beds} Beds Free) assigned!"})
+          "message": f"🚨 ACCIDENT DETECTED by PyTorch AI Model ({conf_str} >= 90% Threshold) at {loc_name}! Nearest Ambulance ({unit_str}) dispatched & Nearest Hospital by Seat Availability ({hosp_name} - {hosp_beds} Beds Free) assigned!"})
     if asg:
         emit({"type": "assignment_updated", "incident_id": inc.id, "ambulance_id": asg.ambulance_id,
               "message": f"Emergency Dispatch Call for {unit_str}: Accident at {loc_name}. 6 screenshots transmitted. Assigned Hospital: {hosp_name} ({hosp_beds} Beds Free).", "level": "warning"})
@@ -900,17 +912,19 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
 async def detect_frame(
     camera_id: int = Form(...),
     file: UploadFile = File(...),
-    threshold: float = Form(0.80),
+    threshold: float = Form(0.90),
     u: User = Depends(need())
 ):
     try:
         return detection.detector.analyse(camera_id, await file.read(), threshold=threshold)
     except ValueError as e:
         raise HTTPException(422, str(e))
+
+
 @app.post("/api/detection/upload-video")
 async def detect_upload_video(
     camera_id: int = Form(1),
-    threshold: float = Form(0.80),
+    threshold: float = Form(0.90),
     auto_dispatch: bool = Form(True),
     file: UploadFile = File(...),
     u: User = Depends(need()),
@@ -965,7 +979,7 @@ async def detect_upload_video(
         unit_str = asg.ambulance.code if asg and asg.ambulance else "AMB-01"
 
         emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-              "message": f"🚨 COLLISION DETECTED in Uploaded Video ({round(analysis.get('peak_probability', 0.94)*100)}% >= 80% level)! {unit_str} dispatched & {hosp_name} ({hosp_beds} seats free) assigned!"})
+              "message": f"🚨 COLLISION DETECTED in Uploaded Video ({round(analysis.get('peak_probability', 0.94)*100)}% >= 90% level)! {unit_str} dispatched & {hosp_name} ({hosp_beds} seats free) assigned!"})
 
         incident_data = ser_inc(inc)
 
@@ -975,12 +989,32 @@ async def detect_upload_video(
         "filename": file.filename,
     }
 
+
+DEFAULT_THRESHOLD = 0.90
+_current_threshold = DEFAULT_THRESHOLD
+
+
+@app.get("/api/detection/threshold")
+def get_detection_threshold():
+    return {"threshold": _current_threshold, "default": DEFAULT_THRESHOLD}
+
+
+@app.post("/api/detection/threshold")
+def set_detection_threshold(body: dict, u: User = Depends(need(["admin", "police"]))):
+    global _current_threshold
+    val = float(body.get("threshold", DEFAULT_THRESHOLD))
+    val = max(0.50, min(0.99, val))
+    _current_threshold = round(val, 2)
+    return {"ok": True, "threshold": _current_threshold}
+
 @app.get("/api/detection/model-status")
 def detect_status(u: User = Depends(user_dep)):
     d = detection.detector
+    model_file = Path(d.model_path).name if d.model_path else "resqroute_accident_model - Copy.pt"
     return {
         "model_active": d.model_loaded,
-        "model_name": f"{d.architecture.upper()} (resqroute_accident_model.pt)",
+        "model_name": f"{d.architecture.upper()} ({model_file})",
+        "model_file": model_file,
         "model_path": d.model_path,
         "config_path": d.config_path,
         "architecture": d.architecture,
@@ -1032,3 +1066,10 @@ async def ws_endpoint(ws: WebSocket):
         manager.drop(ws)
     except Exception:
         manager.drop(ws)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    host = os.environ.get("HOST", "0.0.0.0")
+    uvicorn.run("app.main:app", host=host, port=port, reload=False)

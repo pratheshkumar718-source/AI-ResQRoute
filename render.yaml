@@ -1,0 +1,71 @@
+services:
+  # ---------------------------------------------------------
+  # ResQRoute AI — Backend Web Service (FastAPI + PyTorch)
+  # ---------------------------------------------------------
+  - type: web
+    name: resqroute-backend
+    runtime: python
+    rootDir: backend
+    plan: starter
+    buildCommand: pip install -r requirements.txt && python -m app.model_download
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: RESQ_SECRET_SALT
+        generateValue: true
+      - key: MODEL_DOWNLOAD_URL
+        sync: false
+      - key: MODEL_SHA256
+        value: 5b40e474adeeb6225eb4228055d90f836f92c28cce109d497c423676e7851711
+      - key: MODEL_DOWNLOAD_TOKEN
+        sync: false
+      - key: FRONTEND_URL
+        fromService:
+          name: resqroute-frontend
+          type: web
+          property: host
+
+  # ---------------------------------------------------------
+  # ResQRoute AI — Frontend Static Site (React + Vite + SPA)
+  # ---------------------------------------------------------
+  - type: web
+    name: resqroute-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: resqroute-backend
+          type: web
+          property: host
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+

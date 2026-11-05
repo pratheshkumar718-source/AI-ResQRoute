@@ -9,8 +9,8 @@ import heapq, math, random, json, urllib.request
 from functools import lru_cache
 
 N = 14
-LAT0, LAT1 = 13.040, 13.130
-LNG0, LNG1 = 80.200, 80.320
+LAT0, LAT1 = 13.030, 13.120
+LNG0, LNG1 = 80.220, 80.285
 BBOX = {"min_lat": LAT0, "max_lat": LAT1, "min_lng": LNG0, "max_lng": LNG1}
 
 
