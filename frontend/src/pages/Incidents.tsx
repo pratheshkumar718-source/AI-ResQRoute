@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Check, X, AlertOctagon, RefreshCw, ShieldAlert, Radio, Navigation, Eye, ZoomIn } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Empty, Alert, useAct, DemoNote } from '../components/ui'
-import { api, activeAssignment, fmtDT, fmtTime, Incident } from '../lib/api'
+import { api, activeAssignment, fmtDT, fmtTime, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 
 const pct = (c: number | null) => (c == null ? 'n/a (test trigger)' : Math.round(c * 100) + '%')
 
@@ -263,10 +263,18 @@ export default function Incidents() {
                       <button
                         key={e.id}
                         type="button"
-                        onClick={() => setZoom(e.url)}
+                        onClick={() => setZoom(resolveEvidenceUrl(e.url))}
                         className="group relative rounded-lg overflow-hidden border border-[#CBD5E1] hover:border-[#173B68] transition cursor-pointer"
                       >
-                        <img src={e.url} className="aspect-video object-cover w-full group-hover:scale-105 transition" />
+                        <img
+                          src={resolveEvidenceUrl(e.url)}
+                          alt={`Evidence frame ${e.seq}`}
+                          onError={(ev) => {
+                            ev.currentTarget.onerror = null
+                            ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+                          }}
+                          className="aspect-video object-cover w-full group-hover:scale-105 transition"
+                        />
                         <div className="p-1 text-[10px] text-[#666666] bg-[#FAFBFD] border-t border-[#E2E8F0] flex items-center justify-between">
                           <span>Frame {e.seq}</span>
                           <ZoomIn className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
@@ -380,7 +388,15 @@ export default function Incidents() {
           onClick={() => setZoom(null)}
         >
           <div className="bg-white p-2 rounded-xl max-h-[90vh] max-w-[90vw] shadow-2xl">
-            <img src={zoom} className="max-h-[80vh] max-w-full rounded-lg object-contain" />
+            <img
+              src={resolveEvidenceUrl(zoom)}
+              alt="Enlarged evidence frame"
+              onError={(ev) => {
+                ev.currentTarget.onerror = null
+                ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+              }}
+              className="max-h-[80vh] max-w-full rounded-lg object-contain"
+            />
             <div className="text-center text-xs text-[#666666] mt-1.5 font-medium">Click anywhere to close preview</div>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Empty, Alert, useAct, SystemNote } from '../components/ui'
 import MapView from '../components/MapView'
 import { routesFor } from '../components/RouteHelpers'
-import { api, Incident } from '../lib/api'
+import { api, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 import { sound } from '../lib/audio'
 
 const NEEDS = ['trauma', 'icu', 'neuro', 'pediatric', 'burns']
@@ -196,8 +196,20 @@ function Active({ inc }: { inc: Incident }) {
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                   {inc.evidence.slice(0, 6).map((e, idx) => (
-                    <div key={e.id} className="relative group rounded-md overflow-hidden border border-[#CBD5E1]">
-                      <img src={e.url} className="aspect-video object-cover w-full" />
+                    <div
+                      key={e.id}
+                      onClick={() => setZoomUrl(resolveEvidenceUrl(e.url))}
+                      className="relative group rounded-md overflow-hidden border border-[#CBD5E1] cursor-pointer"
+                    >
+                      <img
+                        src={resolveEvidenceUrl(e.url)}
+                        alt={`Evidence frame ${idx + 1}`}
+                        onError={(ev) => {
+                          ev.currentTarget.onerror = null
+                          ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+                        }}
+                        className="aspect-video object-cover w-full group-hover:scale-105 transition"
+                      />
                       <span className="absolute bottom-0.5 right-0.5 bg-black/70 text-[9px] px-1 rounded text-white font-mono">
                         #{idx + 1}
                       </span>
@@ -575,10 +587,18 @@ export default function Driver() {
                   {offer.i.evidence.slice(0, 6).map((e, idx) => (
                     <div
                       key={e.id}
-                      onClick={() => setZoomUrl(e.url)}
+                      onClick={() => setZoomUrl(resolveEvidenceUrl(e.url))}
                       className="relative rounded-lg overflow-hidden border border-[#CBD5E1] aspect-video group cursor-pointer hover:border-[#173B68] transition"
                     >
-                      <img src={e.url} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                      <img
+                        src={resolveEvidenceUrl(e.url)}
+                        alt={`Evidence frame ${idx + 1}`}
+                        onError={(ev) => {
+                          ev.currentTarget.onerror = null
+                          ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition"
+                      />
                       <span className="absolute bottom-1 left-1.5 text-[9px] font-mono text-white font-bold bg-black/60 px-1 rounded">
                         Frame #{idx + 1} (+{idx * 3}s)
                       </span>
@@ -886,7 +906,15 @@ export default function Driver() {
           onClick={() => setZoomUrl(null)}
         >
           <div className="max-w-3xl w-full bg-white border border-[#CBD5E1] rounded-xl overflow-hidden shadow-2xl p-2">
-            <img src={zoomUrl} className="w-full h-auto rounded-lg object-contain max-h-[80vh]" />
+            <img
+              src={resolveEvidenceUrl(zoomUrl)}
+              alt="Enlarged collision frame"
+              onError={(ev) => {
+                ev.currentTarget.onerror = null
+                ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+              }}
+              className="w-full h-auto rounded-lg object-contain max-h-[80vh]"
+            />
             <div className="p-2 text-center text-xs text-[#666666]">
               High-resolution collision evidence frame · Click anywhere to close
             </div>

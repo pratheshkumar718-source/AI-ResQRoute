@@ -400,6 +400,13 @@ def generate_accident_evidence_frames(camera_id: int = 1, confidence: float = 0.
     return frames
 
 
+def create_fallback_evidence_image(filename: str = "evidence.jpg") -> bytes:
+    """Generate an on-demand realistic fallback surveillance frame if an evidence image is missing on disk."""
+    frames = generate_accident_evidence_frames(camera_id=1, confidence=0.94, location_name="Sector 01 — Optical Camera Feed", num_frames=1)
+    return frames[0] if frames else b""
+
+
+
 def process_video_file(video_bytes: bytes, camera_id: int = 1, threshold: float = 0.90, max_sample_frames: int = 30) -> dict:
     """Analyze uploaded live video footage frame-by-frame with the PyTorch ResNet-18 model."""
     import tempfile

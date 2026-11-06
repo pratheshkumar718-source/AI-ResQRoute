@@ -108,7 +108,7 @@ def ser_inc(i: Incident):
             "selected_hospital_phone": sh.phone if sh else None,
             "hospital_warning": i.hospital_warning,
             "is_demo": i.is_demo, "created_at": iso(i.created_at), "completed_at": iso(i.completed_at),
-            "evidence": [{"id": e.id, "url": f"/evidence/{e.filename}", "seq": e.seq, "captured_at": iso(e.captured_at)} for e in i.evidence],
+            "evidence": [{"id": e.id, "url": f"/evidence/{e.filename}", "filename": e.filename, "seq": e.seq, "captured_at": iso(e.captured_at)} for e in i.evidence],
             "assignments": [ser_asg(a) for a in i.assignments]}
 
 

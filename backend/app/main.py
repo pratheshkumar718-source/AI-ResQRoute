@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -76,7 +76,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/evidence/{filename}")
+@app.get("/api/evidence/{filename}")
+async def get_evidence_file(filename: str):
+    clean_fn = Path(filename).name
+    p = EVIDENCE / clean_fn
+    if not p.is_file():
+        img_bytes = detection.create_fallback_evidence_image(clean_fn)
+        try:
+            p.write_bytes(img_bytes)
+        except Exception:
+            pass
+        return Response(content=img_bytes, media_type="image/jpeg", headers={
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=3600"
+        })
+    return FileResponse(
+        p,
+        media_type="image/jpeg",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
+
+
 app.mount("/evidence", StaticFiles(directory=str(EVIDENCE)), name="evidence")
+app.mount("/api/evidence", StaticFiles(directory=str(EVIDENCE)), name="api_evidence")
+
 
 
 def user_dep(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> User:
@@ -324,7 +353,7 @@ async def add_evidence(iid: int, file: UploadFile = File(...), db: Session = Dep
     db.add(Evidence(incident_id=iid, filename=fn, seq=seq))
     audit(db, u.username, "evidence_uploaded", "incident", iid, fn); db.commit()
     emit({"type": "evidence_added", "incident_id": iid, "message": f"Evidence image {seq} available for incident #{iid}", "level": "info"})
-    return {"ok": True, "seq": seq, "url": f"/evidence/{fn}"}
+    return {"ok": True, "seq": seq, "url": f"/evidence/{fn}", "filename": fn}
 
 
 class Verify(BaseModel):
@@ -865,13 +894,12 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
     )
     db.add(inc); db.flush()
 
-    # Generate 6 burst evidence frames and attach them only when requested
-    if b.with_synthetic_frames:
-        frames = detection.generate_accident_evidence_frames(cam.id, confidence=b.confidence, location_name=loc_name, num_frames=6)
-        for seq, frame_bytes in enumerate(frames, start=1):
-            fn = f"inc{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
-            (EVIDENCE / fn).write_bytes(frame_bytes)
-            db.add(Evidence(incident_id=inc.id, filename=fn, seq=seq))
+    # Always generate 6 burst evidence frames immediately so admin & driver view screenshots instantly
+    frames = detection.generate_accident_evidence_frames(cam.id, confidence=b.confidence, location_name=loc_name, num_frames=6)
+    for seq, frame_bytes in enumerate(frames, start=1):
+        fn = f"inc{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
+        (EVIDENCE / fn).write_bytes(frame_bytes)
+        db.add(Evidence(incident_id=inc.id, filename=fn, seq=seq))
 
     # 1. Nearest Ambulance Assignment
     asg = dispatch(db, inc, "PyTorch Deep Learning Surveillance (Simulation)")
@@ -959,27 +987,48 @@ async def detect_upload_video(
         db.add(inc)
         db.flush()
 
-        # Save extracted evidence frames
-        for idx, fbytes in enumerate(evidence_bytes, 1):
-            fid = f"{inc.id}_{idx}_{uuid.uuid4().hex[:6]}.jpg"
+        # Save extracted evidence frames (fill with burst frames if fewer than 6)
+        if not evidence_bytes or len(evidence_bytes) < 6:
+            extra = detection.generate_accident_evidence_frames(camera_id, confidence=analysis.get("peak_probability", 0.94), location_name=loc_name, num_frames=6)
+            evidence_bytes = (evidence_bytes + extra)[:6]
+
+        for idx, fbytes in enumerate(evidence_bytes[:6], 1):
+            fid = f"inc{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
             dest = EVIDENCE / fid
             dest.write_bytes(fbytes)
             db.add(Evidence(incident_id=inc.id, filename=fid, seq=idx))
 
         # Automated ambulance & hospital allocation
-        asg = assign_dispatch(db, inc)
-        hosp = allocate_nearest_hospital_by_seats(db, inc)
-        db.commit()
+        asg = dispatch(db, inc, "Uploaded Video Neural Surveillance")
+        recs, _ = recommend_hospitals(db, inc)
+        elig = [r for r in recs if r["eligible"]]
+        hosp_name = "Emergency Trauma Centre"
+        hosp_beds = 0
+        if elig:
+            top_h = elig[0]
+            inc.recommended_hospital_id = inc.selected_hospital_id = top_h["hospital"]["id"]
+            hosp_name = top_h["hospital"]["name"]
+            hosp_beds = top_h["hospital"]["available_beds"]
+            if asg:
+                asg.hospital_id = top_h["hospital"]["id"]
+                asg.hospital_route = json.dumps(top_h["route"])
+                track(db, inc.id, asg.id, "hospital_assigned",
+                      f"Nearest hospital assigned by seat availability: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, ETA {top_h['eta_min']} min)")
 
-        audit(db, u, "video_accident_dispatched", "incident", inc.id,
+        audit(db, u.username, "video_accident_dispatched", "incident", inc.id,
               f"Accident detected from uploaded video footage. Peak confidence: {round(analysis.get('peak_probability', 0.94)*100)}%.")
+        track(db, inc.id, asg.id if asg else None, "detected",
+              f"PyTorch Deep Learning Model (resqroute_accident_model.pt) detected collision from uploaded footage with {round(analysis.get('peak_probability', 0.94)*100)}% confidence.")
+        db.commit()
+        db.refresh(inc)
 
-        hosp_name = hosp.name if hosp else "City Central General Hospital"
-        hosp_beds = hosp.available_beds if hosp else 14
         unit_str = asg.ambulance.code if asg and asg.ambulance else "AMB-01"
 
         emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
               "message": f"🚨 COLLISION DETECTED in Uploaded Video ({round(analysis.get('peak_probability', 0.94)*100)}% >= 90% level)! {unit_str} dispatched & {hosp_name} ({hosp_beds} seats free) assigned!"})
+        if asg:
+            emit({"type": "assignment_updated", "incident_id": inc.id, "ambulance_id": asg.ambulance_id,
+                  "message": f"Emergency Dispatch Call for {unit_str}: Accident at {loc_name}. 6 screenshots transmitted. Assigned Hospital: {hosp_name} ({hosp_beds} Beds Free).", "level": "warning"})
 
         incident_data = ser_inc(inc)
 

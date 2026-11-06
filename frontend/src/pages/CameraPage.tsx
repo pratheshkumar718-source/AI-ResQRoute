@@ -6,13 +6,13 @@ import {
 } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Btn, Alert, Badge, DemoNote } from '../components/ui'
-import { api } from '../lib/api'
+import { api, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 
 const SHOTS = 6              // 6 evidence screenshots per incident
 const SHOT_INTERVAL_MS = 600  // Rapid burst interval for forensic validation
 
 export default function CameraPage() {
-  const { cameras, push, refresh } = useApp()
+  const { cameras, incidents, push, refresh } = useApp()
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [camId, setCamId] = useState<number>(1)
@@ -47,6 +47,22 @@ export default function CameraPage() {
   useEffect(() => {
     if (cameras.length && !cameras.find(c => c.id === camId)) setCamId(cameras[0].id)
   }, [cameras])
+
+  // Automatically show the latest incident's burst screenshots if no active burst in memory
+  useEffect(() => {
+    if (thumbs.length === 0 && incidents && incidents.length > 0) {
+      const latestWithEv = incidents.find(i => i.evidence && i.evidence.length > 0)
+      if (latestWithEv) {
+        setThumbs(
+          latestWithEv.evidence.map((e: any) => ({
+            url: resolveEvidenceUrl(e.url || (e.filename ? `/evidence/${e.filename}` : '')),
+            inc: latestWithEv.id,
+            n: e.seq
+          })).slice(0, SHOTS)
+        )
+      }
+    }
+  }, [incidents, thumbs.length])
 
   const handleUpdateThreshold = async (val: number) => {
     setThreshold(val)
@@ -141,7 +157,7 @@ export default function CameraPage() {
         push('error', `🚨 COLLISION DETECTED in video footage! Peak confidence: ${(res.analysis.peak_probability * 100).toFixed(1)}% (>= ${Math.round(threshold * 100)}% threshold). Nearest ambulance & hospital bed assigned!`)
         if (res.incident?.evidence) {
           const list = res.incident.evidence.map((ev: any) => ({
-            url: `/api/evidence/${ev.filename}`,
+            url: resolveEvidenceUrl(ev.url || (ev.filename ? `/evidence/${ev.filename}` : '')),
             inc: res.incident.id,
             n: ev.seq
           }))
@@ -175,12 +191,24 @@ export default function CameraPage() {
         camera_id: camId,
         confidence: conf,
         threshold: threshold,
-        with_synthetic_frames: !isLive
+        with_synthetic_frames: true
       })
 
       const list: { url: string; inc: number; n: number }[] = []
 
-      // If live optical source is active, capture real frames from the stream
+      // Instantly populate evidence burst gallery from incident creation response
+      if (inc?.evidence && inc.evidence.length > 0) {
+        inc.evidence.forEach((ev: any) => {
+          list.push({
+            url: resolveEvidenceUrl(ev.url || (ev.filename ? `/evidence/${ev.filename}` : '')),
+            inc: inc.id,
+            n: ev.seq || list.length + 1
+          })
+        })
+        setThumbs([...list.slice(0, SHOTS)])
+      }
+
+      // If live optical source is active, sequentially grab frames and update slots snappily
       if (isLive) {
         for (let i = 1; i <= SHOTS; i++) {
           const b = await grab(640)
@@ -190,22 +218,19 @@ export default function CameraPage() {
             fd.append('seq', String(i))
             try {
               const r = await api.upload(`/api/incidents/${inc.id}/evidence`, fd)
-              list.push({ url: r.url, inc: inc.id, n: i })
+              const newUrl = resolveEvidenceUrl(r.url || (r.filename ? `/evidence/${r.filename}` : ''))
+              if (i - 1 < list.length) {
+                list[i - 1].url = newUrl
+              } else {
+                list.push({ url: newUrl, inc: inc.id, n: i })
+              }
+              setThumbs([...list.slice(0, SHOTS)])
             } catch { }
           }
-          await new Promise(r => setTimeout(r, SHOT_INTERVAL_MS))
+          await new Promise(r => setTimeout(r, 600))
         }
-      } else if (inc.evidence && inc.evidence.length > 0) {
-        inc.evidence.forEach((ev: any) => {
-          list.push({
-            url: `/api/evidence/${ev.filename}`,
-            inc: inc.id,
-            n: ev.seq
-          })
-        })
       }
 
-      setThumbs(list.slice(0, SHOTS))
       setCapture(`Captured ${Math.min(list.length, SHOTS)} evidence screenshots. Dispatch and hospital allocation confirmed.`)
       refresh()
     } catch (e: any) {
@@ -612,7 +637,15 @@ export default function CameraPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {thumbs.slice(0, SHOTS).map((t, k) => (
               <figure key={k} className="group relative rounded-lg overflow-hidden border border-[#E2E8F0] bg-white shadow-sm">
-                <img src={t.url} className="aspect-video object-cover w-full group-hover:scale-105 transition" />
+                <img
+                  src={resolveEvidenceUrl(t.url)}
+                  alt={`Incident ${t.inc} frame ${t.n}`}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null
+                    e.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+                  }}
+                  className="aspect-video object-cover w-full group-hover:scale-105 transition"
+                />
                 <figcaption className="p-1.5 text-[11px] font-mono text-[#173B68] bg-[#FAFBFD] border-t border-[#E2E8F0] flex justify-between">
                   <span>Inc #{t.inc}</span>
                   <span className="text-[#666666]">Frame {t.n}/{SHOTS}</span>

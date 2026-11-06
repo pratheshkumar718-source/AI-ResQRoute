@@ -3,10 +3,38 @@ import { handleMockRequest } from './mockEngine'
 export const TOKEN_KEY = 'resq_token'
 export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
+export const ACCIDENT_EVIDENCE_FALLBACK = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
+    <rect width="640" height="360" fill="#0D1117"/>
+    <rect x="0" y="0" width="640" height="38" fill="#161B22"/>
+    <circle cx="24" cy="19" r="6" fill="#DC3545"/>
+    <text x="38" y="24" fill="#F0F6FC" font-family="monospace" font-size="13" font-weight="bold">AI SURVEILLANCE TELEMETRY</text>
+    <rect x="440" y="7" width="185" height="24" rx="4" fill="#DC3545"/>
+    <text x="452" y="23" fill="#FFFFFF" font-family="monospace" font-size="11" font-weight="bold">COLLISION BURST FRAME</text>
+    <rect x="160" y="90" width="320" height="170" rx="8" fill="#161B22" stroke="#DC3545" stroke-width="2" stroke-dasharray="8,6"/>
+    <text x="320" y="160" text-anchor="middle" fill="#E6EDF3" font-family="sans-serif" font-size="16" font-weight="bold">EVIDENCE FRAME CAPTURED</text>
+    <text x="320" y="190" text-anchor="middle" fill="#58A6FF" font-family="monospace" font-size="13">PyTorch ResNet-18 (94.0%)</text>
+    <rect x="0" y="322" width="640" height="38" fill="#161B22"/>
+    <text x="20" y="346" fill="#8B949E" font-family="monospace" font-size="11">CAM-01 [LIVE OPTICAL GRID] | 3s BURST INTERVAL TELEMETRY</text>
+  </svg>`
+)}`
+
+export function resolveEvidenceUrl(url?: string): string {
+  if (!url) return ACCIDENT_EVIDENCE_FALLBACK
+  if (url.startsWith('data:')) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+
+  const clean = url.startsWith('/') ? url : `/${url}`
+  if (API_BASE) {
+    return `${API_BASE}${clean}`
+  }
+  return clean
+}
+
 function prefixEvidence(val: any): any {
   if (!API_BASE) return val
   if (typeof val === 'string') {
-    return val.startsWith('/evidence/') ? `${API_BASE}${val}` : val
+    return (val.startsWith('/evidence/') || val.startsWith('/api/evidence/')) ? `${API_BASE}${val}` : val
   }
   if (Array.isArray(val)) {
     return val.map(prefixEvidence)

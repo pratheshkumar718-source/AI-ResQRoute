@@ -571,7 +571,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       hospital_warning: null,
       created_at: new Date().toISOString(),
       completed_at: null,
-      evidence: body?.with_synthetic_frames === false ? [] : [
+      evidence: [
         { id: 1, url: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80', seq: 1, captured_at: new Date().toISOString() },
         { id: 2, url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80', seq: 2, captured_at: new Date().toISOString() },
         { id: 3, url: 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=600&q=80', seq: 3, captured_at: new Date().toISOString() },
@@ -655,6 +655,11 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       completed_at: null,
       evidence: [
         { id: 1, url: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80', seq: 1, captured_at: new Date().toISOString() },
+        { id: 2, url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80', seq: 2, captured_at: new Date().toISOString() },
+        { id: 3, url: 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=600&q=80', seq: 3, captured_at: new Date().toISOString() },
+        { id: 4, url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80', seq: 4, captured_at: new Date().toISOString() },
+        { id: 5, url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=80', seq: 5, captured_at: new Date().toISOString() },
+        { id: 6, url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=80', seq: 6, captured_at: new Date().toISOString() },
       ],
       assignments: [
         {
