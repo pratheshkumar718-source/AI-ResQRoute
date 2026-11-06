@@ -78,8 +78,8 @@ app.add_middleware(
 )
 
 
-@app.get("/evidence/{filename}")
-@app.get("/api/evidence/{filename}")
+@app.api_route("/evidence/{filename}", methods=["GET", "HEAD"])
+@app.api_route("/api/evidence/{filename}", methods=["GET", "HEAD"])
 async def get_evidence_file(filename: str):
     clean_fn = Path(filename).name
     p = EVIDENCE / clean_fn
@@ -102,9 +102,6 @@ async def get_evidence_file(filename: str):
         }
     )
 
-
-app.mount("/evidence", StaticFiles(directory=str(EVIDENCE)), name="evidence")
-app.mount("/api/evidence", StaticFiles(directory=str(EVIDENCE)), name="api_evidence")
 
 
 
