@@ -341,24 +341,29 @@ export default function CameraPage() {
             }
           >
             {/* Model Architecture & Scope Technical Callout */}
-            <div className="mb-3.5 p-3.5 rounded-xl bg-gradient-to-r from-[#FAFBFD] via-[#F8FAFC] to-[#F1F5F9] border border-[#CBD5E1] shadow-sm space-y-2">
+            <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-[#FAFBFD] via-[#F8FAFC] to-[#F1F5F9] border border-[#CBD5E1] shadow-sm space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-bold text-xs text-[#171717]">
                   <div className="p-1 rounded-md bg-[#173B68] text-white">
                     <Cpu className="w-3.5 h-3.5" />
                   </div>
-                  <span>AI Edge Surveillance & Automated Emergency Response Architecture</span>
+                  <span>AI Edge Model & Automation Pipeline Scope</span>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30">
-                  Calibrated Edge Model (ResNet-18)
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30">
+                    Deployed: Lightweight ResNet-18
+                  </span>
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#F0F9F4] text-[#198754] border border-[#198754]/30">
+                    Full Model: YOLO Deep Detector
+                  </span>
+                </div>
               </div>
-              <div className="text-[11px] text-[#475569] leading-relaxed space-y-1.5">
+              <div className="text-[11px] text-[#475569] leading-relaxed space-y-1">
                 <p>
-                  <strong className="text-[#171717]">🎯 Core Automation Scope:</strong> The central scope of this system is verifying that once an accident is detected by the optical surveillance stream, the entire multi-agency emergency pipeline runs autonomously—including dispatching the nearest ready ambulance, clearing traffic with Police Green Corridor, and reserving hospital beds based on real-time seat availability.
+                  <strong className="text-[#171717]">🎯 Core Automation Scope:</strong> The main scope of this system is verifying that once an accident is detected, the full autonomous emergency pipeline executes immediately—routing the nearest ambulance, reserving hospital ICU beds, and clearing traffic with Police Green Corridor.
                 </p>
                 <p>
-                  <strong className="text-[#171717]">🧠 Deployed Compact Edge Model vs. Original Heavy Model:</strong> Due to hosting constraints, deployment limits, and edge inference latency boundaries, this prototype runs a lightweight, compressed version of our model (<code className="text-[#173B68] font-semibold bg-white px-1 py-0.5 rounded border border-[#E2E8F0]">resqroute_accident_model.pt</code>). While this compact model is small and may have variance in certain visual conditions, we have calibrated it to its best possible detection capability. Our team has engineered and trained our original large-scale model which predicts accidents with superior precision and robustness; this compact version is utilized here to ensure responsive, low-latency execution on edge hardware.
+                  <strong className="text-[#171717]">🧠 Small Edge Model vs. Original Large YOLO Model:</strong> Due to deployment limits and edge latency constraints, a compact <code className="text-[#173B68] font-semibold bg-white px-1 py-0.5 rounded border border-[#E2E8F0]">ResNet-18</code> model (<code className="text-[#173B68]">resqroute_accident_model.pt</code>) is deployed here. While small models have visual variances, we calibrated it to its best capability. Our team has trained our <strong>original large-scale YOLO model</strong> (deep object detection with multi-vehicle spatial tracking and bounding-box collision localization) which delivers significantly higher accuracy; this lightweight version is used here for low-latency edge testing.
                 </p>
               </div>
             </div>
@@ -677,19 +682,19 @@ export default function CameraPage() {
         }
       >
         {/* Storage Constraint & Multi-Test Telemetry Notice */}
-        <div className="mb-4 p-3.5 rounded-xl bg-gradient-to-r from-[#FAFBFD] via-[#F8FAFC] to-[#F1F5F9] border border-[#CBD5E1] flex items-start gap-3 shadow-sm">
-          <div className="p-1.5 rounded-lg bg-[#356FA5]/10 text-[#173B68] mt-0.5 shrink-0">
+        <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-[#FAFBFD] via-[#F8FAFC] to-[#F1F5F9] border border-[#CBD5E1] flex items-start gap-2.5 shadow-sm">
+          <div className="p-1 rounded-lg bg-[#356FA5]/10 text-[#173B68] mt-0.5 shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div className="text-xs space-y-1">
             <div className="flex flex-wrap items-center gap-2 font-bold text-[#171717]">
-              <span>Storage Optimization & Repetitive Testing Scope Notice</span>
+              <span>Database Storage Optimization & Smooth Backend Execution</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
-                Compact Telemetry Mode
+                Optional Storage Prototype Mode
               </span>
             </div>
             <p className="text-[#475569] leading-relaxed text-[11px]">
-              The 6 burst evidence frames displayed below are generated as lightweight telemetry simulation captures. While the camera system is fully capable of capturing raw optical video screenshots, streaming and storing raw high-resolution bursts repeatedly would rapidly exceed server disk space and memory limits. Therefore, storage-optimized evidence captures are used so that the end-to-end emergency workflow can be tested multiple times reliably. The primary objective is validating that the automated response pipeline triggers flawlessly upon detection.
+              Due to database storage limitations during prototyping and repeated testing, continuous saving of raw high-resolution screenshots is made optional. Because the AI model is running live in the backend, heavy image disk I/O is bypassed to prevent bottlenecks and ensure smooth, uninterrupted real-time inference without errors. Lightweight telemetry snapshots are used instead to seamlessly verify the 6-frame evidence chain and dispatch workflow.
             </p>
           </div>
         </div>
