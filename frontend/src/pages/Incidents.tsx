@@ -31,8 +31,8 @@ function HospitalPanel({ inc }: { inc: Incident }) {
           <li
             key={c.hospital?.id || Math.random()}
             className={`border rounded-lg p-3 text-sm transition ${c.hospital?.id === recs.selected_hospital_id
-                ? 'border-[#198754] bg-[#F0F9F4] text-[#171717]'
-                : 'border-[#E2E8F0] bg-white text-[#171717]'
+              ? 'border-[#198754] bg-[#F0F9F4] text-[#171717]'
+              : 'border-[#E2E8F0] bg-white text-[#171717]'
               }`}
           >
             <div className="flex justify-between items-start gap-2">
@@ -129,8 +129,8 @@ export default function Incidents() {
                     key={i.id}
                     onClick={() => setSelectedId(i.id)}
                     className={`p-3 rounded-lg border transition cursor-pointer ${active
-                        ? 'border-[#173B68] bg-[#EBF2FA] text-[#171717] shadow-sm'
-                        : 'border-[#E2E8F0] bg-white hover:bg-[#F7F8FA] text-[#171717]'
+                      ? 'border-[#173B68] bg-[#EBF2FA] text-[#171717] shadow-sm'
+                      : 'border-[#E2E8F0] bg-white hover:bg-[#F7F8FA] text-[#171717]'
                       }`}
                   >
                     <div className="flex justify-between items-center">
@@ -169,8 +169,8 @@ export default function Incidents() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg grid place-items-center text-lg font-bold border ${sel.green_corridor
-                        ? 'bg-[#F0F9F4] text-[#198754] border-[#198754]/40'
-                        : 'bg-[#EBF2FA] text-[#173B68] border-[#356FA5]/30'
+                      ? 'bg-[#F0F9F4] text-[#198754] border-[#198754]/40'
+                      : 'bg-[#EBF2FA] text-[#173B68] border-[#356FA5]/30'
                       }`}>
                       🚔
                     </div>
@@ -178,8 +178,8 @@ export default function Incidents() {
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-[#171717] text-sm">Police Green Corridor:</span>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${sel.green_corridor
-                            ? 'bg-[#F0F9F4] text-[#198754] border-[#198754]/40'
-                            : 'bg-[#F7F8FA] text-[#666666] border-[#CBD5E1]'
+                          ? 'bg-[#F0F9F4] text-[#198754] border-[#198754]/40'
+                          : 'bg-[#F7F8FA] text-[#666666] border-[#CBD5E1]'
                           }`}>
                           {sel.green_corridor ? 'ACTIVE (SIGNAL PREEMPTION)' : 'STANDARD TRAFFIC FLOW'}
                         </span>

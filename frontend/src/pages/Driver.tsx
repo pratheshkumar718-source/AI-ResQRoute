@@ -65,11 +65,10 @@ function Assess({ aid }: { aid: number }) {
                   key={n}
                   type="button"
                   onClick={() => setNeeds(checked ? needs.filter(x => x !== n) : [...needs, n])}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer capitalize ${
-                    checked
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer capitalize ${checked
                       ? 'bg-[#EBF2FA] border-[#173B68] text-[#173B68]'
                       : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
-                  }`}
+                    }`}
                 >
                   {n}
                 </button>
@@ -167,11 +166,10 @@ function Active({ inc }: { inc: Incident }) {
             )}
 
             {/* Police Green Corridor Status Indicator */}
-            <div className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
-              inc.green_corridor
+            <div className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${inc.green_corridor
                 ? 'bg-[#F0F9F4] border-[#198754]/30 text-[#166534]'
                 : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#666666]'
-            }`}>
+              }`}>
               <span className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${inc.green_corridor ? 'bg-[#198754]' : 'bg-[#94A3B8]'}`} />
                 <span className="font-semibold">
@@ -498,16 +496,14 @@ export default function Driver() {
               onClick={handleToggleStatus}
               disabled={!!active}
               title={active ? 'Cannot change status during an active assignment' : 'Click to toggle availability'}
-              className={`px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm ${
-                me.status === 'available'
+              className={`px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm ${me.status === 'available'
                   ? 'bg-[#F0F9F4] text-[#198754] border border-[#198754]/40 hover:bg-[#E2F4E9]'
                   : 'bg-[#FDF2F2] text-[#DC3545] border border-[#DC3545]/40 hover:bg-[#FCE8E8]'
-              } ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
-                className={`w-2.5 h-2.5 rounded-full ${
-                  me.status === 'available' ? 'bg-[#198754]' : 'bg-[#DC3545]'
-                }`}
+                className={`w-2.5 h-2.5 rounded-full ${me.status === 'available' ? 'bg-[#198754]' : 'bg-[#DC3545]'
+                  }`}
               />
               <span>
                 {me.status === 'available' ? 'DUTY: AVAILABLE (READY)' : 'DUTY: BUSY / OFF-DUTY'}
@@ -518,11 +514,10 @@ export default function Driver() {
             {/* Sound Mute Toggle */}
             <button
               onClick={toggleSound}
-              className={`p-2 rounded-lg border transition ${
-                muted
+              className={`p-2 rounded-lg border transition ${muted
                   ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545]'
                   : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
-              }`}
+                }`}
               title={muted ? 'Unmute Emergency Siren' : 'Mute Emergency Siren'}
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -690,11 +685,10 @@ export default function Driver() {
                       <button
                         type="button"
                         onClick={() => setVerifyChoice('yes')}
-                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${
-                          verifyChoice === 'yes'
+                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'yes'
                             ? 'bg-[#F0F9F4] border-[#198754] text-[#198754] shadow-sm'
                             : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
-                        }`}
+                          }`}
                       >
                         <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-[#198754]" />
                         <span>Confirm Accident (Yes)</span>
@@ -703,11 +697,10 @@ export default function Driver() {
                       <button
                         type="button"
                         onClick={() => setVerifyChoice('no')}
-                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${
-                          verifyChoice === 'no'
+                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'no'
                             ? 'bg-[#FDF2F2] border-[#DC3545] text-[#DC3545] shadow-sm'
                             : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
-                        }`}
+                          }`}
                       >
                         <PhoneOff className="w-4 h-4 mx-auto mb-1 text-[#DC3545]" />
                         <span>False Alarm (No)</span>
@@ -716,11 +709,10 @@ export default function Driver() {
                       <button
                         type="button"
                         onClick={() => setVerifyChoice('unable')}
-                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${
-                          verifyChoice === 'unable'
+                        className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'unable'
                             ? 'bg-[#FDF9F0] border-[#D69E36] text-[#855B14] shadow-sm'
                             : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
-                        }`}
+                          }`}
                       >
                         <HelpCircle className="w-4 h-4 mx-auto mb-1 text-[#D69E36]" />
                         <span>Unable to Determine</span>
@@ -763,11 +755,10 @@ export default function Driver() {
                                 key={cnt}
                                 type="button"
                                 onClick={() => setFleetNeeded(cnt)}
-                                className={`py-1.5 rounded-md text-xs font-bold border transition cursor-pointer ${
-                                  fleetNeeded === cnt
+                                className={`py-1.5 rounded-md text-xs font-bold border transition cursor-pointer ${fleetNeeded === cnt
                                     ? 'bg-[#173B68] text-white border-[#173B68]'
                                     : 'bg-white border-[#CBD5E1] text-[#666666]'
-                                }`}
+                                  }`}
                               >
                                 {cnt} Unit{cnt > 1 ? 's' : ''}
                               </button>
@@ -803,19 +794,18 @@ export default function Driver() {
                     <button
                       type="button"
                       onClick={handlePrimaryVerification}
-                      className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm ${
-                        verifyChoice === 'no'
+                      className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm ${verifyChoice === 'no'
                           ? 'bg-[#DC3545] hover:bg-[#BB2D3B] text-white'
                           : 'bg-[#173B68] hover:bg-[#102A4C] text-white'
-                      }`}
+                        }`}
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>
                         {verifyChoice === 'yes'
                           ? 'CONFIRM ACCIDENT & RUSH TO SCENE'
                           : verifyChoice === 'unable'
-                          ? 'DISPATCH TO SCENE FOR ON-SITE VERIFICATION'
-                          : 'CLOSE AS FALSE ALARM'}
+                            ? 'DISPATCH TO SCENE FOR ON-SITE VERIFICATION'
+                            : 'CLOSE AS FALSE ALARM'}
                       </span>
                     </button>
 

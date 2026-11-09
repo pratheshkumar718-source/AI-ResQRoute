@@ -74,7 +74,7 @@ async function req(method: string, url: string, body?: any, form?: FormData) {
         try {
           const j = await res.json()
           msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
-        } catch {}
+        } catch { }
         throw new Error(msg)
       }
       const data = await res.json()
