@@ -26,9 +26,9 @@ def seed(reset=False):
             Ambulance(code="AMB-05", driver_name="Paramedic Esha Sharma", phone="+91-98401-10005", lat=13.0360, lng=80.2670, status="available", crew_level="ALS", note="South Zone Highway Patrol"),
         ]
         hosps = [
-            Hospital(name="City Central General Hospital", lat=13.0805, lng=80.2770, phone="+91-44-2800-1001", total_beds=120, available_beds=14, icu_beds=3, capabilities="trauma,icu,neuro"),
-            Hospital(name="Riverside Emergency Medical Centre", lat=13.0785, lng=80.2440, phone="+91-44-2800-1002", total_beds=80, available_beds=6, icu_beds=0, capabilities="trauma,pediatric"),
-            Hospital(name="Lakeview Trauma & Specialty Hospital", lat=13.0545, lng=80.2620, phone="+91-44-2800-1003", total_beds=60, available_beds=9, icu_beds=2, capabilities="icu,burns,neuro,pediatric,trauma"),
+            Hospital(name="City Central General Hospital", lat=13.0805, lng=80.2770, phone="+91-44-2800-1001", total_beds=120, available_beds=14, icu_beds=3, capabilities="emergency,icu,neuro"),
+            Hospital(name="Riverside Emergency Medical Centre", lat=13.0785, lng=80.2440, phone="+91-44-2800-1002", total_beds=80, available_beds=6, icu_beds=0, capabilities="emergency,pediatric"),
+            Hospital(name="Lakeview Specialty Hospital", lat=13.0545, lng=80.2620, phone="+91-44-2800-1003", total_beds=60, available_beds=9, icu_beds=2, capabilities="icu,burns,neuro,pediatric,emergency"),
         ]
         cams = [
             Camera(name="CAM-01 Central Junction", location_name="Central Junction, Sector 4", lat=13.0820, lng=80.2730),
@@ -44,10 +44,10 @@ def seed(reset=False):
             ("citizen1", "citizen123", "Citizen Responder Priya Raman", "citizen", None, None, "priya.raman@citizen.net", "+91-98402-55555", json.dumps({"blood_group": "O+", "emergency_contact_name": "Raman K (Father)", "emergency_contact_phone": "+91-98402-55556", "address": "Anna Nagar West, Chennai"})),
         ]
         users += [(f"driver{k+1}", "driver123", a.driver_name, "driver", a.id, None, f"paramedic.{k+1}@resqroute.org", a.phone, json.dumps({"crew_level": a.crew_level, "license_number": f"TN-01-DL-2022-00{k+1}", "base_station": a.note or "Central Station"})) for k, a in enumerate(ambs)]
-        users += [(f"hospital{k+1}", "hospital123", f"{x.name} Trauma Unit", "hospital", None, x.id, f"er.{k+1}@hospital.org", x.phone, json.dumps({"department": "Emergency Trauma Care & ICU", "hotline_extension": f"Ext {100+k+1}"})) for k, x in enumerate(hosps)]
+        users += [(f"hospital{k+1}", "hospital123", f"{x.name} Emergency Unit", "hospital", None, x.id, f"er.{k+1}@hospital.org", x.phone, json.dumps({"department": "Emergency Care & ICU", "hotline_extension": f"Ext {100+k+1}"})) for k, x in enumerate(hosps)]
         for u, p, n, r, aid, hid, em, ph, det in users:
             db.add(User(username=u, password_hash=h(p), name=n, role=r, ambulance_id=aid, hospital_id=hid, email=em, phone=ph, details=det))
-        db.add(AuditLog(actor="system", action="initialise", entity="system", detail="Operational network initialized with 3 trauma hospitals, 5 fleet ambulances, and 4 AI surveillance cameras"))
+        db.add(AuditLog(actor="system", action="initialise", entity="system", detail="Operational network initialized with 3 regional hospitals, 5 fleet ambulances, and 4 AI surveillance cameras"))
         db.commit()
 
 

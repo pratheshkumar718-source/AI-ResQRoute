@@ -25,7 +25,7 @@ export const PORTAL_ROLES = [
     p: 'citizen123',
     icon: Users,
     badge: 'Public Portal',
-    desc: 'Access emergency hotline directory, real-time safety advisories, and nearby trauma centers.',
+    desc: 'Access emergency hotline directory, real-time safety advisories, and nearby emergency hospitals.',
   },
   {
     id: 'police',
@@ -39,13 +39,13 @@ export const PORTAL_ROLES = [
   },
   {
     id: 'hospital',
-    label: 'Hospital Trauma Units',
+    label: 'Hospital Emergency Units',
     subtitle: 'Emergency Prep & Bed Triage',
     u: 'hospital1',
     p: 'hospital123',
     icon: Building2,
     badge: 'Healthcare Staff',
-    desc: 'Receive pre-arrival patient severity metrics, prepare trauma bays, and manage live ICU bed counts.',
+    desc: 'Receive pre-arrival patient severity metrics, prepare emergency bays, and manage live ICU bed counts.',
   },
   {
     id: 'admin',
@@ -104,7 +104,7 @@ export default function Login({
   const [baseStation, setBaseStation] = useState('Central Station')
 
   const [hospitalId, setHospitalId] = useState<number>(1)
-  const [department, setDepartment] = useState('Emergency Trauma Care & ICU')
+  const [department, setDepartment] = useState('Emergency Care & ICU')
   const [hotlineExt, setHotlineExt] = useState('Ext 101')
 
   const [badgeNumber, setBadgeNumber] = useState('')
@@ -545,7 +545,7 @@ export default function Login({
               {regRole === 'hospital' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-medium text-[#171717] block mb-1">Hospital Trauma Facility</label>
+                    <label className="text-[11px] font-medium text-[#171717] block mb-1">Hospital Facility</label>
                     <select
                       className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
                       value={hospitalId}
@@ -553,7 +553,7 @@ export default function Login({
                     >
                       <option value={1}>City Central General Hospital</option>
                       <option value={2}>Riverside Emergency Medical Centre</option>
-                      <option value={3}>Lakeview Trauma & Specialty Hospital</option>
+                      <option value={3}>Lakeview Specialty Hospital</option>
                     </select>
                   </div>
                   <div>

@@ -27,7 +27,7 @@ export default function LiveMap() {
       <div className="pb-2 border-b border-[#E2E8F0]">
         <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Live Telemetry & Tactical Map</h1>
         <p className="text-xs text-[#666666] mt-0.5">
-          Real-time tracking of ambulance locations, collision coordinates, and receiving trauma hospitals on local street networks.
+          Real-time tracking of ambulance locations, collision coordinates, and receiving emergency hospitals on local street networks.
         </p>
       </div>
 
@@ -168,7 +168,7 @@ export default function LiveMap() {
                       return (
                         <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30 space-y-1.5">
                           <div className="text-[11px] uppercase tracking-wider font-bold text-[#198754]">
-                            Allocated Receiving Trauma Center
+                            Allocated Receiving Hospital
                           </div>
                           <div className="text-xs font-bold text-[#171717]">{hosp.name}</div>
                           <div className="text-[11px] text-[#666666] flex justify-between">
@@ -177,7 +177,7 @@ export default function LiveMap() {
                           </div>
                           {hosp.phone && (
                             <div className="text-[11px] text-[#666666] flex justify-between pt-1 border-t border-[#198754]/20">
-                              <span>Trauma Bay Desk:</span>
+                              <span>Emergency Desk:</span>
                               <a href={`tel:${hosp.phone}`} className="text-[#198754] font-mono font-bold hover:underline">
                                 {hosp.phone}
                               </a>
@@ -214,7 +214,7 @@ export default function LiveMap() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-[#173B68]" />
-                <span className="text-[#171717]">Receiving Trauma Hospital (H)</span>
+                <span className="text-[#171717]">Receiving Hospital (H)</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded bg-[#198754]" />

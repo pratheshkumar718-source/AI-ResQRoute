@@ -46,7 +46,7 @@ const NAV: NavItem[] = [
 const ROLE_BADGE: Record<string, { label: string; style: string }> = {
   admin: { label: 'Chief Dispatcher', style: 'bg-[#EBF2FA] text-[#173B68] border-[#356FA5]/30' },
   driver: { label: 'Paramedic Unit', style: 'bg-[#FDF9F0] text-[#855B14] border-[#D69E36]/30' },
-  hospital: { label: 'Trauma Unit Staff', style: 'bg-[#F0F9F4] text-[#166534] border-[#198754]/30' },
+  hospital: { label: 'Hospital Staff', style: 'bg-[#F0F9F4] text-[#166534] border-[#198754]/30' },
   police: { label: 'Traffic Inspector', style: 'bg-[#EBF2FA] text-[#356FA5] border-[#356FA5]/30' },
   citizen: { label: 'Citizen Responder', style: 'bg-[#F7F8FA] text-[#666666] border-[#E2E8F0]' },
 }
@@ -173,11 +173,10 @@ function Shell() {
                       <button
                         key={n.id}
                         onClick={() => setPage(n.id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer text-left ${
-                          active
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer text-left ${active
                             ? 'bg-[#173B68] text-white shadow-sm font-semibold'
                             : 'text-[#171717] hover:bg-[#F7F8FA]'
-                        }`}
+                          }`}
                       >
                         <n.icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-[#666666]'}`} />
                         <span className="flex-1 truncate">{n.label}</span>
@@ -262,11 +261,10 @@ function Shell() {
             <button
               onClick={handleToggleMute}
               title={muted ? 'Unmute Emergency Siren & Ring' : 'Mute Emergency Audio'}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition cursor-pointer ${
-                muted
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition cursor-pointer ${muted
                   ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545] hover:bg-[#FCE8E8]'
                   : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
-              }`}
+                }`}
             >
               {muted ? <VolumeX className="w-3.5 h-3.5 text-[#DC3545]" /> : <Volume2 className="w-3.5 h-3.5 text-[#173B68]" />}
               <span className="hidden sm:inline">{muted ? 'Siren Muted' : 'Siren ON'}</span>

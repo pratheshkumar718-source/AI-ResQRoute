@@ -95,16 +95,16 @@ export default function Home({ onEnterDashboard }: HomeProps) {
       num: '07',
       title: 'Capacity-Aware Hospital Matching',
       tag: 'Intelligent Triage',
-      desc: 'The platform evaluates real-time ICU bed availability, emergency bay status, and surgical trauma capabilities across regional hospitals to recommend the optimal destination facility.',
-      telemetry: 'Hospital Criteria: Available ICU Beds + Distance + Trauma Specialties',
+      desc: 'The platform evaluates real-time ICU bed availability, emergency bay status, and surgical emergency capabilities across regional hospitals to recommend the optimal destination facility.',
+      telemetry: 'Hospital Criteria: Available ICU Beds + Distance + Emergency Specialties',
       icon: Building2,
     },
     {
       num: '08',
       title: 'Coordinated Clinical Handover',
       tag: 'Pre-Arrival Preparation',
-      desc: 'The receiving trauma center receives live patient vital signs, estimated time of arrival (ETA), and crash severity evidence so medical teams and operating rooms are prepared prior to arrival.',
-      telemetry: 'Handover Status: Live ETA Broadcast | Trauma Bay Pre-Activation',
+      desc: 'The receiving hospital receives live patient vital signs, estimated time of arrival (ETA), and crash severity evidence so medical teams and operating rooms are prepared prior to arrival.',
+      telemetry: 'Handover Status: Live ETA Broadcast | Emergency Bay Pre-Activation',
       icon: Stethoscope,
     },
   ]
@@ -129,19 +129,19 @@ export default function Home({ onEnterDashboard }: HomeProps) {
     },
     {
       val: '4,43,366',
-      label: 'Severe Injuries Requiring Trauma Care',
+      label: 'Severe Injuries Requiring Emergency Care',
       source: 'MoRTH Road Safety Research Cell',
       reportYear: '2022 Annual Report',
       sourceUrl: 'https://morth.nic.in/road-accidents-in-india',
-      detail: 'Accident victims sustaining severe bodily trauma requiring immediate specialized hospital stabilization.',
+      detail: 'Accident victims sustaining severe bodily injuries requiring immediate specialized hospital stabilization.',
     },
     {
       val: 'Up to 50%',
       label: 'Preventable Fatalities in 1st Hour',
-      source: 'World Health Organization (WHO) Trauma Guidelines',
+      source: 'World Health Organization (WHO) Emergency Guidelines',
       reportYear: 'Global Status Report on Road Safety',
       sourceUrl: 'https://www.who.int/violence_injury_prevention/road_traffic/en/',
-      detail: 'Over half of pre-hospital trauma deaths can be averted through timely emergency care in the Golden Hour.',
+      detail: 'Over half of pre-hospital accident deaths can be averted through timely emergency care in the Golden Hour.',
     },
   ]
 
@@ -153,8 +153,8 @@ export default function Home({ onEnterDashboard }: HomeProps) {
       subtitle: 'Public Safety & Bystander Assistance',
       icon: Users,
       badge: 'Public Access',
-      desc: 'Access emergency hotline directories, request immediate SOS assistance, report accident sightings, and view essential first-aid guidelines for trauma victims.',
-      features: ['One-Tap SOS Emergency Dialing', 'Accident Incident Reporting', 'First-Aid & CPR Guidance', 'Nearby Trauma Hospital Finder'],
+      desc: 'Access emergency hotline directories, request immediate SOS assistance, report accident sightings, and view essential first-aid guidelines for accident victims.',
+      features: ['One-Tap SOS Emergency Dialing', 'Accident Incident Reporting', 'First-Aid & CPR Guidance', 'Nearby Emergency Hospital Finder'],
       btnText: 'Open Citizen Portal',
       role: 'citizen',
     },
@@ -182,10 +182,10 @@ export default function Home({ onEnterDashboard }: HomeProps) {
     },
     {
       roleId: 'hospital',
-      title: 'Hospital Trauma Unit Portal',
+      title: 'Hospital Emergency Unit Portal',
       subtitle: 'Emergency Bay & Bed Management',
       icon: Building2,
-      badge: 'Trauma Centers',
+      badge: 'Emergency Hospitals',
       desc: 'Manage real-time ICU and emergency bed availability, monitor inbound ambulance telemetry with live ETAs, review pre-arrival vitals, and coordinate surgical intake.',
       features: ['Live ICU Bed Inventory Management', 'Inbound Ambulance Live ETA', 'Pre-Arrival Patient Severity Data', 'Seamless Handover Confirmation'],
       btnText: 'Enter Hospital Portal',
@@ -504,9 +504,9 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               <div className="w-9 h-9 rounded-lg bg-[#198754]/10 text-[#198754] grid place-items-center font-bold text-sm">
                 05
               </div>
-              <h3 className="font-bold text-[#171717] text-base">Unprepared Hospital Trauma Bays</h3>
+              <h3 className="font-bold text-[#171717] text-base">Unprepared Hospital Emergency Bays</h3>
               <p className="text-xs text-[#666666] leading-relaxed">
-                Trauma centers frequently receive patient handovers with zero advance warning, forcing surgeons, blood banks, and ICU staff to prepare only after the ambulance arrives.
+                Hospitals frequently receive patient handovers with zero advance warning, forcing surgeons, blood banks, and ICU staff to prepare only after the ambulance arrives.
               </p>
             </div>
 
@@ -516,7 +516,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               </div>
               <h3 className="font-bold text-[#171717] text-base">Hospital Capacity Mismatch</h3>
               <p className="text-xs text-[#666666] leading-relaxed">
-                Ambulances frequently deliver critically injured victims to nearest facilities that have zero open ICU beds or lack specialized neurotrauma facilities, forcing secondary transfers.
+                Ambulances frequently deliver critically injured victims to nearest facilities that have zero open ICU beds or lack specialized neurological facilities, forcing secondary transfers.
               </p>
             </div>
           </div>
@@ -596,7 +596,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
 
           <div className="text-center">
             <p className="text-[11px] text-[#666666] italic max-w-2xl mx-auto">
-              Statistics cited above are sourced from the Ministry of Road Transport and Highways (MoRTH), Government of India annual reports and World Health Organization global trauma response publications.
+              Statistics cited above are sourced from the Ministry of Road Transport and Highways (MoRTH), Government of India annual reports and World Health Organization global emergency response publications.
             </p>
           </div>
         </div>
@@ -608,7 +608,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF9F0] border border-[#D69E36]/30 text-xs font-semibold text-[#855B14]">
               <Clock className="w-3.5 h-3.5 text-[#D69E36]" />
-              <span>Trauma Medicine Principle</span>
+              <span>Emergency Medicine Principle</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
               Protect the Golden Time.
@@ -617,7 +617,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               Respond Sooner. Prepare Earlier. Coordinate Better.
             </p>
             <p className="text-xs sm:text-sm text-[#666666] leading-relaxed max-w-2xl mx-auto">
-              In emergency trauma medicine, the 'Golden Hour' is the first 60 minutes after severe traumatic injury during which rapid medical intervention dramatically increases the probability of survival.
+              In emergency medicine, the 'Golden Hour' is the first 60 minutes after severe accident injury during which rapid medical intervention dramatically increases the probability of survival.
             </p>
           </div>
 
@@ -649,7 +649,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               </div>
               <h3 className="font-bold text-[#171717] text-base">Coordinate Better</h3>
               <p className="text-xs text-[#666666] leading-relaxed">
-                Real-time integration with police traffic signals enables green wave routes, while trauma centers reserve ICU beds and prepare blood units ahead of the ambulance arrival.
+                Real-time integration with police traffic signals enables green wave routes, while hospitals reserve ICU beds and prepare blood units ahead of the ambulance arrival.
               </p>
             </div>
           </div>
@@ -759,7 +759,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               Specialized Portals for Every Emergency Agency
             </h2>
             <p className="text-xs sm:text-sm text-[#666666]">
-              Secure role-based interfaces uniting public citizens, paramedics, traffic police, hospital trauma units, and central dispatch controllers.
+              Secure role-based interfaces uniting public citizens, paramedics, traffic police, hospital emergency units, and central dispatch controllers.
             </p>
           </div>
 
@@ -920,7 +920,7 @@ export default function Home({ onEnterDashboard }: HomeProps) {
                 <li><button onClick={() => openPortalLogin('citizen')} className="hover:text-white transition cursor-pointer">Citizen Emergency Information</button></li>
                 <li><button onClick={() => openPortalLogin('driver')} className="hover:text-white transition cursor-pointer">Ambulance Driver Cockpit</button></li>
                 <li><button onClick={() => openPortalLogin('police')} className="hover:text-white transition cursor-pointer">Police Traffic Coordination</button></li>
-                <li><button onClick={() => openPortalLogin('hospital')} className="hover:text-white transition cursor-pointer">Hospital Trauma Units</button></li>
+                <li><button onClick={() => openPortalLogin('hospital')} className="hover:text-white transition cursor-pointer">Hospital Emergency Units</button></li>
                 <li><button onClick={() => openPortalLogin('admin')} className="hover:text-white transition cursor-pointer">Central Operations Command</button></li>
               </ul>
             </div>

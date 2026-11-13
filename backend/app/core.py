@@ -189,7 +189,7 @@ def recommend_hospitals(db: Session, inc: Incident):
     a = j(inc.assessment) or {}
     needs = set(a.get("needs", []))
     if a.get("severity") == "critical":
-        needs.add("trauma")
+        needs.add("emergency")
     patients = max(1, int(a.get("patients", 1)))
     out = []
     for h in db.query(Hospital).order_by(Hospital.id):

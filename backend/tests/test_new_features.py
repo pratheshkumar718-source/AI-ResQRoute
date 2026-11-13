@@ -98,7 +98,7 @@ def test_hospital_registration_and_admin_approval(client, admin):
         "total_beds": 50,
         "available_beds": 15,
         "icu_beds": 3,
-        "capabilities": ["trauma", "icu"],
+        "capabilities": ["emergency", "icu"],
         "username": "stjude_admin",
         "password": "password123"
     }

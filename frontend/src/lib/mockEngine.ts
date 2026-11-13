@@ -19,9 +19,9 @@ export const DEFAULT_AMBULANCES: Ambulance[] = [
 ]
 
 export const DEFAULT_HOSPITALS: Hospital[] = [
-  { id: 1, name: 'City Central General Hospital', lat: 13.0780, lng: 80.2650, phone: '+91-44-2800-1001', total_beds: 120, available_beds: 14, icu_beds: 3, capabilities: ['trauma', 'icu', 'neuro'], receiving: true, updated_at: new Date().toISOString() },
-  { id: 2, name: 'Riverside Emergency Medical Centre', lat: 13.1050, lng: 80.2400, phone: '+91-44-2800-1002', total_beds: 80, available_beds: 6, icu_beds: 0, capabilities: ['trauma', 'pediatric'], receiving: true, updated_at: new Date().toISOString() },
-  { id: 3, name: 'Lakeview Trauma & Specialty Hospital', lat: 13.0550, lng: 80.3000, phone: '+91-44-2800-1003', total_beds: 60, available_beds: 9, icu_beds: 2, capabilities: ['icu', 'burns', 'neuro', 'pediatric', 'trauma'], receiving: true, updated_at: new Date().toISOString() },
+  { id: 1, name: 'City Central General Hospital', lat: 13.0780, lng: 80.2650, phone: '+91-44-2800-1001', total_beds: 120, available_beds: 14, icu_beds: 3, capabilities: ['emergency', 'icu', 'neuro'], receiving: true, updated_at: new Date().toISOString() },
+  { id: 2, name: 'Riverside Emergency Medical Centre', lat: 13.1050, lng: 80.2400, phone: '+91-44-2800-1002', total_beds: 80, available_beds: 6, icu_beds: 0, capabilities: ['emergency', 'pediatric'], receiving: true, updated_at: new Date().toISOString() },
+  { id: 3, name: 'Lakeview Specialty Hospital', lat: 13.0550, lng: 80.3000, phone: '+91-44-2800-1003', total_beds: 60, available_beds: 9, icu_beds: 2, capabilities: ['icu', 'burns', 'neuro', 'pediatric', 'emergency'], receiving: true, updated_at: new Date().toISOString() },
 ]
 
 export const DEFAULT_CAMERAS: Camera[] = [
@@ -40,9 +40,9 @@ export const DEFAULT_USERS = [
   { id: 6, username: 'driver3', password: 'driver123', name: 'Paramedic Charu Latha', role: 'driver', ambulance_id: 3, hospital_id: null },
   { id: 7, username: 'driver4', password: 'driver123', name: 'Paramedic Dev Anand', role: 'driver', ambulance_id: 4, hospital_id: null },
   { id: 8, username: 'driver5', password: 'driver123', name: 'Paramedic Esha Sharma', role: 'driver', ambulance_id: 5, hospital_id: null },
-  { id: 9, username: 'hospital1', password: 'hospital123', name: 'City Central General Hospital Trauma Unit', role: 'hospital', ambulance_id: null, hospital_id: 1 },
-  { id: 10, username: 'hospital2', password: 'hospital123', name: 'Riverside Emergency Medical Centre Trauma Unit', role: 'hospital', ambulance_id: null, hospital_id: 2 },
-  { id: 11, username: 'hospital3', password: 'hospital123', name: 'Lakeview Trauma & Specialty Hospital Trauma Unit', role: 'hospital', ambulance_id: null, hospital_id: 3 },
+  { id: 9, username: 'hospital1', password: 'hospital123', name: 'City Central General Hospital Emergency Unit', role: 'hospital', ambulance_id: null, hospital_id: 1 },
+  { id: 10, username: 'hospital2', password: 'hospital123', name: 'Riverside Emergency Medical Centre Emergency Unit', role: 'hospital', ambulance_id: null, hospital_id: 2 },
+  { id: 11, username: 'hospital3', password: 'hospital123', name: 'Lakeview Specialty Hospital Emergency Unit', role: 'hospital', ambulance_id: null, hospital_id: 3 },
 ]
 
 const ROUTE_CACHE = new Map<string, RouteInfo>()
@@ -73,8 +73,8 @@ export function computeMockRoute(from: [number, number], to: [number, number]): 
           })
         }
       })
-      .catch(() => {})
-  } catch {}
+      .catch(() => { })
+  } catch { }
 
   // Urban street-corner grid (travels along street avenues like Google Maps, not across buildings)
   const midLat = from[0]
@@ -118,7 +118,7 @@ function getStored<T>(key: string, def: T): T {
 function setStored(key: string, val: any) {
   try {
     localStorage.setItem(key, JSON.stringify(val))
-  } catch {}
+  } catch { }
 }
 
 export function getAllUsers() {
@@ -181,7 +181,7 @@ export function getMockIncidents(): Incident[] {
       police_notified: true,
       green_corridor: true,
       verification_answers: { verified: true, ambulances_needed: 1, notes: 'Multi-angle collision confirmed.' },
-      assessment: { severity: 'critical', patients: 2, needs: ['icu', 'trauma'], notes: 'Immediate extraction required' },
+      assessment: { severity: 'critical', patients: 2, needs: ['icu', 'emergency'], notes: 'Immediate extraction required' },
       recommended_hospital_id: 1,
       selected_hospital_id: 1,
       selected_hospital_name: 'City Central General Hospital',
@@ -379,47 +379,47 @@ export async function handleMockRequest(method: string, url: string, body?: any,
 
       const ambulances = (ambRes.data && ambRes.data.length > 0)
         ? ambRes.data.map(a => ({
-            id: a.id,
-            code: a.code,
-            driver_name: a.driver_name,
-            phone: a.phone,
-            lat: Number(a.lat),
-            lng: Number(a.lng),
-            status: a.status,
-            crew_level: a.crew_level,
-            note: a.note || '',
-          }))
+          id: a.id,
+          code: a.code,
+          driver_name: a.driver_name,
+          phone: a.phone,
+          lat: Number(a.lat),
+          lng: Number(a.lng),
+          status: a.status,
+          crew_level: a.crew_level,
+          note: a.note || '',
+        }))
         : getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
 
       const hospitals = (hospRes.data && hospRes.data.length > 0)
         ? hospRes.data.map(h => ({
-            id: h.id,
-            name: h.name,
-            lat: Number(h.lat),
-            lng: Number(h.lng),
-            phone: h.phone,
-            total_beds: h.total_beds,
-            available_beds: h.available_beds,
-            icu_beds: h.icu_beds,
-            capabilities: typeof h.capabilities === 'string'
-              ? h.capabilities.split(',').map((s: string) => s.trim())
-              : (h.capabilities || ['trauma', 'icu']),
-            receiving: h.receiving ?? true,
-            status: h.status || 'operational',
-            last_admission_at: h.last_admission_at || null,
-            updated_at: h.updated_at || new Date().toISOString(),
-          }))
+          id: h.id,
+          name: h.name,
+          lat: Number(h.lat),
+          lng: Number(h.lng),
+          phone: h.phone,
+          total_beds: h.total_beds,
+          available_beds: h.available_beds,
+          icu_beds: h.icu_beds,
+          capabilities: typeof h.capabilities === 'string'
+            ? h.capabilities.split(',').map((s: string) => s.trim())
+            : (h.capabilities || ['emergency', 'icu']),
+          receiving: h.receiving ?? true,
+          status: h.status || 'operational',
+          last_admission_at: h.last_admission_at || null,
+          updated_at: h.updated_at || new Date().toISOString(),
+        }))
         : getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
 
       const cameras = (camRes.data && camRes.data.length > 0)
         ? camRes.data.map(c => ({
-            id: c.id,
-            name: c.name,
-            location_name: c.location_name,
-            lat: Number(c.lat),
-            lng: Number(c.lng),
-            status: c.status || 'online',
-          }))
+          id: c.id,
+          name: c.name,
+          location_name: c.location_name,
+          lat: Number(c.lat),
+          lng: Number(c.lng),
+          status: c.status || 'online',
+        }))
         : DEFAULT_CAMERAS
 
       const incidents = getMockIncidents()
@@ -561,7 +561,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       police_notified: true,
       green_corridor: true,
       verification_answers: null,
-      assessment: { severity: 'critical', patients: 1, needs: ['trauma', 'icu'], notes: 'Automated rapid triage generated' },
+      assessment: { severity: 'critical', patients: 1, needs: ['emergency', 'icu'], notes: 'Automated rapid triage generated' },
       recommended_hospital_id: chosenHosp.id,
       selected_hospital_id: chosenHosp.id,
       selected_hospital_name: chosenHosp.name,
@@ -643,7 +643,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       police_notified: true,
       green_corridor: true,
       verification_answers: null,
-      assessment: { severity: 'severe', patients: 1, needs: ['trauma'], notes: 'Initial trauma assessment' },
+      assessment: { severity: 'severe', patients: 1, needs: ['emergency'], notes: 'Initial emergency assessment' },
       recommended_hospital_id: chosenHosp.id,
       selected_hospital_id: chosenHosp.id,
       selected_hospital_name: chosenHosp.name,
@@ -707,7 +707,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       route: computeMockRoute([13.0690, 80.2520], [h.lat, h.lng]),
     }))
     return {
-      needs: ['trauma', 'icu'],
+      needs: ['emergency', 'icu'],
       warning: null,
       selected_hospital_id: hosps[0]?.id || 1,
       recommended_hospital_id: hosps[0]?.id || 1,
@@ -735,14 +735,14 @@ export async function handleMockRequest(method: string, url: string, body?: any,
     const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
     const newHosp: Hospital = {
       id: Date.now(),
-      name: body?.name || 'Registered Trauma Facility',
+      name: body?.name || 'Registered Hospital Facility',
       lat: body?.lat || 13.0800,
       lng: body?.lng || 80.2700,
       phone: body?.phone || '+91-44-2800-9999',
       total_beds: body?.total_beds || 80,
       available_beds: body?.available_beds || 15,
       icu_beds: body?.icu_beds || 4,
-      capabilities: Array.isArray(body?.capabilities) ? body.capabilities : ['trauma', 'icu'],
+      capabilities: Array.isArray(body?.capabilities) ? body.capabilities : ['emergency', 'icu'],
       receiving: true,
       status: 'pending_verification',
       last_admission_at: null,
@@ -828,7 +828,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           inc.assessment = {
             severity: body?.severity || 'moderate',
             patients: body?.patients || 1,
-            needs: body?.needs || ['trauma'],
+            needs: body?.needs || ['emergency'],
             notes: body?.notes || '',
           }
           inc.status = 'assessed'

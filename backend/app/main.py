@@ -307,7 +307,7 @@ def create_incident(b: IncidentIn, db: Session = Depends(get_db), u: User = Depe
     # AUTOMATIC NEAREST HOSPITAL ALLOCATION BASED ON SEAT AVAILABILITY
     recs, _ = recommend_hospitals(db, inc)
     elig = [r for r in recs if r["eligible"]]
-    hosp_name = "Emergency Trauma Centre"
+    hosp_name = "Emergency Medical Centre"
     hosp_beds = 0
     if elig:
         top_h = elig[0]
@@ -449,10 +449,10 @@ def verify_and_respond(aid: int, b: DriverVerify, db: Session = Depends(get_db),
     a.status = "en_route"
     a.ambulance.status = "busy"
 
-    # Automatically assign best receiving trauma hospital
+    # Automatically assign best receiving hospital
     recs, needs = recommend_hospitals(db, inc)
     elig = [r for r in recs if r["eligible"]]
-    hosp_name = "Trauma Emergency Hospital"
+    hosp_name = "Emergency Medical Hospital"
     if elig:
         top = elig[0]
         inc.recommended_hospital_id = inc.selected_hospital_id = top["hospital"]["id"]
@@ -745,7 +745,7 @@ class HospitalRegister(BaseModel):
     total_beds: int = 60
     available_beds: int = 12
     icu_beds: int = 3
-    capabilities: list[str] = ["trauma", "icu"]
+    capabilities: list[str] = ["emergency", "icu"]
     username: str
     password: str
 
@@ -771,7 +771,7 @@ def register_hospital(b: HospitalRegister, db: Session = Depends(get_db)):
     user = User(
         username=b.username,
         password_hash=h(b.password),
-        name=f"{b.name} Trauma Unit",
+        name=f"{b.name} Emergency Unit",
         role="hospital",
         hospital_id=hosp.id
     )
@@ -905,7 +905,7 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
     # 2. Nearest Hospital Assignment with Seat Availability
     recs, _ = recommend_hospitals(db, inc)
     elig = [r for r in recs if r["eligible"]]
-    hosp_name = "Emergency Trauma Centre"
+    hosp_name = "Emergency Medical Centre"
     hosp_beds = 0
     if elig:
         top_h = elig[0]
@@ -999,7 +999,7 @@ async def detect_upload_video(
         asg = dispatch(db, inc, "Uploaded Video Neural Surveillance")
         recs, _ = recommend_hospitals(db, inc)
         elig = [r for r in recs if r["eligible"]]
-        hosp_name = "Emergency Trauma Centre"
+        hosp_name = "Emergency Medical Centre"
         hosp_beds = 0
         if elig:
             top_h = elig[0]

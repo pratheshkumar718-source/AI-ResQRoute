@@ -17,7 +17,7 @@ export function routesFor(inc?: Incident | null): RouteLine[] {
       coords: a.hospital_route.coords,
       color: '#198754', // Hospital transfer green corridor
       dashed: a.status === 'on_scene',
-      label: `🏥 Scene → ${a.hospital_name || 'Trauma Center'} (${a.hospital_route.distance_km} km · ETA ${a.hospital_route.eta_min} min on road network)`
+      label: `🏥 Scene → ${a.hospital_name || 'Hospital'} (${a.hospital_route.distance_km} km · ETA ${a.hospital_route.eta_min} min on road network)`
     })
   return out
 }

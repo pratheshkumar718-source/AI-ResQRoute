@@ -8,7 +8,9 @@
    1. Universal Mobile Touch & Viewport Resets
    -------------------------------------------------------------------------- */
 @media (max-width: 1023px) {
-  html, body {
+
+  html,
+  body {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
@@ -28,7 +30,9 @@
   }
 
   /* Touch tap feedback */
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: rgba(23, 59, 104, 0.1);
   }
 }
@@ -37,6 +41,7 @@
    2. Dashboard App Shell & Navigation Alignment (Tablets & Mobile)
    -------------------------------------------------------------------------- */
 @media (max-width: 1023px) {
+
   /* Convert desktop row-layout (sidebar + main) into stacked mobile column */
   .flex.h-screen.overflow-hidden {
     flex-direction: column !important;
@@ -59,7 +64,7 @@
   }
 
   /* Compact Brand Top Bar in Mobile Navigation */
-  aside.w-68 > div:first-child {
+  aside.w-68>div:first-child {
     padding: 8px 12px !important;
     display: flex !important;
     align-items: center !important;
@@ -86,17 +91,17 @@
   }
 
   /* Hide category group labels to save mobile vertical space */
-  aside.w-68 nav > div > div:first-child {
+  aside.w-68 nav>div>div:first-child {
     display: none !important;
   }
 
-  aside.w-68 nav > div {
+  aside.w-68 nav>div {
     display: flex !important;
     flex-direction: row !important;
     gap: 6px !important;
   }
 
-  aside.w-68 nav > div > div:last-child {
+  aside.w-68 nav>div>div:last-child {
     display: flex !important;
     flex-direction: row !important;
     gap: 6px !important;
@@ -126,7 +131,7 @@
   }
 
   /* Hide desktop sidebar footer on mobile; keep main content focused */
-  aside.w-68 > div:last-child {
+  aside.w-68>div:last-child {
     display: none !important;
   }
 
@@ -163,6 +168,7 @@
    3. Responsive Grids & Column Stacking (Mobile Screens <= 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Force all desktop multi-column grids to stack cleanly into single-column cards */
   .grid.lg\:grid-cols-3,
   .grid.lg\:grid-cols-12,
@@ -215,7 +221,7 @@
   }
 
   /* Header subtexts */
-  h1 + p,
+  h1+p,
   header p {
     font-size: 11px !important;
   }
@@ -225,6 +231,7 @@
    4. AI Camera Surveillance Page Mobile Alignment (CameraPage.tsx)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Video Container takes full width with 16:9 aspect ratio */
   .aspect-video {
     width: 100% !important;
@@ -244,7 +251,7 @@
     top: 48px !important;
   }
 
-  .absolute.top-12.left-1\/2 > div {
+  .absolute.top-12.left-1\/2>div {
     font-size: 10px !important;
     padding: 6px 10px !important;
     white-space: normal !important;
@@ -270,7 +277,7 @@
     align-items: stretch !important;
   }
 
-  .mt-4.flex.flex-wrap.items-center.justify-between > div {
+  .mt-4.flex.flex-wrap.items-center.justify-between>div {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
@@ -326,6 +333,7 @@
    5. Burst Evidence Stream Gallery Alignment (Mobile 2-Column Grid)
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
+
   /* Exactly aligns the 6 burst evidence frames into a balanced 2-column mobile grid */
   .grid.grid-cols-2.md\:grid-cols-3.lg\:grid-cols-6 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -347,6 +355,7 @@
 }
 
 @media (min-width: 641px) and (max-width: 1023px) {
+
   /* On tablets, render 3 balanced columns */
   .grid.grid-cols-2.md\:grid-cols-3.lg\:grid-cols-6 {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -358,6 +367,7 @@
    6. Paramedic Cockpit Mobile Touch Layout (Driver.tsx)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Duty Status Button & Siren Toggle Bar on Mobile */
   .flex.flex-wrap.items-center.justify-between.gap-3 {
     flex-direction: column !important;
@@ -381,7 +391,7 @@
     justify-content: center !important;
   }
 
-  .fixed.inset-0.z-50 > div {
+  .fixed.inset-0.z-50>div {
     width: 100% !important;
     max-width: 100% !important;
     max-height: calc(100dvh - 16px) !important;
@@ -414,6 +424,7 @@
    7. Incidents & Operations Command Mobile Alignment (Incidents.tsx)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Master-Detail split in Incidents: stacks vertically with clean touch spacing */
   .grid.grid-cols-1.lg\:grid-cols-12 {
     display: flex !important;
@@ -473,6 +484,7 @@
    9. Tables & Audit History Mobile Scroll (HistoryPage.tsx / Ambulances.tsx)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Wrap table containers with momentum touch scrolling */
   table {
     display: block !important;
@@ -493,6 +505,7 @@
    10. Public Landing Page & Auth Modal Mobile Alignment (Home.tsx / Login.tsx)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+
   /* Home Top Navigation Bar */
   header.enterprise-nav {
     padding-left: 12px !important;
@@ -536,7 +549,7 @@
     justify-content: center !important;
   }
 
-  .fixed.inset-0.bg-black\/60 > div {
+  .fixed.inset-0.bg-black\/60>div {
     width: 100% !important;
     max-width: 480px !important;
     max-height: calc(100dvh - 20px) !important;

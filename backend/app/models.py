@@ -117,7 +117,7 @@ class Hospital(Base):
     total_beds = Column(Integer, default=50)
     available_beds = Column(Integer, default=10)
     icu_beds = Column(Integer, default=2)
-    capabilities = Column(String, default="")  # comma-separated: trauma,icu,neuro,pediatric,burns
+    capabilities = Column(String, default="")  # comma-separated: emergency,icu,neuro,pediatric,burns
     receiving = Column(Boolean, default=True)
     status = Column(String, default="verified")  # verified | pending_verification | rejected
     last_admission_at = Column(DateTime, nullable=True)

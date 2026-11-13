@@ -23,7 +23,7 @@ function HospitalPanel({ inc }: { inc: Incident }) {
   return (
     <Card title="Hospital Recommendation & Clinical Bed Match">
       <p className="text-xs text-[#666666] mb-2">
-        Care Needs: {(recs.needs || []).join(', ') || 'general trauma'} · {recs.disclaimer || 'Automated bed allocation by real-time ICU count'}
+        Care Needs: {(recs.needs || []).join(', ') || 'general emergency'} · {recs.disclaimer || 'Automated bed allocation by real-time ICU count'}
       </p>
       {recs.warning && <div className="mb-2"><Alert kind="error">{recs.warning}</Alert></div>}
       <ul className="space-y-2">
@@ -294,7 +294,7 @@ export default function Incidents() {
                         <Check className="w-4 h-4" />Confirm Accident & Dispatch
                       </Btn>
                       <Btn v="danger" onClick={() => act(() => api.post(`/api/incidents/${sel.id}/verify`, { action: 'escalate' }), 'Escalated as critical — priority dispatch')}>
-                        <AlertOctagon className="w-4 h-4" />Escalate (Critical Trauma)
+                        <AlertOctagon className="w-4 h-4" />Escalate (Critical Emergency)
                       </Btn>
                       <Btn v="ghost" onClick={() => act(() => api.post(`/api/incidents/${sel.id}/verify`, { action: 'reject' }), 'Incident rejected')}>
                         <X className="w-4 h-4" />Reject (False Alarm)
@@ -356,7 +356,7 @@ export default function Incidents() {
               <Card title="Paramedic Crew Assessment">
                 <div className="text-xs sm:text-sm space-y-1">
                   <div>Severity: <b>{sel.assessment.severity}</b> · Affected Patients: <b>{sel.assessment.patients}</b></div>
-                  <div>Clinical Care Needs: <b>{sel.assessment.needs?.join(', ') || 'General Trauma Stabilization'}</b></div>
+                  <div>Clinical Care Needs: <b>{sel.assessment.needs?.join(', ') || 'General Emergency Stabilization'}</b></div>
                   {sel.assessment.notes && <div className="text-[#666666] mt-1">{sel.assessment.notes}</div>}
                 </div>
               </Card>

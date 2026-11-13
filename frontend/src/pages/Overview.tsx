@@ -30,7 +30,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
             </span>
           </div>
           <p className="text-xs text-[#666666] mt-0.5">
-            Real-time cross-agency oversight: AI optical cameras, paramedic fleet units, police green corridors, and hospital trauma bays.
+            Real-time cross-agency oversight: AI optical cameras, paramedic fleet units, police green corridors, and hospital emergency bays.
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
           icon={<Truck className="w-5 h-5" />}
         />
         <Stat
-          label="Free Trauma Beds (ICU)"
+          label="Free Hospital Beds (ICU)"
           value={`${totalFreeBeds} (${totalFreeIcu})`}
           color="bg-[#173B68]"
           icon={<Building2 className="w-5 h-5" />}

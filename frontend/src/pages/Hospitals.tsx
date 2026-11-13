@@ -78,7 +78,7 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
         {/* Emergency Contact Number Banner */}
         <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase font-bold text-[#666666]">Trauma Desk & Emergency Hotline</div>
+            <div className="text-[10px] uppercase font-bold text-[#666666]">Emergency Desk & Hotline</div>
             <div className="text-base font-black text-[#173B68] font-mono tracking-wide">{h.phone}</div>
           </div>
           <a
@@ -96,7 +96,7 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
             <div className="flex items-center justify-between text-xs font-bold text-[#198754]">
               <span className="flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 animate-pulse" />
-                <span>INCOMING TRAUMA INTAKE ({incoming.length})</span>
+                <span>INCOMING PATIENT INTAKE ({incoming.length})</span>
               </span>
               <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-[#198754]/20">
                 Live Pre-Arrival
@@ -128,9 +128,8 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
             </div>
             <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-500 ${
-                  pct > 30 ? 'bg-[#198754]' : pct > 10 ? 'bg-[#D69E36]' : 'bg-[#DC3545]'
-                }`}
+                className={`h-full transition-all duration-500 ${pct > 30 ? 'bg-[#198754]' : pct > 10 ? 'bg-[#D69E36]' : 'bg-[#DC3545]'
+                  }`}
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -149,7 +148,7 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
           <div className="text-xs text-[#666666]">
             <span>Capabilities: </span>
             <span className="font-mono text-[#173B68] font-medium">
-              {Array.isArray(h.capabilities) ? h.capabilities.join(' · ') : (h.capabilities || 'General Trauma')}
+              {Array.isArray(h.capabilities) ? h.capabilities.join(' · ') : (h.capabilities || 'General Emergency')}
             </span>
           </div>
         </div>
@@ -209,11 +208,10 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
                     `Hospital ${h.name} set to ${!h.receiving ? 'RECEIVING' : 'DIVERTED'}`
                   )
                 }
-                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition cursor-pointer ${
-                  h.receiving
+                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition cursor-pointer ${h.receiving
                     ? 'bg-[#FDF2F2] hover:bg-[#FCE8E8] text-[#DC3545] border-[#DC3545]/30'
                     : 'bg-[#F0F9F4] hover:bg-[#E2F4E9] text-[#198754] border-[#198754]/30'
-                }`}
+                  }`}
               >
                 {h.receiving ? 'Divert Intake' : 'Resume Receiving'}
               </button>
@@ -240,7 +238,7 @@ export default function Hospitals() {
     total_beds: 100,
     available_beds: 15,
     icu_beds: 4,
-    capabilities: 'trauma,icu,neuro',
+    capabilities: 'emergency,icu,neuro',
   })
 
   const isAdmin = user?.role === 'admin'
@@ -277,7 +275,7 @@ export default function Hospitals() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">
-              {isHospitalStaff ? 'Hospital Trauma Admission Console' : 'Regional Hospital Trauma Network'}
+              {isHospitalStaff ? 'Hospital Admission Console' : 'Regional Hospital Network'}
             </h1>
             {isHospitalStaff && (
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-[#F0F9F4] text-[#198754] border border-[#198754]/30">
@@ -287,7 +285,7 @@ export default function Hospitals() {
           </div>
           <p className="text-xs text-[#666666] mt-0.5">
             {isHospitalStaff
-              ? 'Private hospital console: Manage open trauma beds, ICU readiness, and incoming ambulance admissions.'
+              ? 'Private hospital console: Manage open hospital beds, ICU readiness, and incoming ambulance admissions.'
               : 'Central health authority command: Real-time bed oversight, capability triage, and hospital approvals.'}
           </p>
         </div>
@@ -360,7 +358,7 @@ export default function Hospitals() {
             <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
               <h3 className="font-bold text-base text-[#171717] flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-[#173B68]" />
-                <span>Register Emergency Trauma Center</span>
+                <span>Register Emergency Hospital</span>
               </h3>
               <button
                 onClick={() => setRegisterOpen(false)}
@@ -375,7 +373,7 @@ export default function Hospitals() {
                 <label className="font-semibold text-[#171717] block mb-1">Hospital Facility Name *</label>
                 <input
                   className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717] focus:outline-none focus:border-[#173B68]"
-                  placeholder="e.g. Apollo Trauma & Emergency Center"
+                  placeholder="e.g. Apollo Emergency Medical Center"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
                   required
@@ -433,7 +431,7 @@ export default function Hospitals() {
                   className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm text-[#171717]"
                   value={form.capabilities}
                   onChange={e => setForm({ ...form, capabilities: e.target.value })}
-                  placeholder="trauma,icu,neuro,pediatric,burns"
+                  placeholder="emergency,icu,neuro,pediatric,burns"
                 />
               </div>
 

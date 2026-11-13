@@ -11,7 +11,7 @@ import { routesFor } from '../components/RouteHelpers'
 import { api, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 import { sound } from '../lib/audio'
 
-const NEEDS = ['trauma', 'icu', 'neuro', 'pediatric', 'burns']
+const NEEDS = ['emergency', 'icu', 'neuro', 'pediatric', 'burns']
 
 function Assess({ aid }: { aid: number }) {
   const act = useAct()
@@ -66,8 +66,8 @@ function Assess({ aid }: { aid: number }) {
                   type="button"
                   onClick={() => setNeeds(checked ? needs.filter(x => x !== n) : [...needs, n])}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer capitalize ${checked
-                      ? 'bg-[#EBF2FA] border-[#173B68] text-[#173B68]'
-                      : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
+                    ? 'bg-[#EBF2FA] border-[#173B68] text-[#173B68]'
+                    : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
                     }`}
                 >
                   {n}
@@ -168,8 +168,8 @@ function Active({ inc }: { inc: Incident }) {
 
             {/* Police Green Corridor Status Indicator */}
             <div className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${inc.green_corridor
-                ? 'bg-[#F0F9F4] border-[#198754]/30 text-[#166534]'
-                : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#666666]'
+              ? 'bg-[#F0F9F4] border-[#198754]/30 text-[#166534]'
+              : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#666666]'
               }`}>
               <span className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${inc.green_corridor ? 'bg-[#198754]' : 'bg-[#94A3B8]'}`} />
@@ -261,7 +261,7 @@ function Active({ inc }: { inc: Incident }) {
                   {hosp.phone && (
                     <div className="text-xs text-[#666666] mt-1.5 flex items-center gap-1.5">
                       <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
-                      <span>Trauma Desk: {hosp.phone}</span>
+                      <span>Emergency Desk: {hosp.phone}</span>
                     </div>
                   )}
                 </div>
@@ -295,7 +295,7 @@ function Active({ inc }: { inc: Incident }) {
               <p className="text-[#666666]">
                 Transporting patient to <b className="text-[#171717]">{hosp?.name}</b> —{' '}
                 {a.leg_complete ? (
-                  <span className="text-[#198754] font-bold">Arrived at Trauma Bay</span>
+                  <span className="text-[#198754] font-bold">Arrived at Emergency Bay</span>
                 ) : (
                   <span className="text-[#173B68] font-mono">Traveling along street corridor…</span>
                 )}
@@ -520,8 +520,8 @@ export default function Driver() {
               disabled={!!active}
               title={active ? 'Cannot change status during an active assignment' : 'Click to toggle availability'}
               className={`px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm ${me.status === 'available'
-                  ? 'bg-[#F0F9F4] text-[#198754] border border-[#198754]/40 hover:bg-[#E2F4E9]'
-                  : 'bg-[#FDF2F2] text-[#DC3545] border border-[#DC3545]/40 hover:bg-[#FCE8E8]'
+                ? 'bg-[#F0F9F4] text-[#198754] border border-[#198754]/40 hover:bg-[#E2F4E9]'
+                : 'bg-[#FDF2F2] text-[#DC3545] border border-[#DC3545]/40 hover:bg-[#FCE8E8]'
                 } ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
@@ -538,8 +538,8 @@ export default function Driver() {
             <button
               onClick={toggleSound}
               className={`p-2 rounded-lg border transition ${muted
-                  ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545]'
-                  : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
+                ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545]'
+                : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
                 }`}
               title={muted ? 'Unmute Emergency Siren' : 'Mute Emergency Siren'}
             >
@@ -709,8 +709,8 @@ export default function Driver() {
                         type="button"
                         onClick={() => setVerifyChoice('yes')}
                         className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'yes'
-                            ? 'bg-[#F0F9F4] border-[#198754] text-[#198754] shadow-sm'
-                            : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
+                          ? 'bg-[#F0F9F4] border-[#198754] text-[#198754] shadow-sm'
+                          : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
                           }`}
                       >
                         <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-[#198754]" />
@@ -721,8 +721,8 @@ export default function Driver() {
                         type="button"
                         onClick={() => setVerifyChoice('no')}
                         className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'no'
-                            ? 'bg-[#FDF2F2] border-[#DC3545] text-[#DC3545] shadow-sm'
-                            : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
+                          ? 'bg-[#FDF2F2] border-[#DC3545] text-[#DC3545] shadow-sm'
+                          : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
                           }`}
                       >
                         <PhoneOff className="w-4 h-4 mx-auto mb-1 text-[#DC3545]" />
@@ -733,8 +733,8 @@ export default function Driver() {
                         type="button"
                         onClick={() => setVerifyChoice('unable')}
                         className={`p-2.5 rounded-lg text-xs font-bold border transition text-center cursor-pointer ${verifyChoice === 'unable'
-                            ? 'bg-[#FDF9F0] border-[#D69E36] text-[#855B14] shadow-sm'
-                            : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
+                          ? 'bg-[#FDF9F0] border-[#D69E36] text-[#855B14] shadow-sm'
+                          : 'bg-white border-[#CBD5E1] text-[#666666] hover:bg-[#F7F8FA]'
                           }`}
                       >
                         <HelpCircle className="w-4 h-4 mx-auto mb-1 text-[#D69E36]" />
@@ -779,8 +779,8 @@ export default function Driver() {
                                 type="button"
                                 onClick={() => setFleetNeeded(cnt)}
                                 className={`py-1.5 rounded-md text-xs font-bold border transition cursor-pointer ${fleetNeeded === cnt
-                                    ? 'bg-[#173B68] text-white border-[#173B68]'
-                                    : 'bg-white border-[#CBD5E1] text-[#666666]'
+                                  ? 'bg-[#173B68] text-white border-[#173B68]'
+                                  : 'bg-white border-[#CBD5E1] text-[#666666]'
                                   }`}
                               >
                                 {cnt} Unit{cnt > 1 ? 's' : ''}
@@ -818,8 +818,8 @@ export default function Driver() {
                       type="button"
                       onClick={handlePrimaryVerification}
                       className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm ${verifyChoice === 'no'
-                          ? 'bg-[#DC3545] hover:bg-[#BB2D3B] text-white'
-                          : 'bg-[#173B68] hover:bg-[#102A4C] text-white'
+                        ? 'bg-[#DC3545] hover:bg-[#BB2D3B] text-white'
+                        : 'bg-[#173B68] hover:bg-[#102A4C] text-white'
                         }`}
                     >
                       <CheckCircle2 className="w-4 h-4" />
