@@ -109,6 +109,7 @@ function Assess({ aid }: { aid: number }) {
 function Active({ inc }: { inc: Incident }) {
   const { ambulances, hospitals, tracking, user } = useApp()
   const act = useAct()
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null)
   const a = inc.assignments.find(x =>
     ['offered', 'en_route', 'on_scene', 'transporting', 'at_hospital'].includes(x.status)
   )!
@@ -341,6 +342,28 @@ function Active({ inc }: { inc: Incident }) {
           </Card>
         )}
       </div>
+
+      {zoomUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setZoomUrl(null)}
+        >
+          <div className="max-w-3xl w-full bg-white border border-[#CBD5E1] rounded-xl overflow-hidden shadow-2xl p-2">
+            <img
+              src={resolveEvidenceUrl(zoomUrl)}
+              alt="Enlarged collision frame"
+              onError={(ev) => {
+                ev.currentTarget.onerror = null
+                ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+              }}
+              className="w-full h-auto rounded-lg object-contain max-h-[80vh]"
+            />
+            <div className="p-2 text-center text-xs text-[#666666]">
+              High-resolution collision evidence frame · Click anywhere to close
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
