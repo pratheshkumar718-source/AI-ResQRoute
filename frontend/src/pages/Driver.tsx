@@ -245,48 +245,48 @@ function Active({ inc }: { inc: Incident }) {
           </Card>
         )}
 
-        {a.status === 'on_scene' && !inc.assessment && <Assess aid={a.id} />}
-
-        {a.status === 'on_scene' && inc.assessment && (
-          <Card title="Assigned Receiving Hospital">
-            {hosp ? (
-              <div className="text-xs sm:text-sm space-y-3">
-                <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30">
-                  <div className="font-bold text-[#171717] text-base">{hosp.name}</div>
-                  <div className="text-xs text-[#198754] mt-0.5 font-medium">
-                    {inc.recommended_hospital_id === hosp.id
-                      ? 'Matched by AI Bed Capacity & ICU Availability'
-                      : 'Assigned by Chief Dispatch Controller'}
+        {a.status === 'on_scene' && (
+          <>
+            <Card title="Stage 2 Redirection: Assigned Receiving Hospital">
+              {hosp ? (
+                <div className="text-xs sm:text-sm space-y-3">
+                  <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30">
+                    <div className="font-bold text-[#171717] text-base">{hosp.name}</div>
+                    <div className="text-xs text-[#198754] mt-0.5 font-medium flex items-center gap-1">
+                      <span>✓ Matched via Dijkstra Shortest Path & Bed Availability</span>
+                    </div>
+                    {hosp.phone && (
+                      <div className="text-xs text-[#666666] mt-1.5 flex items-center gap-1.5">
+                        <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
+                        <span>Emergency Desk: {hosp.phone}</span>
+                      </div>
+                    )}
                   </div>
-                  {hosp.phone && (
-                    <div className="text-xs text-[#666666] mt-1.5 flex items-center gap-1.5">
-                      <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
-                      <span>Emergency Desk: {hosp.phone}</span>
+
+                  {a.hospital_route && (
+                    <div className="text-xs text-[#666666] flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                      <span>Dijkstra Shortest Route: <b>{a.hospital_route.distance_km} km</b></span>
+                      <span className="font-mono text-[#173B68] font-bold">ETA: ~{a.hospital_route.eta_min} min</span>
                     </div>
                   )}
+
+                  <Btn
+                    className="w-full py-2.5"
+                    onClick={() => post('start-hospital-route', 'Hospital route initiated — emergency intake alerted')}
+                  >
+                    <Navigation className="w-4 h-4" />
+                    <span>Start Hospital Route (Stage 2 Redirection)</span>
+                  </Btn>
                 </div>
+              ) : (
+                <Alert kind="error">
+                  {inc.hospital_warning ?? 'No hospital selected yet.'} Awaiting destination choice.
+                </Alert>
+              )}
+            </Card>
 
-                {a.hospital_route && (
-                  <div className="text-xs text-[#666666] flex justify-between">
-                    <span>Hospital Route: <b>{a.hospital_route.distance_km} km</b></span>
-                    <span className="font-mono text-[#173B68] font-bold">ETA: {a.hospital_route.eta_min} min</span>
-                  </div>
-                )}
-
-                <Btn
-                  className="w-full py-2.5"
-                  onClick={() => post('start-hospital-route', 'Hospital route initiated')}
-                >
-                  <Navigation className="w-4 h-4" />
-                  <span>Start Hospital Route (Stage 2)</span>
-                </Btn>
-              </div>
-            ) : (
-              <Alert kind="error">
-                {inc.hospital_warning ?? 'No hospital selected yet.'} Awaiting destination choice.
-              </Alert>
-            )}
-          </Card>
+            {!inc.assessment && <Assess aid={a.id} />}
+          </>
         )}
 
         {a.status === 'transporting' && (

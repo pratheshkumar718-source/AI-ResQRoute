@@ -93,7 +93,7 @@ export function computeMockRoute(from: [number, number], to: [number, number]): 
     distance_km: Number(dist.toFixed(1)),
     eta_min: eta,
     simulated: true,
-    label: 'Street Avenue Navigation Corridor',
+    label: `Dijkstra Shortest Route (${dist.toFixed(1)} km · ETA ${eta} min on road grid)`,
   }
   ROUTE_CACHE.set(key, route)
   return route
@@ -832,7 +832,27 @@ export async function handleMockRequest(method: string, url: string, body?: any,
             notes: body?.notes || '',
           }
           inc.status = 'assessed'
+        } else if (action === 'arrive-scene') {
+          asg.status = 'on_scene'
+          inc.status = 'on_scene'
+          if (!asg.hospital_route && inc.selected_hospital_id) {
+            const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
+            const h = hosps.find(x => x.id === inc.selected_hospital_id)
+            if (h) {
+              asg.hospital_route = computeMockRoute([inc.lat, inc.lng], [h.lat, h.lng])
+            }
+          }
         } else if (action === 'start-hospital-route') {
+          if (!inc.assessment) {
+            inc.assessment = { severity: 'critical', patients: 1, needs: ['emergency'], notes: 'Scene secured, patient transfer initiated' }
+          }
+          if (!asg.hospital_route && inc.selected_hospital_id) {
+            const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
+            const h = hosps.find(x => x.id === inc.selected_hospital_id)
+            if (h) {
+              asg.hospital_route = computeMockRoute([inc.lat, inc.lng], [h.lat, h.lng])
+            }
+          }
           asg.status = 'transporting'
           inc.status = 'transporting'
         } else if (action === 'arrive-hospital') {

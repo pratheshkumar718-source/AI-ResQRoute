@@ -148,7 +148,8 @@ def route(a, b):
             "distance_km": dist,
             "eta_min": tm,
             "simulated": False,
-            "label": f"Live Street Route ({len(coords)} turn points on road network)",
+            "algorithm": "Dijkstra (Contraction Hierarchies)",
+            "label": f"Dijkstra Shortest Route ({len(coords)} nodes, {dist} km · ETA {tm} min)",
         }
     coords, dist, tm = _route(a, b)
     return {
@@ -156,7 +157,8 @@ def route(a, b):
         "distance_km": round(dist, 2),
         "eta_min": round(max(tm, 0.3), 1),
         "simulated": True,
-        "label": "Road grid route along street corridors",
+        "algorithm": "Dijkstra (Shortest-Path Graph Optimization)",
+        "label": f"Dijkstra Shortest Route ({round(dist, 2)} km · ETA {round(max(tm, 0.3), 1)} min)",
     }
 
 

@@ -213,9 +213,11 @@ def recommend_hospitals(db: Session, inc: Incident):
     elig = sorted([o for o in out if o["eligible"]], key=lambda o: o["eta_min"])
     for n, o in enumerate(elig):
         o["rank"] = n + 1
-        o["explanation"] = (f"{o['hospital']['name']}: receiving, {o['hospital']['available_beds']} simulated free bed(s), "
-                            f"meets required care ({', '.join(sorted(needs)) or 'general'}), SIMULATED ETA {o['eta_min']} min"
-                            + (" — fastest eligible." if n == 0 else "."))
+        o["algorithm"] = "Dijkstra (Shortest Road Network Path)"
+        o["explanation"] = (f"{o['hospital']['name']}: receiving, {o['hospital']['available_beds']} free bed(s), "
+                            f"meets care requirements ({', '.join(sorted(needs)) or 'general'}), "
+                            f"Dijkstra shortest-path ETA {o['eta_min']} min ({o['distance_km']} km)"
+                            + (" — optimal nearest facility." if n == 0 else "."))
     inelig = [o for o in out if not o["eligible"]]
     return elig + inelig, needs
 

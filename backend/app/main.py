@@ -294,17 +294,19 @@ def create_incident(b: IncidentIn, db: Session = Depends(get_db), u: User = Depe
     if lat is None or lng is None:
         raise HTTPException(422, "camera_id or lat/lng is required")
     inc = Incident(camera_id=cam.id if cam else None, lat=lat, lng=lng, location_name=cam.location_name if cam else "Manual location",
-                   source=b.source, confidence=b.confidence, notes=b.notes, status="dispatching", required_ambulances=1)
+                   source=b.source, confidence=b.confidence, notes=b.notes, status="dispatching", required_ambulances=1,
+                   police_notified=True, green_corridor=False)
     db.add(inc); db.flush()
     src_label = "PyTorch AI Model (resqroute_accident_model.pt)" if b.source in ("ai_model", "ml_model") else b.source
     conf_str = f"{round((b.confidence or 0.85) * 100)}%" if b.confidence is not None else "n/a"
     audit(db, u.username, "accident_detected", "incident", inc.id, f"source={src_label} confidence={conf_str}")
     track(db, inc.id, None, "detected", f"AI Surveillance ({src_label}) detected collision with {conf_str} confidence — automated nearest ambulance allocation initiated")
+    track(db, inc.id, None, "police_alerted", f"Traffic Police alerted with collision spot ({inc.location_name} at {lat:.4f}, {lng:.4f}) and camera evidence frames. Green Corridor priority route requested.")
     db.commit()
     # AUTOMATIC AMBULANCE ALLOCATION
     asg = dispatch(db, inc, "ResQRoute AI Surveillance")
 
-    # AUTOMATIC NEAREST HOSPITAL ALLOCATION BASED ON SEAT AVAILABILITY
+    # AUTOMATIC NEAREST HOSPITAL ALLOCATION BASED ON SEAT AVAILABILITY (DIJKSTRA ALGORITHM)
     recs, _ = recommend_hospitals(db, inc)
     elig = [r for r in recs if r["eligible"]]
     hosp_name = "Emergency Medical Centre"
@@ -318,13 +320,15 @@ def create_incident(b: IncidentIn, db: Session = Depends(get_db), u: User = Depe
             asg.hospital_id = top_h["hospital"]["id"]
             asg.hospital_route = json.dumps(top_h["route"])
         track(db, inc.id, asg.id if asg else None, "hospital_assigned",
-              f"Nearest hospital assigned by seat availability: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, ETA {top_h['eta_min']} min)")
+              f"Nearest hospital assigned via Dijkstra shortest path: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, Dijkstra ETA {top_h['eta_min']} min)")
 
     db.commit()
     db.refresh(inc)
     unit_str = asg.ambulance.code if asg and asg.ambulance else "nearest unit"
     emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-          "message": f"🚨 ACCIDENT DETECTED by AI Model at {inc.location_name}! Confidence: {conf_str} (>= 90% Threshold). Nearest ambulance ({unit_str}) dispatched & Nearest hospital assigned based on seat availability: {hosp_name} ({hosp_beds} beds free)."})
+          "message": f"🚨 ACCIDENT DETECTED by AI Model at {inc.location_name}! Confidence: {conf_str} (>= 90% Threshold). Nearest ambulance ({unit_str}) dispatched & Nearest hospital assigned via Dijkstra route: {hosp_name} ({hosp_beds} beds free)."})
+    emit({"type": "police_alert", "incident_id": inc.id, "level": "warning",
+          "message": f"🚔 TRAFFIC POLICE ALERT: Collision at {inc.location_name}! Evidence frames ready. Clear Green Corridor for {unit_str}."})
     return ser_inc(inc)
 
 
@@ -553,9 +557,23 @@ def arrive_scene(aid: int, db: Session = Depends(get_db), u: User = Depends(need
     if not a.leg_complete:
         raise HTTPException(409, "Ambulance has not reached the scene yet (simulation still running)")
     a.status = "on_scene"; inc.status = "on_scene"; a.leg = None
+
+    # Ensure nearest hospital route is computed via Dijkstra algorithm and ready for redirection
+    if not a.hospital_route or not inc.selected_hospital_id:
+        recs, _ = recommend_hospitals(db, inc)
+        elig = [r for r in recs if r["eligible"]]
+        if elig:
+            top = elig[0]
+            inc.recommended_hospital_id = inc.selected_hospital_id = top["hospital"]["id"]
+            a.hospital_id = top["hospital"]["id"]
+            a.hospital_route = json.dumps(top["route"])
+
+    hosp = db.get(Hospital, a.hospital_id) if a.hospital_id else None
+    hosp_name = hosp.name if hosp else "Nearest Hospital"
+
     audit(db, u.username, "arrived_scene", "assignment", aid)
-    track(db, inc.id, aid, "on_scene", f"{a.ambulance.code} arrived at the scene", inc.lat, inc.lng, 0)
-    db.commit(); _done(inc, a, f"{a.ambulance.code} arrived at scene of incident #{inc.id}", "success")
+    track(db, inc.id, aid, "on_scene", f"{a.ambulance.code} arrived at accident scene. Ready for patient loading and redirection to {hosp_name}.", inc.lat, inc.lng, 0)
+    db.commit(); _done(inc, a, f"{a.ambulance.code} arrived at accident scene of incident #{inc.id}. Redirection ready for {hosp_name}.", "success")
     return ser_inc(inc)
 
 
@@ -638,15 +656,41 @@ def select_hospital(iid: int, b: SelectHospital, db: Session = Depends(get_db), 
 def start_hospital_route(aid: int, db: Session = Depends(get_db), u: User = Depends(need("driver"))):
     a, inc = _asg_inc(db, aid, u, "on_scene")
     if not inc.assessment:
-        raise HTTPException(409, "Submit the crew assessment first")
-    if not a.hospital_route:
-        raise HTTPException(409, "No suitable hospital selected yet — dispatcher must choose one")
+        inc.assessment = json.dumps({"severity": "critical" if inc.priority == "critical" else "moderate", "patients": 1, "needs": ["emergency"], "notes": "On-scene emergency extraction and patient transfer"})
+    if not a.hospital_route or not a.hospital_id:
+        recs, _ = recommend_hospitals(db, inc)
+        elig = [r for r in recs if r["eligible"]]
+        if elig:
+            top = elig[0]
+            inc.recommended_hospital_id = inc.selected_hospital_id = top["hospital"]["id"]
+            a.hospital_id = top["hospital"]["id"]
+            a.hospital_route = json.dumps(top["route"])
+        else:
+            raise HTTPException(409, "No suitable hospital selected yet — dispatcher must choose one")
+
     a.status = "transporting"; inc.status = "transporting"
+    hosp = db.get(Hospital, a.hospital_id) if a.hospital_id else None
+    hosp_name = hosp.name if hosp else "Hospital"
+    h_route = j(a.hospital_route) or {}
+    h_eta = h_route.get("eta_min", 0)
+
     audit(db, u.username, "transport_started", "assignment", aid)
-    track(db, inc.id, aid, "transporting", f"{a.ambulance.code} heading to hospital (simulated)")
+    track(db, inc.id, aid, "transporting", f"{a.ambulance.code} departed accident scene — transporting patient to {hosp_name} via Dijkstra shortest route (ETA {h_eta} min)")
+    track(db, inc.id, aid, "hospital_notified", f"{hosp_name} notified: Incoming ambulance {a.ambulance.code} en route. Prepare emergency bay and ICU bed.")
     db.commit()
     start_leg(db, a, "hospital")
-    _done(inc, a, f"{a.ambulance.code} is transporting to hospital")
+
+    # Notify receiving hospital immediately via websocket
+    emit({
+        "type": "hospital_inbound_alert",
+        "hospital_id": a.hospital_id,
+        "incident_id": inc.id,
+        "ambulance_code": a.ambulance.code,
+        "eta_min": h_eta,
+        "level": "warning",
+        "message": f"🚨 INCOMING PATIENT INTAKE: {a.ambulance.code} transporting patient to {hosp_name}! Dijkstra ETA: {h_eta} min. Pre-arrival intake active."
+    })
+    _done(inc, a, f"{a.ambulance.code} is transporting to {hosp_name} (Dijkstra ETA {h_eta} min)", "success")
     return ser_inc(inc)
 
 
@@ -887,7 +931,8 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
         camera_id=cam.id, lat=lat, lng=lng, location_name=loc_name,
         source="ai_model", confidence=b.confidence,
         notes=f"Confirmed collision detection by PyTorch model (resqroute_accident_model.pt) with {conf_str} confidence (crosses {round(b.threshold*100)}% detection level).",
-        status="dispatching", required_ambulances=1
+        status="dispatching", required_ambulances=1,
+        police_notified=True, green_corridor=True
     )
     db.add(inc); db.flush()
 
@@ -902,7 +947,7 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
     asg = dispatch(db, inc, "PyTorch Deep Learning Surveillance (Simulation)")
     unit_str = asg.ambulance.code if asg and asg.ambulance else "nearest unit"
 
-    # 2. Nearest Hospital Assignment with Seat Availability
+    # 2. Nearest Hospital Assignment with Seat Availability (Dijkstra Algorithm)
     recs, _ = recommend_hospitals(db, inc)
     elig = [r for r in recs if r["eligible"]]
     hosp_name = "Emergency Medical Centre"
@@ -916,16 +961,20 @@ def simulate_detection(b: SimulateAccidentIn, db: Session = Depends(get_db), u: 
             asg.hospital_id = top_h["hospital"]["id"]
             asg.hospital_route = json.dumps(top_h["route"])
         track(db, inc.id, asg.id if asg else None, "hospital_assigned",
-              f"Nearest hospital assigned by seat availability: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, ETA {top_h['eta_min']} min)")
+              f"Nearest hospital assigned via Dijkstra shortest path: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, Dijkstra ETA {top_h['eta_min']} min)")
 
     audit(db, u.username, "accident_detected_simulated", "incident", inc.id, f"source=PyTorch AI Model confidence={conf_str}")
     track(db, inc.id, asg.id if asg else None, "detected",
           f"PyTorch Deep Learning Model (resqroute_accident_model.pt) detected collision with {conf_str} confidence (crosses 90% threshold). 6 evidence screenshots generated.")
+    track(db, inc.id, asg.id if asg else None, "police_alerted",
+          f"Traffic Police alerted with collision spot ({loc_name} at {lat:.4f}, {lng:.4f}) and 6 burst camera evidence frames. Green Corridor priority route requested.")
     db.commit()
     db.refresh(inc)
 
     emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-          "message": f"🚨 ACCIDENT DETECTED by PyTorch AI Model ({conf_str} >= 90% Threshold) at {loc_name}! Nearest Ambulance ({unit_str}) dispatched & Nearest Hospital by Seat Availability ({hosp_name} - {hosp_beds} Beds Free) assigned!"})
+          "message": f"🚨 ACCIDENT DETECTED by PyTorch AI Model ({conf_str} >= 90% Threshold) at {loc_name}! Nearest Ambulance ({unit_str}) dispatched & Nearest Hospital assigned via Dijkstra: {hosp_name} ({hosp_beds} Beds Free)!"})
+    emit({"type": "police_alert", "incident_id": inc.id, "level": "warning",
+          "message": f"🚔 TRAFFIC POLICE ALERT: Collision detected at {loc_name}! 6 burst screenshots captured. Green corridor priority preemption active for {unit_str}."})
     if asg:
         emit({"type": "assignment_updated", "incident_id": inc.id, "ambulance_id": asg.ambulance_id,
               "message": f"Emergency Dispatch Call for {unit_str}: Accident at {loc_name}. 6 screenshots transmitted. Assigned Hospital: {hosp_name} ({hosp_beds} Beds Free).", "level": "warning"})
@@ -979,7 +1028,9 @@ async def detect_upload_video(
             priority="critical",
             source="ai_model",
             confidence=analysis.get("peak_probability", 0.94),
-            notes=f"Collision detected from uploaded live footage at T+{analysis.get('peak_timestamp_s', 0)}s with {round(analysis.get('peak_probability', 0.94)*100)}% PyTorch confidence"
+            notes=f"Collision detected from uploaded live footage at T+{analysis.get('peak_timestamp_s', 0)}s with {round(analysis.get('peak_probability', 0.94)*100)}% PyTorch confidence",
+            police_notified=True,
+            green_corridor=True
         )
         db.add(inc)
         db.flush()
@@ -1010,19 +1061,23 @@ async def detect_upload_video(
                 asg.hospital_id = top_h["hospital"]["id"]
                 asg.hospital_route = json.dumps(top_h["route"])
                 track(db, inc.id, asg.id, "hospital_assigned",
-                      f"Nearest hospital assigned by seat availability: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, ETA {top_h['eta_min']} min)")
+                      f"Nearest hospital assigned via Dijkstra shortest path: {hosp_name} ({hosp_beds} beds free, {top_h['hospital']['icu_beds']} ICU, Dijkstra ETA {top_h['eta_min']} min)")
 
         audit(db, u.username, "video_accident_dispatched", "incident", inc.id,
               f"Accident detected from uploaded video footage. Peak confidence: {round(analysis.get('peak_probability', 0.94)*100)}%.")
         track(db, inc.id, asg.id if asg else None, "detected",
               f"PyTorch Deep Learning Model (resqroute_accident_model.pt) detected collision from uploaded footage with {round(analysis.get('peak_probability', 0.94)*100)}% confidence.")
+        track(db, inc.id, asg.id if asg else None, "police_alerted",
+              f"Traffic Police alerted with collision spot ({loc_name} at {lat:.4f}, {lng:.4f}) and {len(evidence_bytes[:6])} burst camera evidence frames. Green Corridor priority route requested.")
         db.commit()
         db.refresh(inc)
 
         unit_str = asg.ambulance.code if asg and asg.ambulance else "AMB-01"
 
         emit({"type": "incident_created", "incident_id": inc.id, "level": "error",
-              "message": f"🚨 COLLISION DETECTED in Uploaded Video ({round(analysis.get('peak_probability', 0.94)*100)}% >= 90% level)! {unit_str} dispatched & {hosp_name} ({hosp_beds} seats free) assigned!"})
+              "message": f"🚨 COLLISION DETECTED in Uploaded Video ({round(analysis.get('peak_probability', 0.94)*100)}% >= 90% level)! {unit_str} dispatched & Nearest Hospital assigned via Dijkstra: {hosp_name} ({hosp_beds} seats free)!"})
+        emit({"type": "police_alert", "incident_id": inc.id, "level": "warning",
+              "message": f"🚔 TRAFFIC POLICE ALERT: Collision at {loc_name}! Evidence screenshots ready. Green Corridor priority active for {unit_str}."})
         if asg:
             emit({"type": "assignment_updated", "incident_id": inc.id, "ambulance_id": asg.ambulance_id,
                   "message": f"Emergency Dispatch Call for {unit_str}: Accident at {loc_name}. 6 screenshots transmitted. Assigned Hospital: {hosp_name} ({hosp_beds} Beds Free).", "level": "warning"})

@@ -10,14 +10,14 @@ export function routesFor(inc?: Incident | null): RouteLine[] {
     out.push({
       coords: a.scene_route.coords,
       color: '#173B68', // Enterprise Navy Blue route line
-      label: `🚑 ${a.ambulance_code} → Incident Scene (${a.scene_route.distance_km} km · ETA ${a.scene_route.eta_min} min on road network)`
+      label: `🚑 ${a.ambulance_code} → Incident Scene (${a.scene_route.distance_km} km · ETA ${a.scene_route.eta_min} min via Dijkstra shortest path)`
     })
   if (a.hospital_route && ['on_scene', 'transporting', 'at_hospital'].includes(a.status))
     out.push({
       coords: a.hospital_route.coords,
       color: '#198754', // Hospital transfer green corridor
       dashed: a.status === 'on_scene',
-      label: `🏥 Scene → ${a.hospital_name || 'Hospital'} (${a.hospital_route.distance_km} km · ETA ${a.hospital_route.eta_min} min on road network)`
+      label: `🏥 Scene → ${a.hospital_name || 'Nearest Hospital'} (${a.hospital_route.distance_km} km · ETA ${a.hospital_route.eta_min} min via Dijkstra shortest path)`
     })
   return out
 }

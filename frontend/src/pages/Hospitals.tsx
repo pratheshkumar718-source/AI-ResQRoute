@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import {
   Building2, PhoneCall, Bed, HeartPulse, CheckCircle2, AlertTriangle,
-  PlusCircle, ShieldCheck, XCircle, Clock, Stethoscope, RefreshCw, Radio
+  PlusCircle, ShieldCheck, XCircle, Clock, Stethoscope, RefreshCw, Radio,
+  Navigation, Eye, ZoomIn, Activity
 } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, useAct, Alert, SystemNote, Stat } from '../components/ui'
-import { api, Hospital, fmtTime } from '../lib/api'
+import { api, Hospital, fmtTime, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 
 function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAdmin: boolean }) {
   const act = useAct()
   const { incidents } = useApp()
   const [beds, setBeds] = useState(h.available_beds)
   const [icu, setIcu] = useState(h.icu_beds)
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null)
   const pct = Math.min(100, Math.round((h.available_beds / Math.max(1, h.total_beds)) * 100))
 
   // Find incoming patients routed to this hospital
@@ -92,25 +94,98 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
 
         {/* Patient Inflow & Telemetry */}
         {incoming.length > 0 && (
-          <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30 space-y-2">
+          <div className="p-3.5 rounded-xl bg-[#F0F9F4] border border-[#198754]/40 space-y-3">
             <div className="flex items-center justify-between text-xs font-bold text-[#198754]">
               <span className="flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 animate-pulse" />
-                <span>INCOMING PATIENT INTAKE ({incoming.length})</span>
+                <Radio className="w-4 h-4 animate-pulse text-[#DC3545]" />
+                <span>INCOMING PATIENT INTAKE & PRE-ARRIVAL ({incoming.length})</span>
               </span>
-              <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-[#198754]/20">
-                Live Pre-Arrival
+              <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded border border-[#198754]/30 text-[#198754]">
+                Dijkstra Shortest Route
               </span>
             </div>
-            {incoming.map(inc => (
-              <div key={inc.id} className="p-2 rounded bg-white border border-[#198754]/20 text-xs flex justify-between items-center">
-                <div>
-                  <span className="font-semibold text-[#171717]">Incident #{inc.id}</span>
-                  <span className="text-[#666666] text-[11px] block">{inc.location_name}</span>
+
+            {incoming.map(inc => {
+              const asg = inc.assignments?.find(a => ['transporting', 'on_scene', 'at_hospital', 'en_route'].includes(a.status)) || inc.assignments?.[0]
+              const assessment = inc.assessment ? (typeof inc.assessment === 'string' ? JSON.parse(inc.assessment) : inc.assessment) : null
+              const hRoute = asg?.hospital_route
+              const etaMin = hRoute?.eta_min ?? 4
+              const distKm = hRoute?.distance_km ?? 2.8
+
+              return (
+                <div key={inc.id} className="p-3 rounded-lg bg-white border border-[#198754]/30 space-y-2 text-xs shadow-sm">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+                    <div>
+                      <span className="font-bold text-[#171717] text-sm">
+                        Incident #{inc.id} — {inc.location_name}
+                      </span>
+                      <span className="text-[#173B68] font-bold block text-[11px] mt-0.5">
+                        🚑 Assigned Unit: {asg?.ambulance_code || 'Nearest Ambulance'} ({asg?.driver_name || 'Driver On Duty'})
+                      </span>
+                    </div>
+                    <Badge s={inc.status} />
+                  </div>
+
+                  {/* Route & Pre-Arrival Telemetry */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#FAFBFD] p-2 rounded border border-slate-200">
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase font-bold">Dijkstra Shortest ETA</span>
+                      <span className="font-mono font-extrabold text-[#173B68] text-xs">
+                        ~{etaMin} min ({distKm} km)
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase font-bold">Clinical Priority</span>
+                      <span className="font-bold text-[#DC3545]">
+                        {assessment?.severity ? assessment.severity.toUpperCase() : (inc.priority?.toUpperCase() || 'CRITICAL')}
+                        {assessment?.patients ? ` (${assessment.patients} pt)` : ''}
+                      </span>
+                    </div>
+                    {assessment?.needs && assessment.needs.length > 0 && (
+                      <div className="col-span-2">
+                        <span className="text-slate-500 text-[10px] uppercase font-bold">Pre-Arrival Care: </span>
+                        <span className="text-[#173B68] font-semibold">{assessment.needs.join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 6 Burst Evidence Gallery */}
+                  {inc.evidence && inc.evidence.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-slate-700 flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5 text-[#173B68]" />
+                          <span>Scene Evidence ({inc.evidence.length} Frames):</span>
+                        </span>
+                        <span className="text-[10px] text-slate-500">Tap to inspect crash damage</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5">
+                        {inc.evidence.slice(0, 6).map((e, idx) => (
+                          <div
+                            key={e.id || idx}
+                            onClick={() => setZoomUrl(resolveEvidenceUrl(e.url))}
+                            className="relative group rounded overflow-hidden border border-slate-300 hover:border-[#173B68] cursor-pointer transition aspect-video"
+                          >
+                            <img
+                              src={resolveEvidenceUrl(e.url)}
+                              alt={`Evidence ${idx + 1}`}
+                              onError={ev => {
+                                ev.currentTarget.onerror = null
+                                ev.currentTarget.src = ACCIDENT_EVIDENCE_FALLBACK
+                              }}
+                              className="w-full h-full object-cover group-hover:scale-105 transition"
+                            />
+                            <span className="absolute bottom-0 right-0 bg-black/70 text-[8px] px-0.5 rounded text-white font-mono">
+                              #{idx + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Badge s={inc.status} />
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -219,6 +294,29 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
           </div>
         )}
       </div>
+
+      {zoomUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setZoomUrl(null)}
+        >
+          <div
+            className="relative max-w-2xl w-full bg-slate-900 rounded-xl overflow-hidden border border-white/20 p-2 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomUrl(null)}
+              className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 grid place-items-center text-sm font-bold z-10 transition"
+            >
+              ✕
+            </button>
+            <img src={zoomUrl} alt="Evidence Zoom" className="w-full h-auto rounded" />
+            <div className="text-center text-xs text-slate-300 mt-2 font-mono">
+              Accident Scene Optical CCTV Evidence · Click outside to close
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
