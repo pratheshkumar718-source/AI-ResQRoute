@@ -301,7 +301,6 @@ export async function handleMockRequest(method: string, url: string, body?: any,
 
       if (!dbErr && dbUser) {
         if (dbUser.password_hash === expHash) {
-          const token = 'db_tok_' + Math.random().toString(36).substring(2) + Date.now()
           const safeUser = {
             id: dbUser.id,
             username: dbUser.username,
@@ -310,6 +309,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
             ambulance_id: dbUser.ambulance_id,
             hospital_id: dbUser.hospital_id,
           }
+          const token = `resq_${safeUser.id}_${Date.now()}_endless`
           localStorage.setItem('resq_current_user', JSON.stringify(safeUser))
           return { token, user: safeUser }
         } else {
@@ -329,8 +329,8 @@ export async function handleMockRequest(method: string, url: string, body?: any,
     if (!found) {
       throw new Error('Invalid username or password. Please verify credentials or register a new account.')
     }
-    const token = 'mock_tok_' + Math.random().toString(36).substring(2) + Date.now()
     const safeUser = { id: found.id, username: found.username, name: found.name, role: found.role, ambulance_id: found.ambulance_id, hospital_id: found.hospital_id }
+    const token = `resq_${safeUser.id}_${Date.now()}_endless`
     localStorage.setItem('resq_current_user', JSON.stringify(safeUser))
     return { token, user: safeUser }
   }
@@ -373,7 +373,6 @@ export async function handleMockRequest(method: string, url: string, body?: any,
         .single()
 
       if (!insErr && inserted) {
-        const token = 'db_tok_' + Math.random().toString(36).substring(2) + Date.now()
         const safeUser = {
           id: inserted.id,
           username: inserted.username,
@@ -385,6 +384,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           phone: inserted.phone || null,
           details: body.details || {},
         }
+        const token = `resq_${safeUser.id}_${Date.now()}_endless`
         localStorage.setItem('resq_current_user', JSON.stringify(safeUser))
         return { token, user: safeUser }
       }
@@ -396,7 +396,6 @@ export async function handleMockRequest(method: string, url: string, body?: any,
     }
 
     const u = registerMockUser(body)
-    const token = 'mock_tok_' + Math.random().toString(36).substring(2) + Date.now()
     const safeUser = {
       id: u.id,
       username: u.username,
@@ -408,6 +407,7 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       phone: u.phone || null,
       details: u.details || {},
     }
+    const token = `resq_${safeUser.id}_${Date.now()}_endless`
     localStorage.setItem('resq_current_user', JSON.stringify(safeUser))
     return { token, user: safeUser }
   }
@@ -417,7 +417,19 @@ export async function handleMockRequest(method: string, url: string, body?: any,
   if (path === '/api/auth/me' && method === 'GET') {
     const cur = localStorage.getItem('resq_current_user')
     if (cur) return JSON.parse(cur)
-    return { id: 1, username: 'admin', name: 'Chief Dispatch Controller', role: 'admin', ambulance_id: null, hospital_id: null }
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (token && token.startsWith('resq_')) {
+      const parts = token.split('_')
+      const uid = Number(parts[1])
+      const all = getAllUsers()
+      const found = all.find(u => u.id === uid)
+      if (found) {
+        const safe = { id: found.id, username: found.username, name: found.name, role: found.role, ambulance_id: found.ambulance_id, hospital_id: found.hospital_id }
+        localStorage.setItem('resq_current_user', JSON.stringify(safe))
+        return safe
+      }
+    }
+    return { id: 3, username: 'citizen1', name: 'Citizen Responder Priya Raman', role: 'citizen', ambulance_id: null, hospital_id: null }
   }
 
   // Bootstrap

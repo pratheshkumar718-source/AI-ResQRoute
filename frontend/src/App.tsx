@@ -325,7 +325,7 @@ function Shell() {
 
         {/* Main View Scroll Area */}
         <main className="flex-1 overflow-y-auto p-6 bg-[#F7F8FA] text-[#171717] min-h-0">
-          {error && (
+          {error && !error.toLowerCase().includes('authentication expired') && (
             <div className="mb-4">
               <Alert kind="error">
                 Backend connection status: {error}. The system is running with resilient telemetry link.

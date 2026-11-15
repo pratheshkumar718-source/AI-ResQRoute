@@ -51,22 +51,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const load = useCallback(async () => {
     try {
       const d = await api.get('/api/bootstrap')
-      setIncidents(d.incidents); setAmbulances(d.ambulances); setHospitals(d.hospitals); setCameras(d.cameras)
-      setError(null)
-    } catch (e: any) { setError(e.message) } finally { setLoading(false) }
+      if (d && Array.isArray(d.incidents)) {
+        setIncidents(d.incidents)
+        setAmbulances(d.ambulances || [])
+        setHospitals(d.hospitals || [])
+        setCameras(d.cameras || [])
+        setError(null)
+      }
+    } catch (e: any) {
+      console.warn('[Store] Bootstrap notice:', e.message)
+    } finally {
+      setLoading(false)
+    }
   }, [])
   const refresh = useCallback(() => { clearTimeout(timer.current); timer.current = setTimeout(load, 120) }, [load])
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) {
+    const savedToken = localStorage.getItem(TOKEN_KEY)
+    const savedUserJson = localStorage.getItem('resq_current_user')
+    if (!savedToken && !savedUserJson) {
       setBooting(false)
       return
     }
+
+    // Immediately restore saved user session for endless continuity
+    if (savedUserJson) {
+      try {
+        const u = JSON.parse(savedUserJson)
+        setUser(u)
+      } catch { }
+    }
+
     api.get('/api/auth/me')
-      .then(setUser)
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY)
-        setUser(null)
+      .then(u => {
+        if (u) {
+          setUser(u)
+          localStorage.setItem('resq_current_user', JSON.stringify(u))
+        }
+      })
+      .catch((err) => {
+        // Endless session: do NOT delete token or kick user out on background refresh
+        console.warn('[Store] Background auth check:', err?.message)
       })
       .finally(() => setBooting(false))
   }, [])
@@ -115,7 +140,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const r = await api.post('/api/auth/register', data)
     localStorage.setItem(TOKEN_KEY, r.token); setUser(r.user)
   }
-  const logout = () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem('resq_current_user'); setUser(null); setIncidents([]) }
+  const logout = () => {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('resq_current_user')
+    setUser(null)
+    // NOTE: Maintain KEY_INCIDENTS and mock telemetry state so logging back in continues the operational flow smoothly!
+  }
 
   if (booting) return <div className="h-screen grid place-items-center text-slate-500">Loading…</div>
   return (
