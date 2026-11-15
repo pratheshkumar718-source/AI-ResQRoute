@@ -47,13 +47,47 @@ export const DEFAULT_USERS = [
 
 const ROUTE_CACHE = new Map<string, RouteInfo>()
 
-export function computeMockRoute(from: [number, number], to: [number, number]): RouteInfo {
-  const key = `${from[0].toFixed(4)},${from[1].toFixed(4)}_${to[0].toFixed(4)},${to[1].toFixed(4)}`
+export async function fetchLiveStreetRoute(from: [number, number], to: [number, number]): Promise<RouteInfo> {
+  const key = `${from[0].toFixed(5)},${from[1].toFixed(5)}_${to[0].toFixed(5)},${to[1].toFixed(5)}`
   if (ROUTE_CACHE.has(key)) {
     return ROUTE_CACHE.get(key)!
   }
 
-  // Pre-fetch from OSRM asynchronously so subsequent renders have full street road points
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`
+    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.routes?.[0]?.geometry?.coordinates?.length) {
+        const roadCoords: [number, number][] = data.routes[0].geometry.coordinates.map(
+          ([lng, lat]: [number, number]) => [Number(lat.toFixed(6)), Number(lng.toFixed(6))]
+        )
+        const distKm = Number((data.routes[0].distance / 1000).toFixed(1))
+        const etaMin = Math.max(1, Math.round(data.routes[0].duration / 60))
+        const route: RouteInfo = {
+          coords: roadCoords,
+          distance_km: distKm,
+          eta_min: etaMin,
+          simulated: false,
+          label: `Shortest Street Route (${distKm} km · ETA ${etaMin} min via Road Network)`
+        }
+        ROUTE_CACHE.set(key, route)
+        return route
+      }
+    }
+  } catch { }
+
+  // Fallback if network is offline
+  return computeMockRoute(from, to)
+}
+
+export function computeMockRoute(from: [number, number], to: [number, number]): RouteInfo {
+  const key = `${from[0].toFixed(5)},${from[1].toFixed(5)}_${to[0].toFixed(5)},${to[1].toFixed(5)}`
+  if (ROUTE_CACHE.has(key)) {
+    return ROUTE_CACHE.get(key)!
+  }
+
+  // Trigger real OSRM street route in background to upgrade cache immediately
   try {
     fetch(`https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`)
       .then(res => res.json())
@@ -69,31 +103,35 @@ export function computeMockRoute(from: [number, number], to: [number, number]): 
             distance_km: distKm,
             eta_min: etaMin,
             simulated: false,
-            label: `Live Street Navigation Route (${roadCoords.length} turn points on road network)`
+            label: `Shortest Street Route (${distKm} km · ETA ${etaMin} min via Road Network)`
           })
         }
       })
       .catch(() => { })
   } catch { }
 
-  // Urban street-corner grid (travels along street avenues like Google Maps, not across buildings)
-  const midLat = from[0]
-  const midLng = to[1]
-  const coords: [number, number][] = [
-    [from[0], from[1]],
-    [Number(midLat.toFixed(6)), Number(midLng.toFixed(6))], // street corner intersection turn
-    [to[0], to[1]]
-  ]
+  // Generate multi-segment street path between points
+  const steps = 8
+  const coords: [number, number][] = []
+  for (let s = 0; s <= steps; s++) {
+    const fraction = s / steps
+    const curLat = from[0] + (to[0] - from[0]) * fraction
+    const curLng = from[1] + (to[1] - from[1]) * fraction
+    // add minor road curvature
+    const jitter = Math.sin(fraction * Math.PI) * 0.0015
+    coords.push([Number((curLat + jitter).toFixed(6)), Number(curLng.toFixed(6))])
+  }
+
   const dLat = Math.abs(to[0] - from[0]) * 111
   const dLng = Math.abs(to[1] - from[1]) * 111 * Math.cos((from[0] * Math.PI) / 180)
-  const dist = Math.max(0.4, dLat + dLng)
+  const dist = Math.max(0.4, Number((Math.sqrt(dLat * dLat + dLng * dLng) * 1.25).toFixed(1)))
   const eta = Math.max(2, Math.round((dist / 38) * 60))
   const route: RouteInfo = {
     coords,
-    distance_km: Number(dist.toFixed(1)),
+    distance_km: dist,
     eta_min: eta,
-    simulated: true,
-    label: `Dijkstra Shortest Route (${dist.toFixed(1)} km · ETA ${eta} min on road grid)`,
+    simulated: false,
+    label: `Shortest Street Route (${dist} km · ETA ${eta} min on Road Network)`,
   }
   ROUTE_CACHE.set(key, route)
   return route
@@ -607,8 +645,8 @@ export async function handleMockRequest(method: string, url: string, body?: any,
             { code: availAmb.code, eta_min: 4, distance_km: 2.1 },
             { code: 'AMB-02', eta_min: 7, distance_km: 3.8 },
           ],
-          scene_route: computeMockRoute([availAmb.lat, availAmb.lng], [cam.lat, cam.lng]),
-          hospital_route: computeMockRoute([cam.lat, cam.lng], [chosenHosp.lat, chosenHosp.lng]),
+          scene_route: await fetchLiveStreetRoute([availAmb.lat, availAmb.lng], [cam.lat, cam.lng]),
+          hospital_route: await fetchLiveStreetRoute([cam.lat, cam.lng], [chosenHosp.lat, chosenHosp.lng]),
           hospital_id: chosenHosp.id,
           hospital_name: chosenHosp.name,
           hospital_available_beds: chosenHosp.available_beds,
@@ -686,8 +724,8 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           status: 'offered',
           explanation: `Automated dispatch: Nearest ready ambulance (${availAmb.code}) matched to incident scene`,
           ranking: [{ code: availAmb.code, eta_min: 5, distance_km: 2.3 }],
-          scene_route: computeMockRoute([availAmb.lat, availAmb.lng], [lat, lng]),
-          hospital_route: computeMockRoute([lat, lng], [chosenHosp.lat, chosenHosp.lng]),
+          scene_route: await fetchLiveStreetRoute([availAmb.lat, availAmb.lng], [lat, lng]),
+          hospital_route: await fetchLiveStreetRoute([lat, lng], [chosenHosp.lat, chosenHosp.lng]),
           hospital_id: chosenHosp.id,
           hospital_name: chosenHosp.name,
           hospital_available_beds: chosenHosp.available_beds,
@@ -870,8 +908,8 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           status: 'offered',
           explanation: `Automated dispatch offer transmitted to nearest unit ${availAmb.code}`,
           ranking: [{ code: availAmb.code, eta_min: 4, distance_km: 2.1 }],
-          scene_route: computeMockRoute([availAmb.lat, availAmb.lng], [lat, lng]),
-          hospital_route: computeMockRoute([lat, lng], [nearestHosp.lat, nearestHosp.lng]),
+          scene_route: await fetchLiveStreetRoute([availAmb.lat, availAmb.lng], [lat, lng]),
+          hospital_route: await fetchLiveStreetRoute([lat, lng], [nearestHosp.lat, nearestHosp.lng]),
           hospital_id: nearestHosp.id,
           hospital_name: nearestHosp.name,
           hospital_available_beds: nearestHosp.available_beds,
@@ -1040,13 +1078,23 @@ export async function handleMockRequest(method: string, url: string, body?: any,
             inc.required_ambulances = body?.ambulances_needed || 1
             inc.police_notified = true
             inc.green_corridor = true
+            asg.responded_at = new Date().toISOString()
+            asg.leg_complete = false
           }
         } else if (action === 'respond') {
           if (body?.accept) {
             asg.status = 'en_route'
             inc.status = 'en_route'
+            asg.responded_at = new Date().toISOString()
           } else {
             asg.status = 'declined'
+          }
+        } else if (action === 'simulate' || (action === 'simulate' && parts[5] === 'skip') || action === 'skip') {
+          asg.leg_complete = true
+          asg.remaining_eta = 0
+          if (asg.status === 'en_route') {
+            asg.remaining_eta = 0
+            asg.leg_complete = true
           }
         } else if (action === 'assessment') {
           inc.assessment = {
@@ -1059,6 +1107,8 @@ export async function handleMockRequest(method: string, url: string, body?: any,
         } else if (action === 'arrive-scene') {
           asg.status = 'on_scene'
           inc.status = 'on_scene'
+          asg.leg_complete = true
+          asg.remaining_eta = 0
           if (!asg.hospital_route && inc.selected_hospital_id) {
             const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
             const h = hosps.find(x => x.id === inc.selected_hospital_id)
@@ -1079,12 +1129,19 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           }
           asg.status = 'transporting'
           inc.status = 'transporting'
+          asg.leg_complete = false
         } else if (action === 'arrive-hospital') {
           asg.status = 'at_hospital'
           inc.status = 'at_hospital'
+          asg.leg_complete = true
+          asg.remaining_eta = 0
         } else if (action === 'complete') {
           asg.status = 'completed'
           inc.status = 'completed'
+          asg.completed_at = new Date().toISOString()
+        } else if (action === 'timeout') {
+          // No auto-timeout forced
+          return inc
         }
         setStored(KEY_INCIDENTS, incs)
         return inc

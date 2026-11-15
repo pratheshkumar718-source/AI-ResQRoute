@@ -7,7 +7,7 @@ import {
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Empty, Alert, useAct, SystemNote } from '../components/ui'
 import MapView from '../components/MapView'
-import { routesFor } from '../components/RouteHelpers'
+import { routesFor, useLiveStreetRoutes } from '../components/RouteHelpers'
 import { api, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
 import { sound } from '../lib/audio'
 
@@ -235,7 +235,6 @@ function Active({ inc }: { inc: Incident }) {
             <div className="space-y-2.5">
               <Btn
                 className="w-full py-2.5"
-                disabled={!a.leg_complete}
                 onClick={() => post('arrive-scene', 'Arrival at scene recorded')}
               >
                 <Flag className="w-4 h-4" />
@@ -357,7 +356,6 @@ function Active({ inc }: { inc: Incident }) {
 
               <Btn
                 className="w-full py-2.5"
-                disabled={!a.leg_complete}
                 onClick={() => post('arrive-hospital', 'Arrival at hospital recorded')}
               >
                 <HIcon className="w-4 h-4" />
@@ -426,7 +424,7 @@ export default function Driver() {
   const { incidents, ambulances, user } = useApp()
   const act = useAct()
   const [muted, setMuted] = useState(sound.isMuted)
-  const [countdown, setCountdown] = useState(60)
+  const [elapsedSec, setElapsedSec] = useState(0)
 
   // Driver verification state (Yes / No / Unable to determine)
   const [verifyChoice, setVerifyChoice] = useState<'yes' | 'no' | 'unable'>('yes')
@@ -498,32 +496,23 @@ export default function Driver() {
     }
   }, [])
 
-  // 60-Second Countdown Timer and Siren Ring for Offers
+  // Elapsed Time Tracker and Siren Ring for Offers — No Auto-Timeout
   useEffect(() => {
     if (!offer) {
       sound.stopIncomingCallRing()
-      setCountdown(60)
+      setElapsedSec(0)
       return
     }
 
     sound.startIncomingCallRing()
     const offeredTime = offer.a.offered_at ? new Date(offer.a.offered_at).getTime() : Date.now()
-    const updateCountdown = () => {
-      const elapsedSec = Math.floor((Date.now() - offeredTime) / 1000)
-      const remain = Math.max(0, 60 - elapsedSec)
-      setCountdown(remain)
-
-      if (remain <= 0) {
-        sound.stopIncomingCallRing()
-        act(
-          () => api.post(`/api/assignments/${offer.a.id}/timeout`),
-          '60s expired: Incident auto-forwarded to next nearest ambulance unit'
-        )
-      }
+    const updateElapsed = () => {
+      const sec = Math.floor((Date.now() - offeredTime) / 1000)
+      setElapsedSec(sec)
     }
 
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 1000)
+    updateElapsed()
+    const interval = setInterval(updateElapsed, 1000)
     return () => {
       clearInterval(interval)
       sound.stopIncomingCallRing()
@@ -707,13 +696,13 @@ export default function Driver() {
               </div>
             </div>
 
-            {/* 60s Countdown Timer */}
+            {/* Elapsed Time — No Auto-Expiry */}
             <div className="flex items-center gap-3 bg-[#FAFBFD] px-4 py-2 rounded-lg border border-[#CBD5E1]">
-              <Clock className="w-4 h-4 text-[#D69E36]" />
+              <Clock className="w-4 h-4 text-[#173B68]" />
               <div>
-                <div className="text-[10px] font-mono uppercase text-[#666666]">Response Window</div>
+                <div className="text-[10px] font-mono uppercase text-[#666666]">Awaiting Paramedic Action</div>
                 <div className="text-lg font-black text-[#171717] font-mono leading-none">
-                  {countdown}s <span className="text-xs text-[#D69E36] font-normal">Remaining</span>
+                  {Math.floor(elapsedSec / 60)}m {elapsedSec % 60}s <span className="text-xs text-[#173B68] font-normal">Elapsed · No Auto-Expiry</span>
                 </div>
               </div>
             </div>

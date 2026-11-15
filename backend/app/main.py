@@ -826,7 +826,8 @@ def _done(inc, a, msg, level="info"):
 def arrive_scene(aid: int, db: Session = Depends(get_db), u: User = Depends(need("driver"))):
     a, inc = _asg_inc(db, aid, u, "en_route")
     if not a.leg_complete:
-        raise HTTPException(409, "Ambulance has not reached the scene yet (simulation still running)")
+        a.leg_complete = True
+        a.remaining_eta = 0
     a.status = "on_scene"; inc.status = "on_scene"; a.leg = None
 
     audit(db, u.username, "arrived_scene", "assignment", aid)
@@ -972,7 +973,8 @@ def start_hospital_route(aid: int, db: Session = Depends(get_db), u: User = Depe
 def arrive_hospital(aid: int, db: Session = Depends(get_db), u: User = Depends(need("driver"))):
     a, inc = _asg_inc(db, aid, u, "transporting")
     if not a.leg_complete:
-        raise HTTPException(409, "Ambulance has not reached the hospital yet (simulation still running)")
+        a.leg_complete = True
+        a.remaining_eta = 0
     a.status = "at_hospital"; inc.status = "at_hospital"; a.leg = None
     hosp = db.get(Hospital, a.hospital_id) if a.hospital_id else None
     if hosp:

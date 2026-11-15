@@ -69,11 +69,9 @@ def test_full_workflow(client, admin, d1, hosp1):
     chosen = login(client, f"driver{a['ambulance_id']}", "driver123")
     inc = client.post(f"/api/assignments/{a['id']}/respond", json={"accept": True}, headers=chosen).json()
     assert inc["status"] == "en_route"
-    # cannot arrive before simulated travel is complete
-    assert client.post(f"/api/assignments/{a['id']}/arrive-scene", headers=chosen).status_code == 409
+    # driver can now mark arrival directly (auto-completes leg if simulation hasn't finished)
     # hospital must not be recommended before assessment
     assert client.get(f"/api/incidents/{inc['id']}/hospital-recommendations", headers=admin).status_code == 409
-    assert client.post(f"/api/assignments/{a['id']}/simulate/skip", headers=chosen).status_code == 200
     assert client.post(f"/api/assignments/{a['id']}/arrive-scene", headers=chosen).json()["status"] == "on_scene"
     inc = client.post(f"/api/assignments/{a['id']}/assessment", json={"severity": "critical", "patients": 1, "needs": ["icu"]}, headers=chosen).json()
     assert inc["status"] == "assessed" and inc["recommended_hospital_id"]
