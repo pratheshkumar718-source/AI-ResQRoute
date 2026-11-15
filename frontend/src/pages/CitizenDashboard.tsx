@@ -12,8 +12,6 @@ import {
   activeAssignment, fmtDT, fmtTime, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK,
   AiAnalysis, GeminiAnalysis
 } from '../lib/api'
-import MapView from '../components/MapView'
-import { routesFor } from '../components/RouteHelpers'
 
 // Haversine distance calculator in kilometres
 function calcDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -674,21 +672,8 @@ export default function CitizenDashboard() {
                 </div>
               </div>
 
-              {/* Map & Telemetry Details */}
-              <div className="grid lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 rounded-2xl overflow-hidden border border-[#CBD5E1] shadow-sm bg-white min-h-[420px]">
-                  <MapView
-                    ambulances={ambulances}
-                    hospitals={hospitals}
-                    incidents={incidents}
-                    focusIncident={activeIncident}
-                    routes={routesFor(activeIncident)}
-                    height={460}
-                    onSelectIncident={setSelectedId}
-                  />
-                </div>
-
-                <div className="space-y-4">
+              {/* Telemetry Details */}
+              <div className="grid md:grid-cols-2 gap-6">
                   {/* Ambulance & Driver Card */}
                   <div className="bg-white p-5 rounded-2xl border border-[#CBD5E1] shadow-sm space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#173B68] flex items-center gap-1.5">
@@ -773,7 +758,6 @@ export default function CitizenDashboard() {
                       <p className="text-xs text-[#666666] italic">Nearest hospital triage matching in progress…</p>
                     )}
                   </div>
-                </div>
               </div>
             </div>
           ) : (

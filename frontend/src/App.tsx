@@ -34,13 +34,13 @@ const NAV: NavItem[] = [
   { id: 'camera', label: 'AI Accident Surveillance', icon: Camera, roles: ['admin', 'police'], group: 'Command & AI Surveillance' },
   { id: 'overview', label: 'Operations Command Grid', icon: LayoutDashboard, roles: ['admin', 'hospital', 'police'], group: 'Command & AI Surveillance' },
   { id: 'incidents', label: 'Incidents & Verification', icon: ShieldAlert, roles: ['admin', 'police'], group: 'Command & AI Surveillance' },
-  { id: 'map', label: 'Live Tactical Map', icon: Map, roles: ['admin', 'driver', 'hospital', 'police', 'citizen'], group: 'Command & AI Surveillance' },
+  { id: 'map', label: 'Live Tactical Map', icon: Map, roles: ['admin', 'driver', 'hospital', 'police'], group: 'Command & AI Surveillance' },
 
   { id: 'ambulances', label: 'Ambulance Fleet Status', icon: AmbIcon, roles: ['admin', 'police'], group: 'Fleet & Hospital Care' },
   { id: 'driver', label: 'Paramedic Cockpit', icon: Truck, roles: ['driver'], group: 'Fleet & Hospital Care' },
   { id: 'hospitals', label: 'Hospital Beds & ICU', icon: Building2, roles: ['admin', 'hospital', 'citizen'], group: 'Fleet & Hospital Care' },
 
-  { id: 'tracking', label: 'Response Tracking', icon: Route, roles: ['admin', 'hospital', 'police', 'citizen'], group: 'Intelligence & Audit' },
+  { id: 'tracking', label: 'Response Tracking', icon: Route, roles: ['admin', 'hospital', 'police'], group: 'Intelligence & Audit' },
   { id: 'history', label: 'Audit & Incident Logs', icon: History, roles: ['admin', 'driver', 'hospital', 'police'], group: 'Intelligence & Audit' },
   { id: 'settings', label: 'Settings & System Audio', icon: SettingsIcon, roles: ['admin', 'driver', 'hospital', 'police', 'citizen'], group: 'Intelligence & Audit' },
 ]
@@ -177,8 +177,8 @@ function Shell() {
                         key={n.id}
                         onClick={() => setPage(n.id)}
                         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer text-left ${active
-                            ? 'bg-[#173B68] text-white shadow-sm font-semibold'
-                            : 'text-[#171717] hover:bg-[#F7F8FA]'
+                          ? 'bg-[#173B68] text-white shadow-sm font-semibold'
+                          : 'text-[#171717] hover:bg-[#F7F8FA]'
                           }`}
                       >
                         <n.icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-[#666666]'}`} />
@@ -265,8 +265,8 @@ function Shell() {
               onClick={handleToggleMute}
               title={muted ? 'Unmute Emergency Siren & Ring' : 'Mute Emergency Audio'}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition cursor-pointer ${muted
-                  ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545] hover:bg-[#FCE8E8]'
-                  : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
+                ? 'bg-[#FDF2F2] border-[#DC3545]/30 text-[#DC3545] hover:bg-[#FCE8E8]'
+                : 'bg-[#EBF2FA] border-[#356FA5]/30 text-[#173B68] hover:bg-[#DDEBFA]'
                 }`}
             >
               {muted ? <VolumeX className="w-3.5 h-3.5 text-[#DC3545]" /> : <Volume2 className="w-3.5 h-3.5 text-[#173B68]" />}
