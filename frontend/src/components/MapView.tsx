@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, ReactNode } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, Crosshair, Maximize, WifiOff, Globe, Key, Check, AlertCircle, RefreshCw, X, ShieldAlert } from 'lucide-react'
+import { Plus, Minus, Crosshair, Maximize } from 'lucide-react'
 import { api, Ambulance, Hospital, Incident } from '../lib/api'
 import { Badge } from './ui'
 
@@ -218,7 +218,7 @@ const IncInfo = ({ i }: { i: Incident }) => (
 
 /* ---------------- Map Controls & Helpers ---------------- */
 
-function Controls({ fitIncident, fitAll, onOpenKeyModal }: { fitIncident: () => void; fitAll: () => void; onOpenKeyModal: () => void }) {
+function Controls({ fitIncident, fitAll }: { fitIncident: () => void; fitAll: () => void }) {
   const map = useMap()
   const b = 'w-8 h-8 grid place-items-center bg-white hover:bg-slate-100 border-b border-slate-200 text-slate-700 transition'
   return (
@@ -226,8 +226,7 @@ function Controls({ fitIncident, fitAll, onOpenKeyModal }: { fitIncident: () => 
       <button className={b} title="Zoom in" onClick={() => map.zoomIn()}><Plus className="w-4 h-4" /></button>
       <button className={b} title="Zoom out" onClick={() => map.zoomOut()}><Minus className="w-4 h-4" /></button>
       <button className={b} title="Fit to incident" onClick={fitIncident}><Crosshair className="w-4 h-4" /></button>
-      <button className={b} title="Fit all markers" onClick={fitAll}><Maximize className="w-4 h-4" /></button>
-      <button className={`${b.replace('border-b', '')} bg-amber-50 hover:bg-amber-100 text-amber-800`} title="Configure MapTiler API Key" onClick={onOpenKeyModal}><Key className="w-4 h-4" /></button>
+      <button className={b.replace('border-b', '')} title="Fit all markers" onClick={fitAll}><Maximize className="w-4 h-4" /></button>
     </div>
   )
 }
@@ -245,16 +244,13 @@ function Fitter({ pts, token }: { pts: [number, number][]; token: number }) {
 /* ---------------- Main MapView Component ---------------- */
 
 export default function MapView(p: Props) {
-  const [maptilerKey, setMaptilerKey] = useState<string>(() => getMapTilerKey())
+  const [maptilerKey] = useState<string>(() => getMapTilerKey())
   const [mode, setMode] = useState<'checking' | 'maptiler' | 'osm' | 'svg'>('checking')
-  const [showKeyModal, setShowKeyModal] = useState(false)
-  const [inputKey, setInputKey] = useState(maptilerKey)
-  const [maptilerError, setMaptilerError] = useState(false)
 
   const loaded = useRef(0)
   const errors = useRef(0)
 
-  // Initialize mode: if key is present, attempt MapTiler; otherwise run the modeled map (OSM/SVG)
+  // Initialize mode: if key is present, run MapTiler; otherwise run modeled map fallback
   useEffect(() => {
     const pref = localStorage.getItem('resq_map_mode') || 'auto'
     if (pref === 'offline') {
@@ -263,14 +259,9 @@ export default function MapView(p: Props) {
     }
 
     const currentKey = getMapTilerKey()
-    setMaptilerKey(currentKey)
-
     if (currentKey) {
-      // MapTiler key is configured: use MapTiler
       setMode('maptiler')
-      setMaptilerError(false)
     } else {
-      // Until API key is provided: run modeled map (OSM / SVG)
       setMode('osm')
     }
   }, [])
@@ -309,72 +300,6 @@ export default function MapView(p: Props) {
     }
   }, [focus?.id, mode]) // eslint-disable-line
 
-  const swapOffline = (m: 'auto' | 'offline') => {
-    localStorage.setItem('resq_map_mode', m)
-    window.location.reload()
-  }
-
-  const handleSaveKey = (newKey: string) => {
-    const trimmed = newKey.trim()
-    if (trimmed) {
-      localStorage.setItem('resq_maptiler_key', trimmed)
-      setMaptilerKey(trimmed)
-      setMode('maptiler')
-      setMaptilerError(false)
-      loaded.current = 0
-      errors.current = 0
-    } else {
-      localStorage.removeItem('resq_maptiler_key')
-      setMaptilerKey('')
-      setMode('osm')
-      setMaptilerError(false)
-    }
-    setShowKeyModal(false)
-  }
-
-  const banner: ReactNode = (
-    <div className="absolute bottom-2 left-2 z-[1000] flex flex-wrap gap-2 items-center text-[11px]" onMouseDown={e => e.stopPropagation()}>
-      <span className="bg-white/95 rounded px-2.5 py-1 shadow text-slate-700 font-medium border border-slate-200 flex items-center gap-1.5">
-        {mode === 'maptiler' && !maptilerError ? (
-          <>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>MapTiler Streets v2 Active (Connected) · Dijkstra Shortest Routes</span>
-          </>
-        ) : mode === 'svg' ? (
-          <>
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-            <span>Offline Modeled Tactical Map (Simulated Road Network)</span>
-          </>
-        ) : (
-          <>
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Modeled Map (OpenStreetMap Fallback) · {maptilerError ? 'MapTiler Key Error' : 'Awaiting MapTiler Key'}</span>
-          </>
-        )}
-      </span>
-
-      <button
-        type="button"
-        className="bg-white/95 hover:bg-amber-50 text-amber-900 border border-amber-300 rounded px-2.5 py-1 shadow font-semibold flex items-center gap-1 transition cursor-pointer"
-        onClick={() => {
-          setInputKey(maptilerKey)
-          setShowKeyModal(true)
-        }}
-      >
-        <Key className="w-3 h-3 text-amber-600" />
-        <span>{maptilerKey ? 'Edit MapTiler Key' : '🔑 Enter MapTiler Key'}</span>
-      </button>
-
-      <button
-        type="button"
-        className="bg-white/90 hover:bg-slate-100 rounded px-2 py-1 shadow text-slate-700 flex items-center gap-1 transition cursor-pointer"
-        onClick={() => swapOffline(mode === 'svg' ? 'auto' : 'offline')}
-      >
-        {mode === 'svg' ? <><Globe className="w-3 h-3" />Online Map</> : <><WifiOff className="w-3 h-3" />Offline Model Map</>}
-      </button>
-    </div>
-  )
-
   const style = { height: p.height ?? 480 }
 
   if (mode === 'checking') {
@@ -386,17 +311,6 @@ export default function MapView(p: Props) {
     return (
       <div style={style} className="relative rounded-xl overflow-hidden border border-slate-300">
         <SvgMap {...p} focus={focus} open={open} allPts={allPts} incPts={incPts} />
-        {banner}
-        {showKeyModal && (
-          <KeyModal
-            currentKey={inputKey}
-            activeSource={mode}
-            hasError={maptilerError}
-            onChange={setInputKey}
-            onSave={handleSaveKey}
-            onClose={() => setShowKeyModal(false)}
-          />
-        )}
       </div>
     )
   }
@@ -405,7 +319,7 @@ export default function MapView(p: Props) {
   return (
     <div style={style} className="relative rounded-xl overflow-hidden border border-slate-300">
       <MapContainer center={CENTER} zoom={12} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-        {mode === 'maptiler' && maptilerKey && !maptilerError ? (
+        {mode === 'maptiler' && maptilerKey ? (
           <TileLayer
             key={`maptiler-${maptilerKey}`}
             attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
@@ -419,7 +333,6 @@ export default function MapView(p: Props) {
                 errors.current++
                 // If MapTiler key fails repeatedly, fall back gracefully to modeled map
                 if (errors.current > 4 && loaded.current === 0) {
-                  setMaptilerError(true)
                   setMode('osm')
                 }
               }
@@ -449,10 +362,6 @@ export default function MapView(p: Props) {
         <Controls
           fitIncident={() => doFit(incPts)}
           fitAll={() => doFit(allPts)}
-          onOpenKeyModal={() => {
-            setInputKey(maptilerKey)
-            setShowKeyModal(true)
-          }}
         />
 
         {/* Polylines for Dijkstra Shortest Routes */}
@@ -499,125 +408,6 @@ export default function MapView(p: Props) {
           </Marker>
         ))}
       </MapContainer>
-
-      {banner}
-
-      {showKeyModal && (
-        <KeyModal
-          currentKey={inputKey}
-          activeSource={mode}
-          hasError={maptilerError}
-          onChange={setInputKey}
-          onSave={handleSaveKey}
-          onClose={() => setShowKeyModal(false)}
-        />
-      )}
-    </div>
-  )
-}
-
-/* ---------------- MapTiler Key Configuration Modal ---------------- */
-
-function KeyModal({
-  currentKey,
-  activeSource,
-  hasError,
-  onChange,
-  onSave,
-  onClose
-}: {
-  currentKey: string
-  activeSource: string
-  hasError: boolean
-  onChange: (val: string) => void
-  onSave: (val: string) => void
-  onClose: () => void
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-slate-800 space-y-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 grid place-items-center font-bold">
-              <Key className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-[#173B68]">MapTiler API Key</h3>
-              <p className="text-xs text-slate-500">Live vector/raster map tiles provider</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Current Map Status Pill */}
-        <div className={`p-3 rounded-lg border text-xs flex items-center gap-2 ${activeSource === 'maptiler' && !hasError
-            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-            : hasError
-              ? 'bg-red-50 border-red-300 text-red-800'
-              : 'bg-blue-50 border-blue-300 text-blue-800'
-          }`}>
-          {activeSource === 'maptiler' && !hasError ? (
-            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-          )}
-          <span>
-            {activeSource === 'maptiler' && !hasError
-              ? 'MapTiler Streets v2 is currently active and rendering live tiles.'
-              : hasError
-                ? 'MapTiler tile load encountered an error. Running modeled map fallback.'
-                : 'Running modeled map. Provide your MapTiler key below to activate MapTiler.'}
-          </span>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-            Enter MapTiler API Key
-          </label>
-          <input
-            type="text"
-            className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 font-mono focus:outline-none focus:border-[#173B68] focus:bg-white"
-            placeholder="e.g. AbC123XyZ..."
-            value={currentKey}
-            onChange={e => onChange(e.target.value)}
-          />
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Get your free MapTiler key at <a href="https://cloud.maptiler.com/account/keys/" target="_blank" rel="noreferrer" className="text-blue-600 underline">maptiler.com</a>.
-            You can also configure it in <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">frontend/.env</code> as <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">VITE_MAPTILER_API_KEY</code>.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-          <button
-            type="button"
-            className="flex-1 py-2 rounded-lg bg-[#173B68] hover:bg-[#102A4C] text-white font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5"
-            onClick={() => onSave(currentKey)}
-          >
-            <Check className="w-3.5 h-3.5" />
-            <span>Save & Connect Key</span>
-          </button>
-          {currentKey && (
-            <button
-              type="button"
-              className="py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
-              onClick={() => onSave('')}
-            >
-              Use Modeled Map
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   )
 }
@@ -640,7 +430,7 @@ function SvgMap({
 }) {
   const [net, setNet] = useState<any>(null)
   useEffect(() => {
-    api.get('/api/network').then(setNet).catch(() => { })
+    api.get('/api/network').then(setNet).catch(() => {})
   }, [])
 
   const W = 1000
@@ -714,7 +504,7 @@ function SvgMap({
         onWheel={e => zoom(e.deltaY > 0 ? 1.15 : 0.87)}
         onPointerDown={e => {
           drag.current = { x: e.clientX, y: e.clientY }
-            ; (e.target as Element).setPointerCapture?.(e.pointerId)
+          ;(e.target as Element).setPointerCapture?.(e.pointerId)
         }}
         onPointerUp={() => (drag.current = null)}
         onPointerMove={e => {

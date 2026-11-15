@@ -24,36 +24,16 @@ export default function LiveMap() {
 
   return (
     <div className="space-y-6 text-[#171717]">
-      <div className="pb-2 border-b border-[#E2E8F0]">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Live Telemetry & Tactical Map</h1>
-        <p className="text-xs text-[#666666] mt-0.5">
-          Real-time tracking of ambulance locations, collision coordinates, and receiving emergency hospitals on local street networks.
-        </p>
-      </div>
-
-      {/* Live Map Collision Detection Status Notice */}
-      <div className="p-4 rounded-xl bg-white border border-[#CBD5E1] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 grid place-items-center shrink-0 mt-0.5">
-            <Radio className="w-4 h-4 animate-pulse text-[#DC3545]" />
-          </div>
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-sm text-[#171717]">Live Map Optical Detection & CCTV Feed Integration</span>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/40">
-                DEVELOPING STAGE · API KEYS REQUIRED
-              </span>
-            </div>
-            <p className="text-xs text-[#666666] leading-relaxed max-w-3xl">
-              Live automated collision detection across street-level streaming cameras is currently in the active development / pilot stage. Connecting real-world municipal optical feeds requires external <b>Traffic Department GIS API keys</b> and <b>CCTV Media Streaming Gateway tokens</b>. Tactical map currently operates with calibrated road network geometry (OSRM) and verified AI camera coordinates.
-            </p>
-          </div>
+      <div className="pb-2 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Live Telemetry & Tactical Map</h1>
+          <p className="text-xs text-[#666666] mt-0.5">
+            Real-time tracking of ambulance locations, collision coordinates, and receiving emergency hospitals on local street networks.
+          </p>
         </div>
-        <div className="flex sm:flex-col items-end gap-1.5 shrink-0 text-right">
-          <span className="text-[10px] uppercase font-mono font-bold text-[#666666]">Street Network Routing</span>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#198754] bg-[#F0F9F4] border border-[#198754]/30 px-2 py-0.5 rounded-md font-mono">
-            ● OSRM ROAD ROUTING ACTIVE
-          </span>
+        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#198754] bg-[#F0F9F4] border border-[#198754]/30 px-3 py-1 rounded-lg font-mono self-start sm:self-auto">
+          <span className="w-2 h-2 rounded-full bg-[#198754] animate-pulse"></span>
+          <span>LIVE STREET RADAR ACTIVE</span>
         </div>
       </div>
 
@@ -233,38 +213,6 @@ export default function LiveMap() {
                 <span className="text-[#171717]">Stage 2: Accident → Hospital Route</span>
               </li>
             </ul>
-          </Card>
-
-          <Card title="Traffic & Map API Integration Status">
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
-                <div>
-                  <div className="font-semibold text-[#171717]">Municipal CCTV Stream API</div>
-                  <div className="text-[11px] text-[#666666]">Live optical surveillance feed</div>
-                </div>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/30 font-semibold shrink-0">
-                  Key Required
-                </span>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
-                <div>
-                  <div className="font-semibold text-[#171717]">Traffic Department GIS Token</div>
-                  <div className="text-[11px] text-[#666666]">Live congestion & signal preemption</div>
-                </div>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] border border-[#D69E36]/30 font-semibold shrink-0">
-                  Developing Stage
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-semibold text-[#171717]">OSRM Road Corridor Engine</div>
-                  <div className="text-[11px] text-[#666666]">Street network route geometry</div>
-                </div>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#F0F9F4] text-[#198754] border border-[#198754]/30 font-semibold shrink-0">
-                  Connected (Active)
-                </span>
-              </div>
-            </div>
           </Card>
         </div>
       </div>
