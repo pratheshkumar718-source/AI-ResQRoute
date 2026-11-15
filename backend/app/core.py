@@ -93,23 +93,50 @@ def ser_asg(a: Assignment):
 
 def ser_inc(i: Incident):
     sh = getattr(i, "selected_hospital", None)
-    return {"id": i.id, "camera_id": i.camera_id, "camera_name": i.camera.name if i.camera else None,
-            "lat": i.lat, "lng": i.lng, "location_name": i.location_name, "status": i.status, "priority": i.priority,
-            "source": i.source, "confidence": i.confidence, "notes": i.notes, "verified_by": i.verified_by,
-            "required_ambulances": getattr(i, "required_ambulances", 1) or 1,
-            "police_notified": bool(getattr(i, "police_notified", False)),
-            "green_corridor": bool(getattr(i, "green_corridor", False)),
-            "verification_answers": j(getattr(i, "verification_answers", None)),
-            "assessment": j(i.assessment), "recommended_hospital_id": i.recommended_hospital_id,
-            "selected_hospital_id": i.selected_hospital_id,
-            "selected_hospital_name": sh.name if sh else None,
-            "selected_hospital_beds": sh.available_beds if sh else None,
-            "selected_hospital_icu": sh.icu_beds if sh else None,
-            "selected_hospital_phone": sh.phone if sh else None,
-            "hospital_warning": i.hospital_warning,
-            "is_demo": i.is_demo, "created_at": iso(i.created_at), "completed_at": iso(i.completed_at),
-            "evidence": [{"id": e.id, "url": f"/evidence/{e.filename}", "filename": e.filename, "seq": e.seq, "captured_at": iso(e.captured_at)} for e in i.evidence],
-            "assignments": [ser_asg(a) for a in i.assignments]}
+    return {
+        "id": i.id,
+        "camera_id": i.camera_id,
+        "camera_name": i.camera.name if i.camera else None,
+        "lat": i.lat,
+        "lng": i.lng,
+        "location_name": i.location_name,
+        "status": i.status,
+        "priority": i.priority,
+        "source": i.source,
+        "confidence": i.confidence,
+        "notes": i.notes,
+        "verified_by": i.verified_by,
+        "required_ambulances": getattr(i, "required_ambulances", 1) or 1,
+        "police_notified": bool(getattr(i, "police_notified", False)),
+        "green_corridor": bool(getattr(i, "green_corridor", False)),
+        "verification_answers": j(getattr(i, "verification_answers", None)),
+        "assessment": j(i.assessment),
+        "recommended_hospital_id": i.recommended_hospital_id,
+        "selected_hospital_id": i.selected_hospital_id,
+        "selected_hospital_name": sh.name if sh else None,
+        "selected_hospital_beds": sh.available_beds if sh else None,
+        "selected_hospital_icu": sh.icu_beds if sh else None,
+        "selected_hospital_phone": sh.phone if sh else None,
+        "hospital_warning": i.hospital_warning,
+        "is_demo": i.is_demo,
+        "created_at": iso(i.created_at),
+        "completed_at": iso(i.completed_at),
+        "reported_by_user_id": getattr(i, "reported_by_user_id", None),
+        "reporter_name": getattr(i, "reporter_name", None),
+        "reporter_phone": getattr(i, "reporter_phone", None),
+        "accident_type": getattr(i, "accident_type", None),
+        "vehicles_involved": getattr(i, "vehicles_involved", None),
+        "injured_count": getattr(i, "injured_count", None),
+        "citizen_relationship": getattr(i, "citizen_relationship", None),
+        "video_url": getattr(i, "video_url", None),
+        "ai_analysis": j(getattr(i, "ai_analysis", None)),
+        "gemini_analysis": j(getattr(i, "gemini_analysis", None)),
+        "evidence": [
+            {"id": e.id, "url": f"/evidence/{e.filename}", "filename": e.filename, "seq": e.seq, "captured_at": iso(e.captured_at)}
+            for e in i.evidence
+        ],
+        "assignments": [ser_asg(a) for a in i.assignments]
+    }
 
 
 # ---------- dispatch & timeout ----------

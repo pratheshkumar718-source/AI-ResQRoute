@@ -94,6 +94,7 @@ export const api = {
   get: (u: string) => req('GET', u),
   post: (u: string, b: any = {}) => req('POST', u, b),
   patch: (u: string, b: any) => req('PATCH', u, b),
+  delete: (u: string) => req('DELETE', u),
   upload: (u: string, f: FormData) => req('POST', u, undefined, f),
 }
 
@@ -119,6 +120,42 @@ export interface Assignment {
   leg: string | null
   leg_complete: boolean; remaining_eta: number | null; offered_at: string; responded_at: string | null
 }
+export interface AiAnalysis {
+  status: string
+  category: string
+  confidence: number | null
+  error?: string
+  video_url?: string
+  total_frames_sampled?: number
+  analyzed_frames?: number
+  top_evidence_frames?: string[]
+  notes?: string
+}
+
+export interface GeminiAnalysis {
+  incident_summary?: string
+  visible_vehicle_count?: number | string
+  visible_hazards?: string[]
+  observed_collision_indicators?: string[]
+  evidence_observations?: string[]
+  analysis_limitations?: string[]
+  human_review_required?: boolean
+  status?: string
+  ai_generated?: boolean
+  requires_human_review?: boolean
+  notes?: string
+}
+
+export interface EmergencyContact {
+  id: number
+  user_id: number
+  name: string
+  phone: string
+  relationship_type?: string
+  is_primary: boolean
+  created_at: string
+}
+
 export interface Incident {
   id: number; camera_id: number | null; camera_name: string | null; lat: number; lng: number; location_name: string
   status: string; priority: string; source: string; confidence: number | null; notes: string; verified_by: string | null
@@ -132,6 +169,17 @@ export interface Incident {
   hospital_warning: string | null
   created_at: string; completed_at: string | null; evidence: { id: number; url: string; seq: number; captured_at: string }[]
   assignments: Assignment[]
+  // Citizen reporting fields
+  reported_by_user_id?: number | null
+  reporter_name?: string | null
+  reporter_phone?: string | null
+  accident_type?: string | null
+  vehicles_involved?: number | null
+  injured_count?: number | null
+  citizen_relationship?: string | null
+  video_url?: string | null
+  ai_analysis?: AiAnalysis | string | null
+  gemini_analysis?: GeminiAnalysis | string | null
 }
 export interface Ambulance { id: number; code: string; driver_name: string; phone: string; lat: number; lng: number; status: string; crew_level: string; note: string }
 export interface Hospital { id: number; name: string; lat: number; lng: number; phone: string; total_beds: number; available_beds: number; icu_beds: number; capabilities: string[]; receiving: boolean; status?: string; last_admission_at?: string | null; updated_at: string }

@@ -79,13 +79,30 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 
 def ensure_schema_compatibility():
-    """Ensure essential user columns exist in both PostgreSQL and SQLite."""
+    """Ensure essential user and incident columns exist in both PostgreSQL and SQLite."""
     from sqlalchemy import text
     try:
         with engine.connect() as conn:
             for col, col_type in [("email", "VARCHAR"), ("phone", "VARCHAR"), ("details", "TEXT")]:
                 try:
                     conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type};"))
+                    conn.commit()
+                except Exception:
+                    pass
+            for col, col_type in [
+                ("reported_by_user_id", "INTEGER"),
+                ("reporter_name", "VARCHAR"),
+                ("reporter_phone", "VARCHAR"),
+                ("accident_type", "VARCHAR"),
+                ("vehicles_involved", "INTEGER"),
+                ("injured_count", "INTEGER"),
+                ("citizen_relationship", "VARCHAR"),
+                ("video_url", "VARCHAR"),
+                ("ai_analysis", "TEXT"),
+                ("gemini_analysis", "TEXT")
+            ]:
+                try:
+                    conn.execute(text(f"ALTER TABLE incidents ADD COLUMN IF NOT EXISTS {col} {col_type};"))
                     conn.commit()
                 except Exception:
                     pass

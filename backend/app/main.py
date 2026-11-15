@@ -8,7 +8,8 @@ from fastapi.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from . import core, routing, detection
+from . import core, routing, detection, gemini
+import cv2
 from .core import *
 from .db import get_db, EVIDENCE, SessionLocal
 from .models import *
@@ -352,12 +353,264 @@ def create_incident(b: IncidentIn, db: Session = Depends(get_db), u: User = Depe
 
 @app.get("/api/incidents")
 def list_incidents(db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    if u.role == "citizen":
+        # Citizens only see their own reported incidents
+        return [ser_inc(i) for i in db.query(Incident).filter(
+            (Incident.reported_by_user_id == u.id) | (Incident.notes.contains(f"Citizen: {u.username}"))
+        ).order_by(Incident.id.desc())]
     return [ser_inc(i) for i in db.query(Incident).order_by(Incident.id.desc())]
 
 
 @app.get("/api/incidents/{iid}")
 def one_incident(iid: int, db: Session = Depends(get_db), u: User = Depends(user_dep)):
-    return ser_inc(get_or_404(db, Incident, iid))
+    inc = get_or_404(db, Incident, iid)
+    if u.role == "citizen" and inc.reported_by_user_id and inc.reported_by_user_id != u.id:
+        raise HTTPException(403, "Access denied. You can only view your own incident reports.")
+    return ser_inc(inc)
+
+
+@app.get("/api/citizen/my-reports")
+def citizen_my_reports(db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    """Returns all incident reports submitted by the authenticated citizen."""
+    incidents = db.query(Incident).filter(
+        (Incident.reported_by_user_id == u.id) | (Incident.notes.contains(f"Citizen: {u.username}"))
+    ).order_by(Incident.id.desc()).all()
+    return [ser_inc(i) for i in incidents]
+
+
+@app.post("/api/citizen/report")
+async def citizen_report(
+    lat: float = Form(...),
+    lng: float = Form(...),
+    location_name: str = Form("Accident Location"),
+    accident_type: str = Form("Vehicle collision"),
+    vehicles_involved: Optional[int] = Form(None),
+    injured_count: Optional[int] = Form(None),
+    description: str = Form(""),
+    citizen_relationship: str = Form("Witness"),
+    contact_phone: Optional[str] = Form(None),
+    reporter_phone: Optional[str] = Form(None),
+    video: Optional[UploadFile] = File(None),
+    photo: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    u: User = Depends(user_dep)
+):
+    """Submits a citizen emergency accident report with GPS coordinates,
+    optional video/photo evidence, AI accident detection inference, and optional Gemini analysis.
+    """
+    if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):
+        raise HTTPException(422, f"Invalid GPS coordinates: ({lat}, {lng})")
+
+    resolved_phone = (reporter_phone or contact_phone or u.phone or "").strip()
+    priority = "critical" if (injured_count and injured_count > 1) or "critical" in accident_type.lower() else "normal"
+
+    inc = Incident(
+        camera_id=None,
+        lat=round(float(lat), 6),
+        lng=round(float(lng), 6),
+        location_name=location_name.strip() or "Accident Location",
+        status="suspected",  # Awaiting dispatcher verification
+        priority=priority,
+        source="citizen",
+        confidence=None,
+        notes=f"[Citizen Report by {u.name} ({resolved_phone or 'N/A'}) · {citizen_relationship}] {description}".strip(),
+        reported_by_user_id=u.id,
+        reporter_name=u.name or u.username,
+        reporter_phone=resolved_phone,
+        accident_type=accident_type,
+        vehicles_involved=vehicles_involved,
+        injured_count=injured_count,
+        citizen_relationship=citizen_relationship,
+        police_notified=True,
+        green_corridor=False
+    )
+    db.add(inc)
+    db.flush()
+
+    evidence_paths: list[Path] = []
+
+    # 1. Handle optional direct photo upload
+    if photo and photo.filename:
+        photo_bytes = await photo.read()
+        if photo_bytes and len(photo_bytes) <= 15_000_000:
+            photo_fn = f"citizen_photo_{inc.id}_{uuid.uuid4().hex[:8]}.jpg"
+            photo_path = EVIDENCE / photo_fn
+            photo_path.write_bytes(photo_bytes)
+            db.add(Evidence(incident_id=inc.id, filename=photo_fn, seq=1))
+            evidence_paths.append(photo_path)
+
+    # 2. Handle optional accident video
+    ai_result = None
+
+    if video and video.filename:
+        v_ext = Path(video.filename).suffix.lower()
+        if v_ext not in (".mp4", ".mov", ".webm", ".avi", ".mkv"):
+            v_ext = ".mp4"
+        video_fn = f"citizen_video_{inc.id}_{uuid.uuid4().hex[:8]}{v_ext}"
+        video_path = EVIDENCE / video_fn
+        video_bytes = await video.read()
+        if len(video_bytes) > 60_000_000:
+            raise HTTPException(413, "Video file exceeds 60MB limit")
+        video_path.write_bytes(video_bytes)
+        inc.video_url = f"/evidence/{video_fn}"
+
+        # Run AI Video Analysis using trained ResNet-18 model
+        try:
+            analysis = detection.detector.analyse_video(video_path, max_samples=24, sample_interval_s=0.8)
+            samples = analysis.get("samples", [])
+            inc.confidence = analysis.get("confidence", 0.50)
+            
+            # Save top 6 evidence frames extracted from the video
+            for idx, s in enumerate(samples[:6]):
+                frame_fn = f"citizen_frame_{inc.id}_{idx+1}_{uuid.uuid4().hex[:6]}.jpg"
+                frame_path = EVIDENCE / frame_fn
+                cv2.imwrite(str(frame_path), s["frame"])
+                db.add(Evidence(incident_id=inc.id, filename=frame_fn, seq=len(inc.evidence) + idx + 1))
+                evidence_paths.append(frame_path)
+
+            ai_result = {
+                "status": "completed",
+                "category": analysis.get("category", "Accident event detected"),
+                "confidence": analysis.get("confidence", 0.85),
+                "frames_analyzed": analysis.get("frames_analyzed", len(samples)),
+                "evidence_count": min(6, len(samples)),
+                "video_url": inc.video_url
+            }
+            inc.ai_analysis = json.dumps(ai_result)
+        except Exception as ex:
+            ai_result = {
+                "status": "error",
+                "category": "Inconclusive / insufficient evidence",
+                "confidence": 0.50,
+                "error": str(ex),
+                "video_url": inc.video_url
+            }
+            inc.ai_analysis = json.dumps(ai_result)
+    else:
+        # Report submitted without video
+        inc.confidence = 0.85 if priority == "critical" else 0.70
+        ai_result = {
+            "status": "manual_report",
+            "category": "Inconclusive / insufficient evidence (No video provided)",
+            "confidence": None,
+            "notes": "Citizen emergency report submitted without video recording. Visual verification required."
+        }
+        inc.ai_analysis = json.dumps(ai_result)
+
+    # 3. Optional Gemini Visual Incident Analysis
+    metadata_dict = {
+        "location_name": location_name,
+        "accident_type": accident_type,
+        "vehicles_involved": vehicles_involved or "Not specified",
+        "injured_count": injured_count or "Not specified",
+        "citizen_relationship": citizen_relationship,
+        "description": description
+    }
+    try:
+        gemini_summary = gemini.analyze_incident_evidence(evidence_paths, metadata_dict)
+        inc.gemini_analysis = json.dumps(gemini_summary)
+    except Exception:
+        inc.gemini_analysis = json.dumps({
+            "status": "unavailable",
+            "ai_generated": True,
+            "requires_human_review": True,
+            "incident_summary": "Automated incident report logged. Gemini assistant unavailable. Human review required."
+        })
+
+    # 4. Audit & Tracking Events
+    audit(db, u.username, "citizen_report_submitted", "incident", inc.id, f"{accident_type} at {location_name}")
+    track(db, inc.id, None, "citizen_reported", f"Citizen {u.name} submitted an emergency accident report ({accident_type}) at {location_name}. Status: Awaiting Dispatcher Verification.")
+    db.commit()
+    db.refresh(inc)
+
+    # 5. Broadcast real-time alerts
+    emit({
+        "type": "incident_created",
+        "incident_id": inc.id,
+        "level": "warning",
+        "message": f"🚨 NEW CITIZEN ACCIDENT REPORT #{inc.id} at {location_name}! Category: {ai_result.get('category')}. Awaiting verification."
+    })
+
+    return ser_inc(inc)
+
+
+class ContactIn(BaseModel):
+    name: str
+    phone: str
+    relationship_type: str = "Family"
+    is_primary: bool = False
+
+
+@app.get("/api/citizen/contacts")
+def list_contacts(db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    contacts = db.query(EmergencyContact).filter_by(user_id=u.id).order_by(EmergencyContact.is_primary.desc(), EmergencyContact.id.asc()).all()
+    return [{
+        "id": c.id,
+        "user_id": c.user_id,
+        "name": c.name,
+        "phone": c.phone,
+        "relationship_type": c.relationship_type,
+        "is_primary": bool(c.is_primary),
+        "created_at": iso(c.created_at)
+    } for c in contacts]
+
+
+@app.post("/api/citizen/contacts")
+def add_contact(b: ContactIn, db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    if b.is_primary:
+        db.query(EmergencyContact).filter_by(user_id=u.id).update({"is_primary": False})
+    c = EmergencyContact(
+        user_id=u.id,
+        name=b.name.strip(),
+        phone=b.phone.strip(),
+        relationship_type=b.relationship_type.strip(),
+        is_primary=b.is_primary
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+    return {
+        "id": c.id,
+        "user_id": c.user_id,
+        "name": c.name,
+        "phone": c.phone,
+        "relationship_type": c.relationship_type,
+        "is_primary": bool(c.is_primary),
+        "created_at": iso(c.created_at)
+    }
+
+
+@app.patch("/api/citizen/contacts/{cid}")
+def update_contact(cid: int, b: ContactIn, db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    c = get_or_404(db, EmergencyContact, cid)
+    if c.user_id != u.id:
+        raise HTTPException(403, "Access denied")
+    if b.is_primary:
+        db.query(EmergencyContact).filter(EmergencyContact.user_id == u.id, EmergencyContact.id != cid).update({"is_primary": False})
+    c.name = b.name.strip()
+    c.phone = b.phone.strip()
+    c.relationship_type = b.relationship_type.strip()
+    c.is_primary = b.is_primary
+    db.commit()
+    return {
+        "id": c.id,
+        "user_id": c.user_id,
+        "name": c.name,
+        "phone": c.phone,
+        "relationship_type": c.relationship_type,
+        "is_primary": bool(c.is_primary),
+        "created_at": iso(c.created_at)
+    }
+
+
+@app.delete("/api/citizen/contacts/{cid}")
+def delete_contact(cid: int, db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    c = get_or_404(db, EmergencyContact, cid)
+    if c.user_id != u.id:
+        raise HTTPException(403, "Access denied")
+    db.delete(c)
+    db.commit()
+    return {"ok": True}
 
 
 @app.post("/api/incidents/{iid}/evidence")

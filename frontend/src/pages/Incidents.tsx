@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Check, X, AlertOctagon, RefreshCw, ShieldAlert, Radio, Navigation, Eye, ZoomIn } from 'lucide-react'
+import { Check, X, AlertOctagon, RefreshCw, ShieldAlert, Radio, Navigation, Eye, ZoomIn, Video, PhoneCall, Sparkles, UserCheck, AlertTriangle } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Empty, Alert, useAct, DemoNote } from '../components/ui'
-import { api, activeAssignment, fmtDT, fmtTime, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK } from '../lib/api'
+import { api, activeAssignment, fmtDT, fmtTime, Incident, resolveEvidenceUrl, ACCIDENT_EVIDENCE_FALLBACK, AiAnalysis, GeminiAnalysis } from '../lib/api'
+
+function parseJsonSafe<T>(val: any): T | null {
+  if (!val) return null
+  if (typeof val === 'object') return val as T
+  try {
+    return JSON.parse(val) as T
+  } catch {
+    return null
+  }
+}
 
 const pct = (c: number | null) => (c == null ? 'n/a (test trigger)' : Math.round(c * 100) + '%')
 
@@ -284,6 +294,175 @@ export default function Incidents() {
                   </div>
                 )}
               </div>
+
+              {/* Citizen Incident Details & AI Video Assessment */}
+              {Boolean(sel.reported_by_user_id || sel.source === 'citizen_report' || sel.reporter_name) && (() => {
+                const aiData = parseJsonSafe<AiAnalysis>(sel.ai_analysis)
+                const gemData = parseJsonSafe<GeminiAnalysis>(sel.gemini_analysis)
+
+                return (
+                  <div className="mb-4 p-3.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl space-y-3.5">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0]">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded bg-[#EBF2FA] text-[#173B68]">
+                          <UserCheck className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <h4 className="font-bold text-xs uppercase tracking-wider text-[#173B68]">
+                            Citizen Emergency Report
+                          </h4>
+                          <p className="text-[11px] text-[#666666]">
+                            Submitted by {sel.reporter_name || 'Citizen Responder'} ({sel.citizen_relationship || 'Witness'})
+                          </p>
+                        </div>
+                      </div>
+                      {sel.reporter_phone && (
+                        <a
+                          href={`tel:${sel.reporter_phone}`}
+                          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-white border border-[#CBD5E1] text-[#173B68] hover:bg-[#F1F5F9] transition"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
+                          <span>{sel.reporter_phone}</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                        <span className="text-[10px] text-[#666666] uppercase block font-semibold">Accident Type</span>
+                        <span className="font-bold text-[#171717]">{sel.accident_type || 'Vehicle collision'}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                        <span className="text-[10px] text-[#666666] uppercase block font-semibold">Vehicles Involved</span>
+                        <span className="font-bold text-[#171717]">{sel.vehicles_involved ?? 'Unknown'}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                        <span className="text-[10px] text-[#666666] uppercase block font-semibold">Injured Count</span>
+                        <span className="font-bold text-[#DC3545]">{sel.injured_count ?? 'Unknown'}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                        <span className="text-[10px] text-[#666666] uppercase block font-semibold">Reporter Role</span>
+                        <span className="font-bold text-[#171717] capitalize">{sel.citizen_relationship || 'Witness'}</span>
+                      </div>
+                    </div>
+
+                    {/* Uploaded Video Player */}
+                    {sel.video_url && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#171717]">
+                          <Video className="w-4 h-4 text-[#DC3545]" />
+                          <span>Uploaded Accident Video Footage</span>
+                        </div>
+                        <div className="rounded-lg overflow-hidden border border-[#CBD5E1] bg-black max-h-72 flex justify-center">
+                          <video
+                            controls
+                            playsInline
+                            className="w-full max-h-72 object-contain"
+                            src={resolveEvidenceUrl(sel.video_url)}
+                          >
+                            Your browser does not support HTML5 video preview.
+                          </video>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ResNet-18 Video AI Detection Result */}
+                    {aiData && (
+                      <div className="p-3 bg-white rounded-lg border border-[#CBD5E1] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#173B68]" />
+                            <span className="text-xs font-bold text-[#171717]">PyTorch ResNet-18 Video Inference</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                            aiData.category?.toLowerCase().includes('detected') && !aiData.category?.toLowerCase().includes('no')
+                              ? 'bg-[#F0F9F4] text-[#166534] border border-[#198754]/30'
+                              : aiData.category?.toLowerCase().includes('inconclusive')
+                              ? 'bg-[#FDF9F0] text-[#855B14] border border-[#D69E36]/30'
+                              : 'bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]'
+                          }`}>
+                            {aiData.category || 'AI Analysis Completed'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#475569]">
+                          {aiData.summary || aiData.notes || 'Automated frame-by-frame collision signature scan completed.'}
+                        </p>
+                        {aiData.confidence !== null && aiData.confidence !== undefined && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[11px] text-[#666666]">
+                              <span>Collision Probability Confidence</span>
+                              <span className="font-mono font-bold text-[#171717]">{(aiData.confidence * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  aiData.confidence >= 0.8 ? 'bg-[#DC3545]' : aiData.confidence >= 0.5 ? 'bg-[#D69E36]' : 'bg-[#198754]'
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(5, aiData.confidence * 100))}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Gemini AI Visual Assessment Card */}
+                    {gemData && (
+                      <div className="p-3 bg-gradient-to-br from-[#EFF6FF] to-[#FAFBFD] rounded-lg border border-[#93C5FD] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-[#2563EB]" />
+                            <span className="text-xs font-bold text-[#1E40AF]">Gemini Vision Incident Assessment</span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF3C7] text-[#92400E] border border-[#F59E0B]/40">
+                            AI-GENERATED · HUMAN REVIEW REQUIRED
+                          </span>
+                        </div>
+
+                        {gemData.incident_summary && (
+                          <p className="text-xs text-[#1E3A8A] font-medium leading-relaxed">
+                            {gemData.incident_summary}
+                          </p>
+                        )}
+
+                        <div className="grid sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                          {gemData.visible_hazards && gemData.visible_hazards.length > 0 && (
+                            <div className="bg-white/80 p-2 rounded border border-[#BFDBFE]">
+                              <span className="font-bold text-[#DC2626] block mb-1 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> Visible Hazards
+                              </span>
+                              <ul className="list-disc list-inside space-y-0.5 text-[#475569]">
+                                {gemData.visible_hazards.map((h, i) => (
+                                  <li key={i}>{h}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {gemData.observed_collision_indicators && gemData.observed_collision_indicators.length > 0 && (
+                            <div className="bg-white/80 p-2 rounded border border-[#BFDBFE]">
+                              <span className="font-bold text-[#1E40AF] block mb-1">
+                                Collision Indicators
+                              </span>
+                              <ul className="list-disc list-inside space-y-0.5 text-[#475569]">
+                                {gemData.observed_collision_indicators.map((c, i) => (
+                                  <li key={i}>{c}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {gemData.analysis_limitations && gemData.analysis_limitations.length > 0 && (
+                          <p className="text-[10px] text-[#64748B] italic pt-1 border-t border-[#DBEAFE]">
+                            Limitations: {gemData.analysis_limitations.join('; ')}. Dispatchers must verify scene reality before allocating critical resources.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Verification & Action Toolbar */}
               {(user?.role === 'admin' || user?.role === 'police') && (

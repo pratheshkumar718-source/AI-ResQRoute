@@ -19,6 +19,7 @@ import Hospitals from './pages/Hospitals'
 import Tracking from './pages/Tracking'
 import HistoryPage from './pages/HistoryPage'
 import SettingsPage from './pages/SettingsPage'
+import CitizenDashboard from './pages/CitizenDashboard'
 
 interface NavItem {
   id: string
@@ -29,6 +30,7 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
+  { id: 'citizen', label: 'Citizen Emergency Portal', icon: ShieldAlert, roles: ['citizen'], group: 'Command & AI Surveillance' },
   { id: 'camera', label: 'AI Accident Surveillance', icon: Camera, roles: ['admin', 'police'], group: 'Command & AI Surveillance' },
   { id: 'overview', label: 'Operations Command Grid', icon: LayoutDashboard, roles: ['admin', 'hospital', 'police'], group: 'Command & AI Surveillance' },
   { id: 'incidents', label: 'Incidents & Verification', icon: ShieldAlert, roles: ['admin', 'police'], group: 'Command & AI Surveillance' },
@@ -52,6 +54,7 @@ const ROLE_BADGE: Record<string, { label: string; style: string }> = {
 }
 
 function getDefaultPageForUser(role?: string): string {
+  if (role === 'citizen') return 'citizen'
   if (role === 'admin') return 'camera'
   if (role === 'driver') return 'driver'
   if (role === 'hospital') return 'hospitals'
@@ -331,6 +334,7 @@ function Shell() {
           )}
 
           <ErrorBoundary>
+            {page === 'citizen' && <CitizenDashboard />}
             {page === 'camera' && <CameraPage />}
             {page === 'overview' && <Overview go={setPage} />}
             {page === 'incidents' && <Incidents />}
@@ -341,7 +345,7 @@ function Shell() {
             {page === 'tracking' && <Tracking />}
             {page === 'history' && <HistoryPage />}
             {page === 'settings' && <SettingsPage />}
-            {!['camera', 'overview', 'incidents', 'map', 'ambulances', 'driver', 'hospitals', 'tracking', 'history', 'settings'].includes(page) && (
+            {!['citizen', 'camera', 'overview', 'incidents', 'map', 'ambulances', 'driver', 'hospitals', 'tracking', 'history', 'settings'].includes(page) && (
               <div className="p-8 text-center text-[#666666]">
                 <h2 className="text-lg font-bold text-[#171717] mb-2">Section Not Found</h2>
                 <button

@@ -57,7 +57,21 @@ class Incident(Base):
     is_demo = Column(Boolean, default=True)
     created_at = Column(DateTime, default=now)
     completed_at = Column(DateTime, nullable=True)
+
+    # Citizen Reporting & AI Telemetry fields
+    reported_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    reporter_name = Column(String, nullable=True)
+    reporter_phone = Column(String, nullable=True)
+    accident_type = Column(String, nullable=True)
+    vehicles_involved = Column(Integer, nullable=True)
+    injured_count = Column(Integer, nullable=True)
+    citizen_relationship = Column(String, nullable=True)
+    video_url = Column(String, nullable=True)
+    ai_analysis = Column(Text, nullable=True)  # JSON
+    gemini_analysis = Column(Text, nullable=True)  # JSON
+
     camera = relationship("Camera")
+    reported_by = relationship("User", foreign_keys=[reported_by_user_id])
     selected_hospital = relationship("Hospital", foreign_keys=[selected_hospital_id])
     evidence = relationship("Evidence", order_by="Evidence.id", cascade="all, delete-orphan")
     assignments = relationship("Assignment", order_by="Assignment.id", cascade="all, delete-orphan")
@@ -146,3 +160,15 @@ class AuditLog(Base):
     entity = Column(String)
     entity_id = Column(Integer, nullable=True)
     detail = Column(Text, default="")
+
+
+class EmergencyContact(Base):
+    __tablename__ = "emergency_contacts"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    relationship_type = Column(String, default="Family")  # Parent, Spouse, Sibling, Friend, Doctor, etc.
+    is_primary = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=now)
+    user = relationship("User")

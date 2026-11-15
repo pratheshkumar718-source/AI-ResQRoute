@@ -105,6 +105,12 @@ const KEY_INCIDENTS = 'resq_incidents_v2'
 const KEY_AMBULANCES = 'resq_ambulances_v2'
 const KEY_HOSPITALS = 'resq_hospitals_v2'
 const KEY_AUDIT = 'resq_audit_v2'
+const KEY_CONTACTS = 'resq_contacts_v2'
+
+const DEFAULT_CONTACTS = [
+  { id: 1, user_id: 3, name: 'Suresh Raman (Father)', phone: '+91-98401-22334', relationship_type: 'Family', is_primary: true, created_at: new Date().toISOString() },
+  { id: 2, user_id: 3, name: 'Anita Raman (Sister)', phone: '+91-98401-55667', relationship_type: 'Family', is_primary: false, created_at: new Date().toISOString() },
+]
 
 function getStored<T>(key: string, def: T): T {
   try {
@@ -728,6 +734,212 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       { id: 2, incident_id: 101, event: 'dispatched', message: 'AMB-01 dispatched to scene', ts: new Date().toISOString() },
     ]
     return { audit, events }
+  }
+
+  // Citizen Emergency Reporting & Management
+  if (path === '/api/citizen/my-reports' && method === 'GET') {
+    const incs = getMockIncidents()
+    const authedUser = getAuthedUser()
+    const myId = authedUser?.id || 3
+    return incs.filter(i => (i as any).reported_by_user_id === myId || (i as any).source === 'citizen_report')
+  }
+
+  if (path === '/api/citizen/report' && method === 'POST') {
+    const incs = getMockIncidents()
+    const authedUser = getAuthedUser()
+    const myId = authedUser?.id || 3
+    const myName = authedUser?.name || 'Citizen Responder Priya Raman'
+
+    let lat = 13.085
+    let lng = 80.26
+    let location_name = 'Citizen Verified Location'
+    let accident_type = 'Vehicle collision'
+    let vehicles_involved: any = 2
+    let injured_count: any = 1
+    let citizen_relationship = 'witness'
+    let reporter_phone = authedUser?.phone || '+91-98401-23456'
+    let description = ''
+    let priority = 'high'
+    let hasVideo = false
+
+    if (form) {
+      if (form.get('lat')) lat = parseFloat(form.get('lat') as string)
+      if (form.get('lng')) lng = parseFloat(form.get('lng') as string)
+      if (form.get('location_name')) location_name = form.get('location_name') as string
+      if (form.get('accident_type')) accident_type = form.get('accident_type') as string
+      if (form.get('vehicles_involved')) vehicles_involved = parseInt(form.get('vehicles_involved') as string)
+      if (form.get('injured_count')) injured_count = parseInt(form.get('injured_count') as string)
+      if (form.get('citizen_relationship')) citizen_relationship = form.get('citizen_relationship') as string
+      if (form.get('reporter_phone')) reporter_phone = form.get('reporter_phone') as string
+      if (form.get('description')) description = form.get('description') as string
+      if (form.get('priority')) priority = form.get('priority') as string
+      if (form.get('video')) hasVideo = true
+    } else if (body) {
+      lat = body.lat || lat
+      lng = body.lng || lng
+      location_name = body.location_name || location_name
+      accident_type = body.accident_type || accident_type
+      vehicles_involved = body.vehicles_involved ?? vehicles_involved
+      injured_count = body.injured_count ?? injured_count
+      citizen_relationship = body.citizen_relationship || citizen_relationship
+      reporter_phone = body.reporter_phone || reporter_phone
+      description = body.description || description
+      priority = body.priority || priority
+    }
+
+    const newId = 100 + incs.length + 1
+    const aiAnalysis = hasVideo ? {
+      status: 'analyzed',
+      category: 'Accident event detected',
+      confidence: 0.942,
+      evaluated_frames: 6,
+      summary: 'PyTorch ResNet-18 detected high-confidence impact signatures across sequential video frames.',
+      top_evidence_frames: []
+    } : {
+      status: 'manual_report',
+      category: 'Inconclusive / insufficient evidence (No video provided)',
+      confidence: null,
+      notes: 'Citizen emergency report submitted without video recording. Visual verification required.'
+    }
+
+    const geminiAnalysis = {
+      incident_summary: `Reported ${accident_type} at ${location_name}. Preliminary scene parameters: ~${vehicles_involved || 1} vehicle(s), ~${injured_count || 1} injured party(ies).`,
+      visible_vehicle_count: vehicles_involved || 1,
+      visible_hazards: ['Roadway obstruction', 'Potential fuel spillage hazard'],
+      observed_collision_indicators: ['Structural vehicular impact', 'Roadside debris pattern'],
+      evidence_observations: ['High-contrast collision point identified', 'Bystander group assembled'],
+      analysis_limitations: ['Camera angle perspective constraints', 'Single-pass preliminary optical scan'],
+      human_review_required: true,
+      ai_generated: true,
+      requires_human_review: true
+    }
+
+    const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+    const availAmb = ambs.find(a => a.status === 'available') || ambs[0]
+    const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
+    const nearestHosp = hosps.find(h => h.receiving && h.available_beds > 0) || hosps[0]
+
+    const newInc: any = {
+      id: newId,
+      camera_id: null,
+      camera_name: 'Citizen Mobile Dispatch Unit',
+      lat,
+      lng,
+      location_name,
+      status: 'suspected',
+      priority,
+      source: 'citizen_report',
+      confidence: hasVideo ? 0.942 : 0.75,
+      notes: description || `${accident_type} reported by ${myName}`,
+      verified_by: null,
+      required_ambulances: 1,
+      police_notified: false,
+      green_corridor: false,
+      verification_answers: null,
+      assessment: null,
+      recommended_hospital_id: nearestHosp.id,
+      selected_hospital_id: nearestHosp.id,
+      selected_hospital_name: nearestHosp.name,
+      selected_hospital_beds: nearestHosp.available_beds,
+      selected_hospital_icu: nearestHosp.icu_beds,
+      selected_hospital_phone: nearestHosp.phone,
+      hospital_warning: null,
+      created_at: new Date().toISOString(),
+      completed_at: null,
+      evidence: [],
+      assignments: [
+        {
+          id: Date.now(),
+          incident_id: newId,
+          ambulance_id: availAmb.id,
+          ambulance_code: availAmb.code,
+          driver_name: availAmb.driver_name,
+          driver_phone: availAmb.phone,
+          status: 'offered',
+          explanation: `Automated dispatch offer transmitted to nearest unit ${availAmb.code}`,
+          ranking: [{ code: availAmb.code, eta_min: 4, distance_km: 2.1 }],
+          scene_route: computeMockRoute([availAmb.lat, availAmb.lng], [lat, lng]),
+          hospital_route: computeMockRoute([lat, lng], [nearestHosp.lat, nearestHosp.lng]),
+          hospital_id: nearestHosp.id,
+          hospital_name: nearestHosp.name,
+          hospital_available_beds: nearestHosp.available_beds,
+          hospital_icu_beds: nearestHosp.icu_beds,
+          hospital_phone: nearestHosp.phone,
+          leg: 'to_scene',
+          leg_complete: false,
+          remaining_eta: 4,
+          offered_at: new Date().toISOString(),
+          responded_at: null
+        }
+      ],
+      reported_by_user_id: myId,
+      reporter_name: myName,
+      reporter_phone,
+      accident_type,
+      vehicles_involved,
+      injured_count,
+      citizen_relationship,
+      video_url: hasVideo ? '/evidence/sample_accident_recording.mp4' : null,
+      ai_analysis: aiAnalysis,
+      gemini_analysis: geminiAnalysis
+    }
+
+    incs.unshift(newInc)
+    setStored(KEY_INCIDENTS, incs)
+    return newInc
+  }
+
+  if (path === '/api/citizen/contacts' && method === 'GET') {
+    const contacts = getStored<any[]>(KEY_CONTACTS, DEFAULT_CONTACTS)
+    const authedUser = getAuthedUser()
+    const myId = authedUser?.id || 3
+    return contacts.filter(c => c.user_id === myId)
+  }
+
+  if (path === '/api/citizen/contacts' && method === 'POST') {
+    const contacts = getStored<any[]>(KEY_CONTACTS, DEFAULT_CONTACTS)
+    const authedUser = getAuthedUser()
+    const myId = authedUser?.id || 3
+    if (body?.is_primary) {
+      contacts.forEach(c => { if (c.user_id === myId) c.is_primary = false })
+    }
+    const newContact = {
+      id: Date.now(),
+      user_id: myId,
+      name: body?.name || 'Emergency Contact',
+      phone: body?.phone || '+91-98000-00000',
+      relationship_type: body?.relationship_type || 'Family',
+      is_primary: Boolean(body?.is_primary),
+      created_at: new Date().toISOString()
+    }
+    contacts.push(newContact)
+    setStored(KEY_CONTACTS, contacts)
+    return newContact
+  }
+
+  if (path.startsWith('/api/citizen/contacts/') && method === 'PATCH') {
+    const cid = Number(path.split('/')[4])
+    const contacts = getStored<any[]>(KEY_CONTACTS, DEFAULT_CONTACTS)
+    const match = contacts.find(c => c.id === cid)
+    if (match) {
+      if (body?.is_primary) {
+        contacts.forEach(c => { if (c.user_id === match.user_id) c.is_primary = false })
+      }
+      if (body?.name !== undefined) match.name = body.name
+      if (body?.phone !== undefined) match.phone = body.phone
+      if (body?.relationship_type !== undefined) match.relationship_type = body.relationship_type
+      if (body?.is_primary !== undefined) match.is_primary = body.is_primary
+      setStored(KEY_CONTACTS, contacts)
+      return match
+    }
+  }
+
+  if (path.startsWith('/api/citizen/contacts/') && method === 'DELETE') {
+    const cid = Number(path.split('/')[4])
+    let contacts = getStored<any[]>(KEY_CONTACTS, DEFAULT_CONTACTS)
+    contacts = contacts.filter(c => c.id !== cid)
+    setStored(KEY_CONTACTS, contacts)
+    return { ok: true }
   }
 
   // Register New Hospital
