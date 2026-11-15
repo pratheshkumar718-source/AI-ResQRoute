@@ -1,0 +1,3032 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="ResQRoute AI - Computational Intelligence, Deep Learning Architectures, and Routing Techniques for Real-Time Accident Detection and Emergency Medical Dispatch." />
+    <meta name="theme-color" content="#0b1528" />
+    <title>ResQRoute AI – Algorithms & Computational Intelligence</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+       CSS VARIABLES & ENTERPRISE DESIGN SYSTEM
+       Primary: Dark Navy (#0B1528) | Accent: Emergency Red (#DC2626)
+       Neutral: Pure White (#FFF), Off-White (#F8FAFC), Slate (#64748B)
+       ========================================================================== */
+        :root {
+            --navy-950: #070d19;
+            --navy-900: #0b1528;
+            --navy-850: #101c36;
+            --navy-800: #162445;
+            --navy-700: #1e335e;
+            --navy-600: #2d4a82;
+
+            --red-600: #dc2626;
+            --red-500: #ef4444;
+            --red-100: #fee2e2;
+            --red-50: #fef2f2;
+
+            --emerald-600: #059669;
+            --emerald-500: #10b981;
+            --emerald-50: #ecfdf5;
+
+            --amber-600: #d97706;
+            --amber-500: #f59e0b;
+            --amber-50: #fffbeb;
+
+            --blue-600: #2563eb;
+            --blue-50: #eff6ff;
+
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            --white: #ffffff;
+
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+
+            --shadow-xs: 0 1px 2px rgba(11, 21, 40, 0.05);
+            --shadow-sm: 0 2px 6px rgba(11, 21, 40, 0.06);
+            --shadow-md: 0 6px 18px rgba(11, 21, 40, 0.08);
+            --shadow-lg: 0 12px 32px rgba(11, 21, 40, 0.1);
+            --shadow-xl: 0 20px 48px rgba(11, 21, 40, 0.12);
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 22px;
+            --radius-full: 9999px;
+
+            --transition-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
+            --header-height: 74px;
+            --container-max: 1240px;
+        }
+
+        /* Base Reset */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--white);
+            color: var(--slate-800);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color var(--transition-fast);
+        }
+
+        img,
+        svg {
+            display: block;
+            max-width: 100%;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        /* Utility Container */
+        .container {
+            width: 100%;
+            max-width: var(--container-max);
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        /* ==========================================================================
+       SECTION HEADERS & TYPOGRAPHY
+       ========================================================================== */
+        .badge-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.85rem;
+            background-color: var(--slate-100);
+            color: var(--navy-800);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--slate-200);
+            margin-bottom: 1rem;
+        }
+
+        .badge-label.badge-red {
+            background-color: var(--red-50);
+            color: var(--red-600);
+            border-color: rgba(220, 38, 38, 0.2);
+        }
+
+        .badge-label.badge-blue {
+            background-color: var(--blue-50);
+            color: var(--blue-600);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 3.2vw, 2.75rem);
+            font-weight: 800;
+            color: var(--navy-900);
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+        }
+
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--slate-600);
+            max-width: 720px;
+            line-height: 1.65;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .center-block {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ==========================================================================
+       STICKY HEADER / NAVIGATION BAR
+       ========================================================================== */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: var(--header-height);
+            background-color: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--slate-200);
+            transition: all var(--transition-base);
+        }
+
+        .site-header.scrolled {
+            box-shadow: 0 4px 20px rgba(11, 21, 40, 0.06);
+            background-color: rgba(255, 255, 255, 0.98);
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        /* Brand Logo */
+        .brand-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .brand-logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 2px 10px rgba(11, 21, 40, 0.16);
+            border: 2px solid rgba(220, 38, 38, 0.25);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .brand-group:hover .brand-logo-img {
+            transform: scale(1.05);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+            color: var(--white);
+            border-radius: var(--radius-md);
+            display: grid;
+            place-items: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(11, 21, 40, 0.2);
+        }
+
+        .brand-pulse-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--red-600);
+            border-radius: 50%;
+            border: 2px solid var(--white);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+            }
+        }
+
+        .brand-name {
+            font-size: 1.32rem;
+            font-weight: 800;
+            color: var(--navy-900);
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+
+        .brand-name span.highlight {
+            color: var(--red-600);
+        }
+
+        .brand-tagline {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--slate-500);
+            letter-spacing: 0.01em;
+            font-style: italic;
+        }
+
+        /* Navigation Links */
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--slate-700);
+            position: relative;
+            padding: 0.4rem 0;
+            transition: color var(--transition-fast);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background-color: var(--red-600);
+            transition: width var(--transition-base);
+            border-radius: var(--radius-full);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--navy-900);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Primary CTA Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            padding: 0.68rem 1.35rem;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background-color: var(--navy-900);
+            color: var(--white);
+            border: 1px solid var(--navy-800);
+            box-shadow: 0 3px 10px rgba(11, 21, 40, 0.16);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--navy-800);
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 16px rgba(11, 21, 40, 0.22);
+            color: var(--white);
+        }
+
+        .btn-emergency {
+            background-color: var(--red-600);
+            color: var(--white);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+        }
+
+        .btn-emergency:hover {
+            background-color: #b91c1c;
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35);
+            color: var(--white);
+        }
+
+        .btn-outline {
+            background-color: var(--white);
+            color: var(--navy-900);
+            border: 1px solid var(--slate-300);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--slate-50);
+            border-color: var(--navy-700);
+            transform: translateY(-1.5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-icon-ext {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2.2;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            width: 32px;
+            height: 32px;
+            justify-content: center;
+            align-items: center;
+            background: none;
+            border-radius: var(--radius-sm);
+        }
+
+        .mobile-menu-btn span {
+            width: 22px;
+            height: 2px;
+            background-color: var(--navy-900);
+            transition: transform var(--transition-base), opacity var(--transition-fast);
+        }
+
+        /* ==========================================================================
+       HERO SECTION
+       ========================================================================== */
+        .hero-section {
+            padding: clamp(3.5rem, 6vw, 6rem) 0 4.5rem;
+            background: linear-gradient(180deg, var(--white) 0%, var(--slate-50) 100%);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .hero-bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.05) 1px, transparent 0);
+            background-size: 32px 32px;
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.95fr;
+            gap: 3.5rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content {
+            max-width: 640px;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem;
+            background-color: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-xs);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--navy-800);
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-eyebrow .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--red-600);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .hero-heading {
+            font-size: clamp(2.4rem, 4.2vw, 3.45rem);
+            font-weight: 800;
+            color: var(--navy-950);
+            letter-spacing: -0.035em;
+            line-height: 1.15;
+            margin-bottom: 1.35rem;
+        }
+
+        .hero-heading span.gradient-text {
+            background: linear-gradient(135deg, var(--navy-900) 20%, var(--red-600) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-lead {
+            font-size: 1.18rem;
+            color: var(--slate-600);
+            line-height: 1.65;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2.25rem;
+        }
+
+        .hero-meta-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.75rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--slate-200);
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.82rem;
+            color: var(--slate-600);
+            font-weight: 600;
+        }
+
+        .hero-meta-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--navy-700);
+        }
+
+        /* Hero Visual Illustration */
+        .hero-visual-card {
+            position: relative;
+            background: linear-gradient(165deg, var(--navy-950) 0%, var(--navy-900) 60%, var(--navy-850) 100%);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            border: 1px solid var(--navy-700);
+            box-shadow: 0 25px 60px -12px rgba(11, 21, 40, 0.35);
+            color: var(--white);
+            overflow: hidden;
+        }
+
+        .hero-visual-card::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .visual-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .visual-window-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .visual-window-dots span {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .visual-window-dots span:nth-child(1) {
+            background-color: #ef4444;
+        }
+
+        .visual-window-dots span:nth-child(2) {
+            background-color: #f59e0b;
+        }
+
+        .visual-window-dots span:nth-child(3) {
+            background-color: #10b981;
+        }
+
+        .visual-live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            color: #34d399;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .visual-live-indicator::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            background-color: #10b981;
+            border-radius: 50%;
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        /* Telemetry canvas simulation */
+        .telemetry-stage {
+            position: relative;
+            background-color: rgba(7, 13, 25, 0.85);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.25rem;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .telemetry-svg-scene {
+            width: 100%;
+            height: 180px;
+        }
+
+        .telemetry-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .stat-value.urgent {
+            color: #f87171;
+        }
+
+        /* Floating UI Badges on the Hero Graphic */
+        .hero-floating-badge {
+            position: absolute;
+            background-color: rgba(16, 28, 54, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 0.6rem 0.85rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .hero-floating-badge.badge-1 {
+            bottom: -15px;
+            left: 20px;
+        }
+
+        .hero-floating-badge.badge-2 {
+            top: 40px;
+            right: -15px;
+        }
+
+        .status-dot-success {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--emerald-500);
+        }
+
+        .status-dot-alert {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--red-500);
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        /* ==========================================================================
+       SECTION 3: ALGORITHMS AND TECHNIQUES SHOWCASE
+       ========================================================================== */
+        .algorithms-section {
+            padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+            background-color: var(--white);
+            position: relative;
+        }
+
+        .filter-tabs-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0 3rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .filter-pills {
+            display: inline-flex;
+            background-color: var(--slate-100);
+            padding: 0.35rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--slate-200);
+            gap: 0.25rem;
+        }
+
+        .filter-btn {
+            padding: 0.45rem 1.15rem;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--slate-600);
+            border-radius: var(--radius-full);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            color: var(--navy-900);
+        }
+
+        .filter-btn.active {
+            background-color: var(--white);
+            color: var(--navy-900);
+            box-shadow: 0 2px 6px rgba(11, 21, 40, 0.08);
+        }
+
+        /* Cards Grid */
+        .algo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.75rem;
+        }
+
+        .algo-card {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-sm);
+            padding: 1.85rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .algo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: transparent;
+            transition: background-color var(--transition-fast);
+        }
+
+        .algo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--slate-300);
+        }
+
+        .algo-card:hover::before {
+            background-color: var(--red-600);
+        }
+
+        .algo-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.15rem;
+        }
+
+        .algo-num {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--slate-400);
+            letter-spacing: 0.05em;
+        }
+
+        .algo-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            display: grid;
+            place-items: center;
+            color: var(--navy-900);
+            transition: all var(--transition-fast);
+        }
+
+        .algo-card:hover .algo-icon-wrap {
+            background-color: var(--navy-900);
+            color: var(--white);
+            border-color: var(--navy-900);
+        }
+
+        .algo-app-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--navy-700);
+            background-color: var(--slate-100);
+            padding: 0.28rem 0.65rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.65rem;
+            border: 1px solid var(--slate-200);
+        }
+
+        .algo-title {
+            font-size: 1.28rem;
+            font-weight: 700;
+            color: var(--navy-950);
+            letter-spacing: -0.015em;
+            line-height: 1.3;
+            margin-bottom: 0.75rem;
+        }
+
+        .algo-desc {
+            font-size: 0.94rem;
+            color: var(--slate-600);
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Card Micro-Visual / Workflow Diagram */
+        .algo-diagram-box {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: auto;
+            font-size: 0.82rem;
+        }
+
+        .diagram-header {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--slate-500);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Specific diagram mini-components */
+        .diagram-cnn-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.25rem;
+            background: var(--white);
+            padding: 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px dashed var(--slate-300);
+        }
+
+        .diagram-cnn-flow .block {
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            text-align: center;
+            font-weight: 600;
+            background: var(--slate-100);
+            color: var(--navy-800);
+            border: 1px solid var(--slate-200);
+        }
+
+        .diagram-cnn-flow .block.highlight-red {
+            background-color: var(--red-50);
+            color: var(--red-600);
+            border-color: rgba(220, 38, 38, 0.25);
+        }
+
+        .diagram-cnn-flow .arrow {
+            color: var(--slate-400);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .diagram-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            background: var(--white);
+            padding: 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--slate-200);
+        }
+
+        .diagram-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .diagram-bar-label {
+            width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--slate-600);
+        }
+
+        .diagram-progress-track {
+            flex: 1;
+            height: 8px;
+            background: var(--slate-100);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .diagram-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .fill-red {
+            background-color: var(--red-600);
+        }
+
+        .fill-blue {
+            background-color: var(--navy-700);
+        }
+
+        .fill-green {
+            background-color: var(--emerald-500);
+        }
+
+        .diagram-formula-code {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            background-color: var(--white);
+            padding: 0.5rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--slate-200);
+            color: var(--navy-900);
+            overflow-x: auto;
+        }
+
+        .filmstrip-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            background: var(--white);
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--slate-200);
+        }
+
+        .filmstrip-frame {
+            background-color: var(--navy-900);
+            aspect-ratio: 16/9;
+            border-radius: 2px;
+            display: grid;
+            place-items: center;
+            color: var(--white);
+            font-family: var(--font-mono);
+            font-size: 0.58rem;
+            border: 1px solid var(--slate-300);
+            position: relative;
+        }
+
+        .filmstrip-frame::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--red-500);
+        }
+
+        /* Note tag inside card */
+        .card-note {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            margin-top: 0.5rem;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* ==========================================================================
+       SECTION 4: COMPLETE SYSTEM WORKFLOW
+       ========================================================================== */
+        .workflow-section {
+            padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+            background-color: var(--slate-50);
+            border-top: 1px solid var(--slate-200);
+            border-bottom: 1px solid var(--slate-200);
+            position: relative;
+        }
+
+        .workflow-timeline {
+            position: relative;
+            margin-top: 3.5rem;
+        }
+
+        /* Vertical line on desktop & mobile */
+        .workflow-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            bottom: 40px;
+            left: 32px;
+            width: 3px;
+            background: linear-gradient(180deg, var(--red-600) 0%, var(--navy-700) 50%, var(--emerald-500) 100%);
+            border-radius: var(--radius-full);
+        }
+
+        .workflow-step-card {
+            position: relative;
+            display: flex;
+            gap: 1.75rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .workflow-step-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-marker {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            background: var(--white);
+            border: 2px solid var(--slate-300);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            box-shadow: var(--shadow-sm);
+            z-index: 2;
+            transition: all var(--transition-base);
+            color: var(--navy-900);
+        }
+
+        .workflow-step-card:hover .step-marker {
+            border-color: var(--red-600);
+            box-shadow: 0 0 0 6px var(--red-100);
+            transform: scale(1.06);
+        }
+
+        .step-num-badge {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--red-600);
+            margin-top: -2px;
+        }
+
+        .step-body {
+            flex: 1;
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            box-shadow: var(--shadow-xs);
+            transition: all var(--transition-base);
+        }
+
+        .workflow-step-card:hover .step-body {
+            box-shadow: var(--shadow-md);
+            border-color: var(--slate-300);
+            transform: translateX(4px);
+        }
+
+        .step-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-stage-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--navy-950);
+        }
+
+        .step-phase-pill {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+            background: var(--slate-100);
+            color: var(--slate-700);
+            border: 1px solid var(--slate-200);
+        }
+
+        .step-phase-pill.detection {
+            background-color: var(--red-50);
+            color: var(--red-600);
+            border-color: var(--red-100);
+        }
+
+        .step-phase-pill.dispatch {
+            background-color: var(--blue-50);
+            color: var(--blue-600);
+            border-color: var(--slate-200);
+        }
+
+        .step-phase-pill.handover {
+            background-color: var(--emerald-50);
+            color: var(--emerald-600);
+            border-color: var(--slate-200);
+        }
+
+        .step-desc {
+            font-size: 0.92rem;
+            color: var(--slate-600);
+            line-height: 1.6;
+        }
+
+        .step-tech-tag {
+            margin-top: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            color: var(--navy-700);
+            background: var(--slate-50);
+            padding: 0.25rem 0.55rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--slate-200);
+        }
+
+        /* ==========================================================================
+       SECTION 5: IMPLEMENTATION TRANSPARENCY
+       ========================================================================== */
+        .transparency-section {
+            padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+            background-color: var(--white);
+            position: relative;
+        }
+
+        .transparency-banner {
+            background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 100%);
+            border-radius: var(--radius-xl);
+            padding: clamp(2rem, 4vw, 3rem);
+            color: var(--white);
+            border: 1px solid var(--navy-700);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 3.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .transparency-banner::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .transparency-banner-content {
+            position: relative;
+            z-index: 1;
+            max-width: 820px;
+        }
+
+        .transparency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-full);
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+            color: #93c5fd;
+        }
+
+        .transparency-title {
+            font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .transparency-lead {
+            font-size: 1.05rem;
+            color: var(--slate-300);
+            line-height: 1.65;
+        }
+
+        /* Comparison Grid */
+        .transparency-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .transparency-col {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-sm);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .col-header-box {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .col-header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+        }
+
+        .col-header-icon.verified {
+            background-color: var(--emerald-50);
+            color: var(--emerald-600);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .col-header-icon.conceptual {
+            background-color: var(--blue-50);
+            color: var(--blue-600);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+
+        .col-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--navy-950);
+        }
+
+        .col-subtitle {
+            font-size: 0.8rem;
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+
+        .transparency-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .transparency-item {
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+        }
+
+        .check-bullet {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .check-bullet.verified {
+            background-color: var(--emerald-50);
+            color: var(--emerald-600);
+            border: 1px solid var(--emerald-500);
+        }
+
+        .check-bullet.conceptual {
+            background-color: var(--blue-50);
+            color: var(--blue-600);
+            border: 1px solid var(--blue-600);
+        }
+
+        .item-content h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--navy-900);
+            margin-bottom: 0.2rem;
+        }
+
+        .item-content p {
+            font-size: 0.88rem;
+            color: var(--slate-600);
+            line-height: 1.55;
+        }
+
+        .integrity-note-box {
+            margin-top: 2.5rem;
+            background-color: var(--slate-50);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            border-left: 4px solid var(--navy-900);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .integrity-note-box svg {
+            width: 22px;
+            height: 22px;
+            color: var(--navy-900);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .integrity-note-text {
+            font-size: 0.88rem;
+            color: var(--slate-700);
+            line-height: 1.6;
+        }
+
+        /* ==========================================================================
+       SECTION 6: ABOUT SECTION
+       ========================================================================== */
+        .about-section {
+            padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+            background: linear-gradient(180deg, var(--slate-50) 0%, var(--white) 100%);
+            border-top: 1px solid var(--slate-200);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3.5rem;
+            align-items: center;
+        }
+
+        .about-lead {
+            font-size: 1.15rem;
+            color: var(--slate-700);
+            line-height: 1.65;
+            margin-bottom: 1.25rem;
+        }
+
+        .about-body {
+            font-size: 0.96rem;
+            color: var(--slate-600);
+            line-height: 1.65;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-card-stack {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .about-metric-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-xs);
+            transition: all var(--transition-base);
+        }
+
+        .about-metric-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background-color: var(--red-50);
+            color: var(--red-600);
+            display: grid;
+            place-items: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .metric-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--navy-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-desc {
+            font-size: 0.82rem;
+            color: var(--slate-500);
+            line-height: 1.5;
+        }
+
+        /* ==========================================================================
+       SECTION 7: CALL TO ACTION STRIP
+       ========================================================================== */
+        .cta-section {
+            background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 100%);
+            padding: 5rem 0;
+            color: var(--white);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-top: 1px solid var(--navy-800);
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(220, 38, 38, 0.18) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .cta-heading {
+            font-size: clamp(2rem, 3.5vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .cta-subtext {
+            font-size: 1.1rem;
+            color: var(--slate-300);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .cta-btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* ==========================================================================
+       FOOTER SECTION
+       ========================================================================== */
+        .site-footer {
+            background-color: var(--navy-950);
+            color: var(--white);
+            padding: 4.5rem 0 2.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr;
+            gap: 3.5rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .footer-brand-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.88rem;
+            color: var(--slate-400);
+            font-style: italic;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .footer-desc {
+            font-size: 0.85rem;
+            color: var(--slate-400);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-col-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--white);
+            margin-bottom: 1.15rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .footer-links a {
+            font-size: 0.86rem;
+            color: var(--slate-400);
+            transition: color var(--transition-fast);
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+            padding-left: 3px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 0.82rem;
+            color: var(--slate-400);
+        }
+
+        /* Back to Top Floating Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--navy-900);
+            color: var(--white);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 14px rgba(11, 21, 40, 0.3);
+            border: 1px solid var(--navy-700);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all var(--transition-base);
+            z-index: 990;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--red-600);
+            transform: translateY(-3px);
+        }
+
+        /* ==========================================================================
+       RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .hero-content {
+                max-width: 100%;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .transparency-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .site-header {
+                height: 68px;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 68px;
+                left: 0;
+                right: 0;
+                background-color: var(--white);
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1.5rem;
+                gap: 1.25rem;
+                border-bottom: 1px solid var(--slate-200);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+                transform: translateY(-120%);
+                transition: transform var(--transition-base);
+                z-index: 999;
+            }
+
+            .nav-menu.open {
+                transform: translateY(0);
+            }
+
+            .header-cta-wrap {
+                display: none;
+            }
+
+            .nav-menu .mobile-only-cta {
+                display: block;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .algo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-timeline::before {
+                left: 24px;
+            }
+
+            .step-marker {
+                width: 48px;
+                height: 48px;
+            }
+
+            .workflow-step-card {
+                gap: 1rem;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .about-card-stack {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========================================================================
+       1. WEBSITE HEADER
+       ======================================================================== -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <!-- Project Brand & Tagline -->
+            <a href="#home" class="brand-group" aria-label="ResQRoute AI Home">
+                <div class="brand-logo-wrap">
+                    <img src="logo.png" alt="ResQRoute AI Logo" class="brand-logo-img" />
+                    <span class="brand-name">ResQRoute <span class="highlight">AI</span></span>
+                </div>
+                <span class="brand-tagline">Every Second Counts. Give Every Second a Purpose.</span>
+            </a>
+
+            <!-- Desktop Navigation Menu -->
+            <nav aria-label="Main Navigation">
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="/" class="nav-link" style="color:#38bdf8;font-weight:700;">&larr; Return to App</a></li>
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#algorithms" class="nav-link">Algorithms</a></li>
+                    <li><a href="#workflow" class="nav-link">Working Process</a></li>
+                    <li><a href="#transparency" class="nav-link">Transparency</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                </ul>
+            </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu"
+                aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================================================
+       2. HERO SECTION
+       ======================================================================== -->
+    <section class="hero-section" id="home">
+        <div class="hero-bg-grid"></div>
+        <div class="container hero-grid">
+            <!-- Left Column: Copy & Actions -->
+            <div class="hero-content">
+                <div class="hero-eyebrow">
+                    <span class="dot"></span>
+                    <span>Emergency Response Intelligence System</span>
+                </div>
+
+                <h1 class="hero-heading">
+                    The Intelligence Behind <span class="gradient-text">ResQRoute AI</span>
+                </h1>
+
+                <p class="hero-lead">
+                    Discover the algorithms, deep learning models and computational techniques that power intelligent
+                    accident detection, ambulance allocation, emergency navigation and hospital recommendation.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#algorithms" class="btn btn-primary">
+                        <span>Explore Algorithms</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M7 13l5 5 5-5M12 6v12"></path>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="hero-meta-strip">
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span>ResNet-18 Deep Learning</span>
+                    </div>
+
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                        <span>Intelligent Road Routing</span>
+                    </div>
+
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                        <span>Driver Verification Loop</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive CSS & SVG Visual Simulation -->
+            <div class="hero-visual-card">
+                <div class="visual-topbar">
+                    <div class="visual-window-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="visual-live-indicator">
+                        AI Inference Engine Active
+                    </div>
+                </div>
+
+                <div class="telemetry-stage">
+                    <!-- Emergency AI Simulation SVG Graphic -->
+                    <svg class="telemetry-svg-scene" viewBox="0 0 420 180" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <!-- Road Network Graph Lines -->
+                        <path d="M 30 140 Q 120 130 180 90 T 360 40" stroke="#1e293b" stroke-width="8"
+                            stroke-linecap="round" />
+                        <path d="M 30 140 Q 120 130 180 90 T 360 40" stroke="#334155" stroke-width="2"
+                            stroke-dasharray="6 6" />
+
+                        <!-- Secondary Branch to Hospital -->
+                        <path d="M 180 90 Q 230 140 330 145" stroke="#1e293b" stroke-width="6" stroke-linecap="round" />
+                        <path d="M 180 90 Q 230 140 330 145" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 4" />
+
+                        <!-- Route Wave Pulse -->
+                        <path d="M 60 135 L 180 90 L 330 145" stroke="url(#routeGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+
+                        <!-- Node 1: Ambulance Node -->
+                        <g transform="translate(60, 135)">
+                            <circle r="14" fill="#0f172a" stroke="#2563eb" stroke-width="2" />
+                            <!-- Ambulance Icon -->
+                            <path d="M -7 -3 h 9 l 3 3 v 4 h -12 z M -4 4 a 2 2 0 1 0 4 0 M 3 4 a 2 2 0 1 0 4 0"
+                                stroke="#60a5fa" stroke-width="1.2" fill="none" />
+                            <text x="-15" y="-18" fill="#93c5fd" font-size="9" font-family="'JetBrains Mono', monospace"
+                                font-weight="600">AMB-04 [DISPATCH]</text>
+                        </g>
+
+                        <!-- Node 2: Accident Site (ResNet-18 Detected) -->
+                        <g transform="translate(180, 90)">
+                            <circle r="20" fill="rgba(220, 38, 38, 0.2)" stroke="#ef4444" stroke-width="1.5">
+                                <animate attributeName="r" values="18;24;18" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s"
+                                    repeatCount="indefinite" />
+                            </circle>
+                            <circle r="12" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+                            <!-- Crash pulse warning -->
+                            <path d="M 0 -5 L 0 2 M 0 5 L 0 5.5" stroke="#ffffff" stroke-width="2"
+                                stroke-linecap="round" />
+                            <text x="-40" y="-22" fill="#fca5a5" font-size="9" font-family="'JetBrains Mono', monospace"
+                                font-weight="700">INCIDENT #9021</text>
+                            <text x="-48" y="28" fill="#cbd5e1" font-size="8"
+                                font-family="'JetBrains Mono', monospace">Near Accident Event</text>
+                        </g>
+
+                        <!-- Node 3: Hospital Waypoint -->
+                        <g transform="translate(330, 145)">
+                            <circle r="14" fill="#064e3b" stroke="#10b981" stroke-width="2" />
+                            <!-- Hospital H -->
+                            <path d="M -4 -5 v 10 M 4 -5 v 10 M -4 0 h 8" stroke="#34d399" stroke-width="2" />
+                            <text x="-20" y="26" fill="#6ee7b7" font-size="9" font-family="'JetBrains Mono', monospace"
+                                font-weight="600">EMERGENCY CENTER A</text>
+                            <text x="-15" y="-18" fill="#a7f3d0" font-size="8"
+                                font-family="'JetBrains Mono', monospace">ICU: Available</text>
+                        </g>
+
+                        <!-- Gradients -->
+                        <defs>
+                            <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#3b82f6" />
+                                <stop offset="50%" stop-color="#ef4444" />
+                                <stop offset="100%" stop-color="#10b981" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+
+                    <!-- Telemetry Stats Grid -->
+                    <div class="telemetry-stats-bar">
+                        <div class="stat-box">
+                            <div class="stat-label">Model Architecture</div>
+                            <div class="stat-value">ResNet-18</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Classification</div>
+                            <div class="stat-value urgent">Event Detected</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Evidence Capture</div>
+                            <div class="stat-value">6 Frames / 3s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating UI badges -->
+                <div class="hero-floating-badge badge-1">
+                    <span class="status-dot-alert"></span>
+                    <span>Ambulance Driver Handshake Verified</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================
+       3. ALGORITHMS AND TECHNIQUES SHOWCASE
+       ======================================================================== -->
+    <section class="algorithms-section" id="algorithms">
+        <div class="container">
+            <div class="text-center center-block">
+                <span class="badge-label badge-red">Core Technological Foundation</span>
+                <h2 class="section-title">Algorithms & Computational Techniques</h2>
+                <p class="section-description center-block">
+                    An architectural breakdown of the deep learning architectures, spatial formulations, graph
+                    algorithms, and multi-criteria heuristics evaluated and designed for ResQRoute AI.
+                </p>
+
+                <!-- Category Filters -->
+                <div class="filter-tabs-wrapper">
+                    <div class="filter-pills" role="tablist">
+                        <button class="filter-btn active" data-filter="all" role="tab">All Techniques (8)</button>
+                        <button class="filter-btn" data-filter="vision" role="tab">Computer Vision & AI</button>
+                        <button class="filter-btn" data-filter="navigation" role="tab">Spatial & Navigation</button>
+                        <button class="filter-btn" data-filter="operations" role="tab">Optimization & Protocols</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8 Algorithm Cards Grid -->
+            <div class="algo-grid" id="algoCardsGrid">
+
+                <!-- 01. ResNet-18 (Convolutional Neural Network) -->
+                <div class="algo-card" data-category="vision">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">01 // CNN</span>
+                            <div class="algo-icon-wrap" title="Convolutional Neural Network">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: AI Accident Detection</div>
+                        <h3 class="algo-title">ResNet-18 (Convolutional Neural Network)</h3>
+                        <p class="algo-desc">
+                            A deep residual convolutional neural network used to classify incoming CCTV video frames
+                            into two discrete operational states: <strong>Background</strong> or <strong>Near Accident
+                                Event</strong>. Utilizes an 18-layer deep architecture featuring residual shortcut
+                            connections that bypass layers to mitigate the vanishing gradient problem.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Residual Block Skip Connection</span>
+                            <span>18 Layers</span>
+                        </div>
+                        <div class="diagram-cnn-flow">
+                            <div class="block">Input x</div>
+                            <div class="arrow">→</div>
+                            <div class="block">Conv3x3 + ReLU</div>
+                            <div class="arrow">→</div>
+                            <div class="block highlight-red">F(x) + x</div>
+                            <div class="arrow">→</div>
+                            <div class="block">Output</div>
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Confirmed trained model architecture in ResQRoute AI.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 02. Transfer Learning -->
+                <div class="algo-card" data-category="vision">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">02 // Deep Learning</span>
+                            <div class="algo-icon-wrap" title="Transfer Learning">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Accident Detection Model Training</div>
+                        <h3 class="algo-title">Transfer Learning</h3>
+                        <p class="algo-desc">
+                            Accelerates model convergence and enhances generalization by initializing ResNet-18 with
+                            ImageNet-pretrained weights. Low-level edge and texture representations are preserved while
+                            upper convolutional and fully connected layers are fine-tuned on custom traffic accident
+                            image datasets.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Feature Reusability Pipeline</span>
+                            <span>ImageNet Weights</span>
+                        </div>
+                        <div class="diagram-cnn-flow">
+                            <div class="block">Pretrained Base</div>
+                            <div class="arrow">→</div>
+                            <div class="block">Frozen Layers</div>
+                            <div class="arrow">→</div>
+                            <div class="block highlight-red">Tuned Head</div>
+                            <div class="arrow">→</div>
+                            <div class="block">Incident Prob</div>
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Prevents overfitting given specialized domain video data.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 03. Softmax Classification -->
+                <div class="algo-card" data-category="vision">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">03 // Probability</span>
+                            <div class="algo-icon-wrap" title="Softmax Function">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Accident Event Classification</div>
+                        <h3 class="algo-title">Softmax Classification</h3>
+                        <p class="algo-desc">
+                            Converts raw unnormalized logit outputs from the final linear layer into a bounded,
+                            normalized probability distribution summing to 1. Enables threshold-based identification
+                            between benign background frames and suspected near-accident events.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Probability Output Distribution</span>
+                            <span>σ(z)ᵢ = eᶻⁱ / Σeᶻʲ</span>
+                        </div>
+                        <div class="diagram-bar-wrap">
+                            <div class="diagram-bar-item">
+                                <span class="diagram-bar-label">Near Accident Event</span>
+                                <div class="diagram-progress-track">
+                                    <div class="diagram-progress-fill fill-red" style="width: 89%;"></div>
+                                </div>
+                                <span>0.89</span>
+                            </div>
+                            <div class="diagram-bar-item">
+                                <span class="diagram-bar-label">Background Normal</span>
+                                <div class="diagram-progress-track">
+                                    <div class="diagram-progress-fill fill-blue" style="width: 11%;"></div>
+                                </div>
+                                <span>0.11</span>
+                            </div>
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Trigger threshold configured to filter noisy false positives.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 04. Dijkstra's Algorithm / A* -->
+                <div class="algo-card" data-category="navigation">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">04 // Graph Routing</span>
+                            <div class="algo-icon-wrap" title="Graph Pathfinding">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="6" cy="6" r="3"></circle>
+                                    <circle cx="18" cy="18" r="3"></circle>
+                                    <line x1="8.5" y1="8.5" x2="15.5" y2="15.5"></line>
+                                    <polyline points="12 6 12 12 18 12"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Ambulance & Hospital Road Navigation</div>
+                        <h3 class="algo-title">Dijkstra's Algorithm / A*</h3>
+                        <p class="algo-desc">
+                            Foundational shortest-path and heuristic search algorithms utilized in road network graph
+                            traversals. Evaluates road segment weights, traffic costs, and distance heuristics to
+                            compute optimal travel trajectories between ambulances, incident sites, and destination
+                            emergency rooms.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Graph Cost Optimization</span>
+                            <span>f(n) = g(n) + h(n)</span>
+                        </div>
+                        <div class="diagram-formula-code">
+                            Nodes: [Ambulance] → [Intersections A, B, C] → [Hospital]<br />
+                            Cost: min Σ(Segment_Length / Speed_Limit + Congestion_Penalty)
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            *Actual implementation engine depends on deployed routing service (e.g. OSRM / Mapbox /
+                            GraphHopper).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 05. Haversine Formula -->
+                <div class="algo-card" data-category="navigation">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">05 // Geodesics</span>
+                            <div class="algo-icon-wrap" title="Haversine Geodesic Calculation">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Geographical Distance Calculation</div>
+                        <h3 class="algo-title">Haversine Formula</h3>
+                        <p class="algo-desc">
+                            Determines the great-circle distance between two latitude and longitude coordinate pairs
+                            across a spherical surface. Provides computationally instantaneous straight-line proximity
+                            estimates between moving emergency vehicles and reported crash coordinates.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Spherical Great-Circle Formulation</span>
+                            <span>Radius R = 6,371 km</span>
+                        </div>
+                        <div class="diagram-formula-code">
+                            a = sin²(Δφ/2) + cos(φ₁)·cos(φ₂)·sin²(Δλ/2)<br />
+                            d = 2 · R · atan2(√a, √(1−a))
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Ideal for fast O(1) spatial pre-filtering prior to road graph routing.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 06. Greedy Selection -->
+                <div class="algo-card" data-category="operations">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">06 // Optimization</span>
+                            <div class="algo-icon-wrap" title="Greedy Allocation Strategy">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <polyline points="17 11 19 13 23 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Ambulance Allocation</div>
+                        <h3 class="algo-title">Greedy Selection</h3>
+                        <p class="algo-desc">
+                            An algorithmic decision strategy that evaluates the pool of currently available, active
+                            emergency units and assigns the candidate with the minimum estimated arrival time (ETA) or
+                            shortest spatial distance to the incident scene without waiting for future global state
+                            shifts.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Local Optimum Selection</span>
+                            <span>Ambulance Dispatch</span>
+                        </div>
+                        <div class="diagram-bar-wrap">
+                            <div class="diagram-bar-item">
+                                <span class="diagram-bar-label">Unit A (Selected)</span>
+                                <div class="diagram-progress-track">
+                                    <div class="diagram-progress-fill fill-green" style="width: 25%;"></div>
+                                </div>
+                                <span>3.2 min</span>
+                            </div>
+                            <div class="diagram-bar-item">
+                                <span class="diagram-bar-label">Unit B (Standby)</span>
+                                <div class="diagram-progress-track">
+                                    <div class="diagram-progress-fill fill-blue" style="width: 65%;"></div>
+                                </div>
+                                <span>8.7 min</span>
+                            </div>
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Ensures immediate zero-latency dispatch when seconds are vital.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 07. Multi-Criteria Decision-Making (MCDM) -->
+                <div class="algo-card" data-category="operations">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">07 // Decision Science</span>
+                            <div class="algo-icon-wrap" title="Multi-Criteria Evaluation">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Hospital Recommendation</div>
+                        <h3 class="algo-title">Multi-Criteria Decision-Making (MCDM)</h3>
+                        <p class="algo-desc">
+                            A holistic evaluation framework that ranks potential receiving medical facilities across
+                            multiple competing criteria: real-time general bed availability, critical ICU bed capacity,
+                            specialized emergency capability levels, live road distance, and estimated transit duration.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>Weighted Parameter Assessment</span>
+                            <span>Vector Score</span>
+                        </div>
+                        <div class="diagram-formula-code">
+                            Score = w₁(ICU_Avail) + w₂(Bed_Capacity) + w₃(Specialty) - w₄(Travel_Time)
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Prevents routing severe emergency cases to full or unprepared emergency clinics.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 08. Time-Interval-Based Frame Extraction -->
+                <div class="algo-card" data-category="vision">
+                    <div>
+                        <div class="algo-card-top">
+                            <span class="algo-num">08 // Temporal Sampling</span>
+                            <div class="algo-icon-wrap" title="Temporal Evidence Capture">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="algo-app-tag">Application: Accident Evidence Capture</div>
+                        <h3 class="algo-title">Time-Interval-Based Frame Extraction</h3>
+                        <p class="algo-desc">
+                            A deterministic evidence-sampling protocol triggered immediately upon incident
+                            classification. Captures precisely six sequential video screenshots spaced at 3-second
+                            intervals ($t_0, t_0+3s, \dots, t_0+15s$), bundles them with a unique Incident ID and UTC
+                            timestamps, and dispatches them directly to the assigned driver console for rapid human
+                            verification.
+                        </p>
+                    </div>
+
+                    <div class="algo-diagram-box">
+                        <div class="diagram-header">
+                            <span>6 Screenshots Captured @ 3s Delta</span>
+                            <span>15s Window</span>
+                        </div>
+                        <div class="filmstrip-row">
+                            <div class="filmstrip-frame">t₀</div>
+                            <div class="filmstrip-frame">+3s</div>
+                            <div class="filmstrip-frame">+6s</div>
+                            <div class="filmstrip-frame">+9s</div>
+                            <div class="filmstrip-frame">+12s</div>
+                            <div class="filmstrip-frame">+15s</div>
+                        </div>
+                        <div class="card-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Provides visual ground truth to first responders prior to on-scene arrival.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================
+       4. COMPLETE SYSTEM WORKFLOW
+       ======================================================================== -->
+    <section class="workflow-section" id="workflow">
+        <div class="container">
+            <div class="text-center center-block">
+                <span class="badge-label badge-blue">End-to-End Orchestration</span>
+                <h2 class="section-title">Complete System Workflow</h2>
+                <p class="section-description center-block">
+                    From the initial visual frame input on traffic cameras to final patient handover at an equipped
+                    emergency medical center: a 10-stage coordinated pipeline combining AI detection and human
+                    verification.
+                </p>
+            </div>
+
+            <!-- 10-Stage Visual Timeline -->
+            <div class="workflow-timeline">
+
+                <!-- Stage 01 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">01</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Accident Video Frame Input</h3>
+                            <span class="step-phase-pill detection">Phase 1: Ingestion</span>
+                        </div>
+                        <p class="step-desc">
+                            Continuous live CCTV surveillance streams and road sensor video feeds are ingested into the
+                            processing pipeline and split into discrete, normalized image frames for real-time analysis.
+                        </p>
+                        <div class="step-tech-tag">CCTV Ingestion Stream / Frame Buffering</div>
+                    </div>
+                </div>
+
+                <!-- Stage 02 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">02</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">ResNet-18 Accident Detection</h3>
+                            <span class="step-phase-pill detection">Phase 1: Ingestion</span>
+                        </div>
+                        <p class="step-desc">
+                            Each extracted frame passes through the fine-tuned 18-layer residual neural network,
+                            leveraging trained spatial features to detect structural collision patterns and atypical
+                            road behavior.
+                        </p>
+                        <div class="step-tech-tag">Deep Learning / ResNet-18 Architecture</div>
+                    </div>
+                </div>
+
+                <!-- Stage 03 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">03</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Confidence-Based Suspected Accident Identification</h3>
+                            <span class="step-phase-pill detection">Phase 2: Validation</span>
+                        </div>
+                        <p class="step-desc">
+                            Softmax classification scores evaluate whether class probabilities for "Near Accident Event"
+                            breach the designated statistical confidence threshold, preventing false alarms from traffic
+                            anomalies.
+                        </p>
+                        <div class="step-tech-tag">Softmax Probability Thresholding / Event Flagging</div>
+                    </div>
+                </div>
+
+                <!-- Stage 04 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">04</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Evidence Capture</h3>
+                            <span class="step-phase-pill detection">Phase 2: Validation</span>
+                        </div>
+                        <p class="step-desc">
+                            The time-interval extraction protocol triggers automatically, archiving six sequential
+                            screenshot frames sampled at three-second intervals along with GPS coordinates and a unique
+                            Incident ID.
+                        </p>
+                        <div class="step-tech-tag">6 Frames @ 3-Second Delta / Incident ID Serialization</div>
+                    </div>
+                </div>
+
+                <!-- Stage 05 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">05</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Ambulance Driver Verification</h3>
+                            <span class="step-phase-pill dispatch">Phase 3: Human-in-the-Loop</span>
+                        </div>
+                        <p class="step-desc">
+                            The captured evidence screenshots appear on the assigned ambulance driver's terminal. The
+                            driver or dispatcher reviews the image sequence to confirm whether the alert is a valid
+                            physical crash.
+                        </p>
+                        <div class="step-tech-tag">Human-in-the-Loop Verification / False Positive Safeguard</div>
+                    </div>
+                </div>
+
+                <!-- Stage 06 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">06</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Ambulance Allocation</h3>
+                            <span class="step-phase-pill dispatch">Phase 4: Operations</span>
+                        </div>
+                        <p class="step-desc">
+                            Once verified, the dispatch engine evaluates active ambulances using greedy nearest-distance
+                            selection or minimal travel-time algorithms to assign the closest suitable emergency
+                            vehicle.
+                        </p>
+                        <div class="step-tech-tag">Greedy Selection / Fleet Availability State</div>
+                    </div>
+                </div>
+
+                <!-- Stage 07 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">07</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Road-Network Navigation</h3>
+                            <span class="step-phase-pill dispatch">Phase 4: Operations</span>
+                        </div>
+                        <p class="step-desc">
+                            Turn-by-turn routing is generated via road-network pathfinding engines (e.g. Dijkstra or A*
+                            variants), calculating optimal paths that account for current road geometry and traffic
+                            barriers.
+                        </p>
+                        <div class="step-tech-tag">Shortest-Path Graph Routing / Turn-by-Turn Telemetry</div>
+                    </div>
+                </div>
+
+                <!-- Stage 08 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">08</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Police Coordination</h3>
+                            <span class="step-phase-pill dispatch">Phase 4: Operations</span>
+                        </div>
+                        <p class="step-desc">
+                            Incident geolocation, visual evidence, and anticipated arrival vectors are automatically
+                            transmitted to local law enforcement dispatchers to assist with traffic clearing and road
+                            containment.
+                        </p>
+                        <div class="step-tech-tag">Inter-Agency Notification / Corridor Clearing</div>
+                    </div>
+                </div>
+
+                <!-- Stage 09 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">09</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Hospital Recommendation</h3>
+                            <span class="step-phase-pill handover">Phase 5: Medical Handover</span>
+                        </div>
+                        <p class="step-desc">
+                            Multi-criteria decision models evaluate candidate medical centers based on real-time bed
+                            counts, ICU readiness, distance, and transit time, recommending the most prepared facility
+                            for patient triage.
+                        </p>
+                        <div class="step-tech-tag">Multi-Criteria Decision-Making (MCDM) / Facility Match</div>
+                    </div>
+                </div>
+
+                <!-- Stage 10 -->
+                <div class="workflow-step-card">
+                    <div class="step-marker">
+                        <span class="step-num-badge">10</span>
+                    </div>
+                    <div class="step-body">
+                        <div class="step-header">
+                            <h3 class="step-stage-name">Emergency Arrival and Handover</h3>
+                            <span class="step-phase-pill handover">Phase 5: Medical Handover</span>
+                        </div>
+                        <p class="step-desc">
+                            The ambulance arrives on site, stabilizes the patient, and completes transfer to the
+                            pre-notified emergency department, closing the incident loop with full timestamped audit
+                            trails.
+                        </p>
+                        <div class="step-tech-tag">Complete Incident Closure / Telemetry Log Archive</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================
+       5. IMPORTANT IMPLEMENTATION TRANSPARENCY
+       ======================================================================== -->
+    <section class="transparency-section" id="transparency">
+        <div class="container">
+            <!-- Dark Hero Banner -->
+            <div class="transparency-banner">
+                <div class="transparency-banner-content">
+                    <div class="transparency-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <span>Research & Engineering Integrity</span>
+                    </div>
+                    <h2 class="transparency-title">Implemented Technologies vs Supporting Algorithm Concepts</h2>
+                    <p class="transparency-lead">
+                        Academic transparency and technical accuracy are fundamental to ResQRoute AI. We explicitly
+                        distinguish between models that have been formally trained in our codebase versus architectural
+                        concepts that serve as conceptual or modular building blocks.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Comparative Two-Column Matrix -->
+            <div class="transparency-grid">
+
+                <!-- Column 1: Confirmed Implementation -->
+                <div class="transparency-col">
+                    <div class="col-header-box">
+                        <div class="col-header-icon verified">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="col-title">Confirmed Trained Model</h3>
+                            <span class="col-subtitle">Verified in project pipeline & codebase</span>
+                        </div>
+                    </div>
+
+                    <ul class="transparency-list">
+                        <li class="transparency-item">
+                            <div class="check-bullet verified">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>ResNet-18 Deep Convolutional Network</h4>
+                                <p>The confirmed core vision model is an 18-layer Deep Residual Network adapted for
+                                    frame-level feature extraction and classification.</p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet verified">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Transfer Learning Methodology</h4>
+                                <p>Initial weights derived from ImageNet pretraining, followed by targeted parameter
+                                    fine-tuning on accident-related video frames.</p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet verified">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Binary Frame Classification Scope</h4>
+                                <p>The trained classification task is specifically bounded to:
+                                    <strong>Background</strong> vs <strong>Near Accident Event</strong>.
+                                </p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet verified">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Softmax Probability Transformation</h4>
+                                <p>Applied at the classification head to map model logit scores into valid class
+                                    probability distributions whenever verified in runtime inference scripts.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Column 2: Supporting Algorithm Concepts -->
+                <div class="transparency-col">
+                    <div class="col-header-box">
+                        <div class="col-header-icon conceptual">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="col-title">Supporting Algorithm Concepts</h3>
+                            <span class="col-subtitle">Architectural design patterns & potential approaches</span>
+                        </div>
+                    </div>
+
+                    <ul class="transparency-list">
+                        <li class="transparency-item">
+                            <div class="check-bullet conceptual">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <path d="M5 12h14"></path>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Dijkstra & A* Routing Paradigms</h4>
+                                <p>Represent candidate shortest-path and heuristic routing methods. In practice,
+                                    operational road navigation relies on the chosen third-party routing engine (e.g.
+                                    Mapbox, OSRM) rather than custom standalone graph code.</p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet conceptual">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <path d="M5 12h14"></path>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Haversine Distance Formulation</h4>
+                                <p>Conceptual baseline for great-circle spherical distance computation. Utilized to
+                                    illustrate spatial radius filtering without claiming proprietary geodesics.</p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet conceptual">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <path d="M5 12h14"></path>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Greedy Selection Heuristics</h4>
+                                <p>Characterizes the nearest-available ambulance assignment logic as a heuristic
+                                    concept, rather than an intractable constraint satisfaction solver.</p>
+                            </div>
+                        </li>
+
+                        <li class="transparency-item">
+                            <div class="check-bullet conceptual">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <path d="M5 12h14"></path>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <h4>Multi-Criteria Decision-Making (MCDM)</h4>
+                                <p>Explains the multi-variable triage reasoning (beds, ICU, travel duration) without
+                                    fabricating proprietary mathematical weighting equations unless confirmed by the
+                                    source code.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Integrity Notice Box -->
+            <div class="integrity-note-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p class="integrity-note-text">
+                    <strong>Engineering Authenticity Policy:</strong> ResQRoute AI adheres to strict academic honesty.
+                    We do not fabricate benchmark metrics, model accuracy percentages, synthetic latency claims, or
+                    real-world municipal integrations. All descriptions accurately reflect the design, tested
+                    components, and evaluated computational techniques of the project.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================
+       6. ABOUT SECTION
+       ======================================================================== -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div>
+                    <span class="badge-label badge-red">Project Mission</span>
+                    <h2 class="section-title">Bridging Vision AI and Emergency Services</h2>
+                    <p class="about-lead">
+                        In medical emergencies, the golden hour dictates survivability. ResQRoute AI is engineered
+                        around a single conviction: <em>Every Second Counts. Give Every Second a Purpose.</em>
+                    </p>
+                    <p class="about-body">
+                        By continuously monitoring traffic camera feeds using efficient computer vision architectures,
+                        the system bridges the critical delay between an accident occurring and the first 911 dispatch
+                        call.
+                    </p>
+                    <p class="about-body">
+                        Crucially, ResQRoute AI implements a <strong>human-in-the-loop verification protocol</strong>.
+                        Before sirens blare and units deploy, assigned responders review immediate six-frame visual
+                        evidence, ensuring public safety resources are allocated with precision, reliability, and human
+                        oversight.
+                    </p>
+                </div>
+
+                <div class="about-card-stack">
+                    <div class="about-metric-card">
+                        <div class="metric-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2v20M2 12h20" />
+                            </svg>
+                        </div>
+                        <h4 class="metric-title">Human Verification</h4>
+                        <p class="metric-desc">Visual 6-screenshot capture prevents false dispatch alarms and preserves
+                            public emergency resources.</p>
+                    </div>
+
+                    <div class="about-metric-card">
+                        <div class="metric-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                        <h4 class="metric-title">Real-Time Ingestion</h4>
+                        <p class="metric-desc">Lightweight ResNet-18 frame processing optimized for high-throughput
+                            video streams.</p>
+                    </div>
+
+                    <div class="about-metric-card">
+                        <div class="metric-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                            </svg>
+                        </div>
+                        <h4 class="metric-title">Coordinated Dispatch</h4>
+                        <p class="metric-desc">Seamless telemetry links between ambulance drivers, police control rooms,
+                            and hospital triage.</p>
+                    </div>
+
+                    <div class="about-metric-card">
+                        <div class="metric-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                        </div>
+                        <h4 class="metric-title">Triage-Aware Hospitals</h4>
+                        <p class="metric-desc">Multi-variable evaluation matches patients to facilities with available
+                            ICU beds and specialist care.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================
+       7. FOOTER
+       ======================================================================== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand Summary -->
+                <div>
+                    <div class="footer-brand-title">
+                        <img src="logo.png" alt="ResQRoute AI Logo" class="footer-brand-logo" />
+                        <span>ResQRoute AI</span>
+                    </div>
+                    <div class="footer-brand-tagline">
+                        Intelligent Accident Detection. Coordinated Emergency Response.
+                    </div>
+                    <p class="footer-desc">
+                        A research and computational engineering project dedicated to accelerating emergency response
+                        timelines through deep vision intelligence, spatial analytics, and verified human-in-the-loop
+                        coordination.
+                    </p>
+                </div>
+
+                <!-- Navigation Links -->
+                <div>
+                    <h4 class="footer-col-title">Navigation</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#algorithms">Algorithms & Techniques</a></li>
+                        <li><a href="#workflow">Working Process</a></li>
+                        <li><a href="#transparency">Implementation Transparency</a></li>
+                        <li><a href="#about">About Project</a></li>
+                    </ul>
+                </div>
+
+                <!-- Technical Stack -->
+                <div>
+                    <h4 class="footer-col-title">Core Techniques</h4>
+                    <ul class="footer-links">
+                        <li><a href="#algorithms">ResNet-18 Deep CNN</a></li>
+                        <li><a href="#algorithms">Transfer Learning</a></li>
+                        <li><a href="#algorithms">Softmax Probability</a></li>
+                        <li><a href="#algorithms">Dijkstra / A* Routing</a></li>
+                        <li><a href="#algorithms">Haversine Distance</a></li>
+                        <li><a href="#algorithms">Frame Extraction (6 @ 3s)</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom Strip -->
+            <div class="footer-bottom">
+                <div>
+                    &copy; 2026 ResQRoute AI. All Rights Reserved.
+                </div>
+                <div style="display: flex; gap: 1.5rem;">
+                    <a href="#transparency" style="color: var(--slate-400);">Academic Integrity</a>
+                    <a href="#workflow" style="color: var(--slate-400);">System Protocol</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Floating Button -->
+    <button class="back-to-top" id="backToTopBtn" aria-label="Back to top of page">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
+    <!-- ========================================================================
+       JAVASCRIPT: INTERACTIONS & RESPONSIVE BEHAVIOR
+       ======================================================================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Sticky Header & Shadow on Scroll
+            const header = document.getElementById('siteHeader');
+            const backToTopBtn = document.getElementById('backToTopBtn');
+
+            window.addEventListener('scroll', () => {
+                const scrollPos = window.scrollY;
+                if (scrollPos > 40) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+
+                // Back to top button toggle
+                if (scrollPos > 400) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            }, { passive: true });
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // 2. Mobile Menu Toggle
+            const mobileBtn = document.getElementById('mobileMenuBtn');
+            const navMenu = document.getElementById('navMenu');
+
+            mobileBtn.addEventListener('click', () => {
+                const isOpen = navMenu.classList.toggle('open');
+                mobileBtn.setAttribute('aria-expanded', isOpen);
+            });
+
+            // Close mobile menu on clicking any navigation link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('open');
+                    mobileBtn.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            // 3. Scrollspy for Active Navigation State
+            const sections = document.querySelectorAll('section[id], header[id]');
+            window.addEventListener('scroll', () => {
+                const scrollY = window.pageYOffset;
+
+                sections.forEach(current => {
+                    const sectionHeight = current.offsetHeight;
+                    const sectionTop = current.offsetTop - 120;
+                    const sectionId = current.getAttribute('id');
+
+                    if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${sectionId}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { passive: true });
+
+            // 4. Algorithm Filter Tabs
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const algoCards = document.querySelectorAll('.algo-card');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Toggle active class on buttons
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const selectedFilter = btn.getAttribute('data-filter');
+
+                    algoCards.forEach(card => {
+                        const cardCat = card.getAttribute('data-category');
+                        if (selectedFilter === 'all' || cardCat === selectedFilter) {
+                            card.style.display = 'flex';
+                            // Trigger slight fade-in
+                            card.style.opacity = '0';
+                            setTimeout(() => {
+                                card.style.transition = 'opacity 0.25s ease, transform 0.3s ease';
+                                card.style.opacity = '1';
+                            }, 10);
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

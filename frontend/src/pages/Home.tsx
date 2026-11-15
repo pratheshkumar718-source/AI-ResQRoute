@@ -360,81 +360,122 @@ export default function Home({ onEnterDashboard }: HomeProps) {
               </div>
             </div>
 
-            {/* Right Column: Hero Architecture Graphic Card */}
+            {/* Right Column: Core Algorithmic Intelligence Card */}
             <div className="lg:col-span-5">
-              <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-md p-6 space-y-5">
+              <div className="bg-white rounded-2xl border border-[#CBD5E1]/80 shadow-lg hover:shadow-xl transition-shadow duration-300 p-5 sm:p-6 space-y-4">
+                {/* Header */}
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#198754]" />
-                    <span className="text-xs font-bold text-[#171717] uppercase tracking-wider">
-                      Live Coordination Pipeline
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#198754] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#198754]"></span>
+                    </span>
+                    <span className="text-xs font-extrabold text-[#171717] uppercase tracking-wider">
+                      Algorithmic Architecture
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#F7F8FA] text-[#356FA5] border border-[#E2E8F0]">
-                    PyTorch ResNet-18
+                  <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30">
+                    4 Core Engines
                   </span>
                 </div>
 
-                {/* Coordinated Flow Simulation Visualizer */}
-                <div className="space-y-3 text-xs">
-                  {/* Step A: Optical Surveillance */}
-                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-md bg-[#173B68] text-white grid place-items-center shrink-0">
+                <p className="text-xs text-[#666666] leading-relaxed">
+                  ResQRoute AI combines deep learning computer vision with deterministic road graph optimization to orchestrate end-to-end emergency response:
+                </p>
+
+                {/* Structured Algorithm Modules */}
+                <div className="space-y-2.5 text-xs">
+                  {/* Algo 1: ResNet-18 Deep Residual Vision */}
+                  <div className="p-3 rounded-xl bg-[#FAFBFD] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition group">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#DC3545]/10 text-[#DC3545] grid place-items-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
                         <Eye className="w-4 h-4" />
                       </div>
-                      <div>
-                        <div className="font-semibold text-[#171717]">Optical Feed Monitoring</div>
-                        <div className="text-[#666666] text-[11px]">CCTV CAM-01 Central Junction</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <span className="font-bold text-[#171717] text-xs truncate">ResNet-18 Vision CNN</span>
+                          <span className="text-[10px] font-mono font-bold text-[#DC3545] bg-[#FDF2F2] px-1.5 py-0.2 rounded border border-[#DC3545]/30">
+                            Vision AI
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#666666] leading-snug">
+                          Autonomous video frame optical classification with Softmax confidence scoring (&ge;90% threshold).
+                        </p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-[#F0F9F4] text-[#198754] font-semibold text-[10px]">
-                      Active 25 FPS
-                    </span>
                   </div>
 
-                  {/* Step B: 6 Burst Evidence Frame Transfer */}
-                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-md bg-[#DC3545] text-white grid place-items-center shrink-0">
-                        <Siren className="w-4 h-4" />
+                  {/* Algo 2: Dijkstra Road-Network Pathfinding & OSRM */}
+                  <div className="p-3 rounded-xl bg-[#FAFBFD] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition group">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#173B68]/10 text-[#173B68] grid place-items-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                        <Compass className="w-4 h-4" />
                       </div>
-                      <div>
-                        <div className="font-semibold text-[#171717]">Accident Detection Trigger</div>
-                        <div className="text-[#666666] text-[11px]">6 Evidence Frames @ 3s Interval</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <span className="font-bold text-[#171717] text-xs truncate">Dijkstra &amp; OSRM Routing</span>
+                          <span className="text-[10px] font-mono font-bold text-[#173B68] bg-[#EBF2FA] px-1.5 py-0.2 rounded border border-[#356FA5]/30">
+                            Shortest Path
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#666666] leading-snug">
+                          Calculates actual road-network geometry, street turns, and driving travel-time ETAs for scene &amp; hospital routes.
+                        </p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-[#FDF2F2] text-[#DC3545] font-semibold text-[10px]">
-                      94.2% Conf (≥90%)
-                    </span>
                   </div>
 
-                  {/* Step C: Multi-Agency Dispatch & Hospital Reservation */}
-                  <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-md bg-[#356FA5] text-white grid place-items-center shrink-0">
+                  {/* Algo 3: Haversine Formula & Greedy Dispatch */}
+                  <div className="p-3 rounded-xl bg-[#FAFBFD] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition group">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#D97706]/10 text-[#D97706] grid place-items-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
                         <Truck className="w-4 h-4" />
                       </div>
-                      <div>
-                        <div className="font-semibold text-[#171717]">Parallel Dispatch & Bed Triage</div>
-                        <div className="text-[#666666] text-[11px]">Unit AMB-01 + City Central Hospital</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <span className="font-bold text-[#171717] text-xs truncate">Haversine &amp; Greedy Dispatch</span>
+                          <span className="text-[10px] font-mono font-bold text-[#855B14] bg-[#FDF9F0] px-1.5 py-0.2 rounded border border-[#D69E36]/30">
+                            Nearest Unit
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#666666] leading-snug">
+                          Sub-second great-circle spatial trigonometry to rank and dispatch the nearest available ambulance unit.
+                        </p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-[#EBF2FA] text-[#173B68] font-semibold text-[10px]">
-                      14 Beds Ready
-                    </span>
+                  </div>
+
+                  {/* Algo 4: Multi-Criteria Decision-Making (MCDM) */}
+                  <div className="p-3 rounded-xl bg-[#FAFBFD] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition group">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#16A34A]/10 text-[#16A34A] grid place-items-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <span className="font-bold text-[#171717] text-xs truncate">MCDM Hospital Matching</span>
+                          <span className="text-[10px] font-mono font-bold text-[#166534] bg-[#F0F9F4] px-1.5 py-0.2 rounded border border-[#198754]/30">
+                            Capacity Triage
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#666666] leading-snug">
+                          Multi-attribute evaluation matching emergency patient severity against available general &amp; ICU beds.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Subtle Action Prompt */}
-                <div className="pt-2 text-center">
-                  <button
-                    onClick={() => onEnterDashboard('camera')}
-                    className="w-full py-2.5 px-4 rounded-lg bg-[#173B68] hover:bg-[#102A4C] text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                {/* Explore The Algorithms Used Action Button */}
+                <div className="pt-2">
+                  <a
+                    href="/algorithms.html"
+                    className="w-full py-3 px-4 rounded-xl bg-[#173B68] hover:bg-[#102A4C] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer text-center"
                   >
-                    <span>Launch AI Surveillance Monitor</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                    <Sparkles className="w-4 h-4 text-[#F59E0B] animate-pulse" />
+                    <span>Explore the Algorithms Used</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </a>
                 </div>
               </div>
             </div>
