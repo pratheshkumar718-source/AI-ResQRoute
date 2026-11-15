@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   MapPin, Navigation, Flag, Hospital as HIcon, CheckCircle2,
   FastForward, PhoneCall, PhoneOff, Volume2, VolumeX, ShieldAlert,
-  Clock, Power, AlertTriangle, Eye, Layers, Activity, HelpCircle, Users
+  Clock, Power, AlertTriangle, Eye, Layers, Activity, HelpCircle, Users, Radio
 } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Empty, Alert, useAct, SystemNote } from '../components/ui'
@@ -152,7 +152,7 @@ function Active({ inc }: { inc: Incident }) {
             </div>
 
             {route && (
-              <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] space-y-1">
+              <div className="p-3 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] space-y-1.5">
                 <div className="flex justify-between text-xs text-[#666666]">
                   <span>Road Route Distance</span>
                   <span className="font-bold text-[#171717]">{route.distance_km} km</span>
@@ -161,6 +161,16 @@ function Active({ inc }: { inc: Incident }) {
                   <span>Estimated Arrival ETA</span>
                   <span className="font-bold text-[#173B68] font-mono text-sm">
                     {Number(eta).toFixed(1)} min
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] pt-1 border-t border-[#E2E8F0]">
+                  <span className="text-[#666666]">Navigation Mode</span>
+                  <span className={`px-2 py-0.5 rounded font-bold ${
+                    (route as any)?.simulated
+                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  }`}>
+                    {(route as any)?.simulated ? '⚡ Simulated Fallback Route' : '🛣️ Real Road Network Route'}
                   </span>
                 </div>
               </div>
@@ -247,45 +257,89 @@ function Active({ inc }: { inc: Incident }) {
 
         {a.status === 'on_scene' && (
           <>
-            <Card title="Stage 2 Redirection: Assigned Receiving Hospital">
-              {hosp ? (
-                <div className="text-xs sm:text-sm space-y-3">
-                  <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30">
-                    <div className="font-bold text-[#171717] text-base">{hosp.name}</div>
-                    <div className="text-xs text-[#198754] mt-0.5 font-medium flex items-center gap-1">
-                      <span>✓ Matched via Dijkstra Shortest Path & Bed Availability</span>
-                    </div>
-                    {hosp.phone && (
-                      <div className="text-xs text-[#666666] mt-1.5 flex items-center gap-1.5">
-                        <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
-                        <span>Emergency Desk: {hosp.phone}</span>
-                      </div>
-                    )}
+            {!inc.assessment ? (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-lg bg-[#EBF2FA] border border-[#356FA5]/30 text-xs text-[#173B68] flex items-center gap-2">
+                  <Activity className="w-4 h-4 shrink-0 text-[#173B68]" />
+                  <span>
+                    <b>Step 1 of 2:</b> Submit patient clinical assessment below. Nearest suitable hospital and road-route navigation will be automatically evaluated upon submission.
+                  </span>
+                </div>
+                <Assess aid={a.id} />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Clinical Assessment Summary */}
+                <div className="p-3.5 rounded-lg bg-white border border-[#CBD5E1] space-y-2 text-xs">
+                  <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-2">
+                    <span className="font-bold text-[#171717] uppercase tracking-wide">Patient Clinical Assessment</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 uppercase">
+                      {(inc.assessment as any)?.severity ?? 'Moderate'}
+                    </span>
                   </div>
-
-                  {a.hospital_route && (
-                    <div className="text-xs text-[#666666] flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
-                      <span>Dijkstra Shortest Route: <b>{a.hospital_route.distance_km} km</b></span>
-                      <span className="font-mono text-[#173B68] font-bold">ETA: ~{a.hospital_route.eta_min} min</span>
+                  <div className="grid grid-cols-2 gap-2 text-[#666666]">
+                    <div>Patients: <b className="text-[#171717]">{(inc.assessment as any)?.patients ?? 1}</b></div>
+                    <div>Care Needs: <b className="text-[#171717]">{((inc.assessment as any)?.needs ?? ['emergency']).join(', ')}</b></div>
+                  </div>
+                  {Boolean((inc.assessment as any)?.notes) && (
+                    <div className="text-[11px] text-[#666666] italic bg-slate-50 p-2 rounded">
+                      "{(inc.assessment as any).notes}"
                     </div>
                   )}
-
-                  <Btn
-                    className="w-full py-2.5"
-                    onClick={() => post('start-hospital-route', 'Hospital route initiated — emergency intake alerted')}
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Start Hospital Route (Stage 2 Redirection)</span>
-                  </Btn>
                 </div>
-              ) : (
-                <Alert kind="error">
-                  {inc.hospital_warning ?? 'No hospital selected yet.'} Awaiting destination choice.
-                </Alert>
-              )}
-            </Card>
 
-            {!inc.assessment && <Assess aid={a.id} />}
+                {/* Stage 2 Redirection Card */}
+                <Card title="Stage 2 Redirection: Assigned Receiving Hospital">
+                  {hosp ? (
+                    <div className="text-xs sm:text-sm space-y-3">
+                      <div className="p-3 rounded-lg bg-[#F0F9F4] border border-[#198754]/30">
+                        <div className="font-bold text-[#171717] text-base">{hosp.name}</div>
+                        <div className="text-xs text-[#198754] mt-0.5 font-medium flex items-center gap-1">
+                          <span>✓ Evaluated for bed availability, care capabilities & road ETA</span>
+                        </div>
+                        {hosp.phone && (
+                          <div className="text-xs text-[#666666] mt-1.5 flex items-center gap-1.5">
+                            <PhoneCall className="w-3.5 h-3.5 text-[#198754]" />
+                            <span>Emergency Desk: {hosp.phone}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {a.hospital_route && (
+                        <div className="text-xs text-[#666666] space-y-1.5 bg-slate-50 p-2.5 rounded border border-slate-200">
+                          <div className="flex justify-between">
+                            <span>Road Route Distance: <b>{a.hospital_route.distance_km} km</b></span>
+                            <span className="font-mono text-[#173B68] font-bold">ETA: ~{a.hospital_route.eta_min} min</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span>Routing Engine:</span>
+                            <span className={`px-2 py-0.5 rounded font-bold ${
+                              (a.hospital_route as any)?.simulated
+                                ? 'bg-amber-100 text-amber-900'
+                                : 'bg-emerald-100 text-emerald-900'
+                            }`}>
+                              {(a.hospital_route as any)?.simulated ? '⚡ Simulated Fallback' : '🛣️ Real Road Network'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <Btn
+                        className="w-full py-2.5"
+                        onClick={() => post('start-hospital-route', 'Hospital route initiated — emergency intake alerted')}
+                      >
+                        <Navigation className="w-4 h-4" />
+                        <span>Start Hospital Route (Stage 2 Redirection)</span>
+                      </Btn>
+                    </div>
+                  ) : (
+                    <Alert kind="error">
+                      {inc.hospital_warning ?? 'No hospital selected yet.'} Awaiting destination choice.
+                    </Alert>
+                  )}
+                </Card>
+              </div>
+            )}
           </>
         )}
 
@@ -381,6 +435,12 @@ export default function Driver() {
   const [driverNotes, setDriverNotes] = useState<string>('')
   const [zoomUrl, setZoomUrl] = useState<string | null>(null)
 
+  // Real Device GPS Tracking state
+  const [gpsActive, setGpsActive] = useState(false)
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null)
+  const [gpsError, setGpsError] = useState<string | null>(null)
+  const watchRef = useRef<number | null>(null)
+
   // Driver Isolation: find this driver's unit only
   const me = ambulances.find(a => a.id === user?.ambulance_id)
   const mine = incidents.flatMap(i =>
@@ -388,6 +448,55 @@ export default function Driver() {
   )
   const offer = mine.find(x => x.a.status === 'offered')
   const active = mine.find(x => ['en_route', 'on_scene', 'transporting', 'at_hospital'].includes(x.a.status))
+
+  const toggleGps = () => {
+    if (gpsActive) {
+      if (watchRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchRef.current)
+        watchRef.current = null
+      }
+      setGpsActive(false)
+      setGpsCoords(null)
+      return
+    }
+
+    if (!navigator.geolocation) {
+      setGpsError('Geolocation is not supported by this browser')
+      return
+    }
+
+    setGpsError(null)
+    const wid = navigator.geolocation.watchPosition(
+      pos => {
+        const { latitude, longitude, accuracy, heading, speed } = pos.coords
+        setGpsActive(true)
+        setGpsCoords({ lat: latitude, lng: longitude, accuracy: Math.round(accuracy) })
+        if (me) {
+          api.post(`/api/ambulances/${me.id}/location`, {
+            lat: latitude,
+            lng: longitude,
+            accuracy_m: accuracy,
+            heading: heading ?? undefined,
+            speed_kmh: speed ? speed * 3.6 : undefined
+          }).catch(() => {})
+        }
+      },
+      err => {
+        setGpsError(err.message)
+        setGpsActive(false)
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    )
+    watchRef.current = wid
+  }
+
+  useEffect(() => {
+    return () => {
+      if (watchRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchRef.current)
+      }
+    }
+  }, [])
 
   // 60-Second Countdown Timer and Siren Ring for Offers
   useEffect(() => {
@@ -545,9 +654,30 @@ export default function Driver() {
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
+
+            {/* Real Device GPS Tracking Toggle */}
+            <button
+              type="button"
+              onClick={toggleGps}
+              title={gpsActive ? 'Disable live device GPS tracking' : 'Enable live device GPS tracking (Geolocation API)'}
+              className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
+                gpsActive
+                  ? 'bg-[#EBF2FA] text-[#173B68] border border-[#173B68]/40 hover:bg-[#DDEBFA]'
+                  : 'bg-white text-[#666666] border border-[#CBD5E1] hover:bg-[#F7F8FA]'
+              }`}
+            >
+              <Radio className={`w-3.5 h-3.5 ${gpsActive ? 'text-[#173B68] animate-pulse' : 'text-[#94A3B8]'}`} />
+              <span>{gpsActive ? `GPS LIVE (±${gpsCoords?.accuracy ?? 5}m)` : 'DEVICE GPS: OFF'}</span>
+            </button>
           </div>
         )}
       </div>
+
+      {gpsError && (
+        <Alert kind="warn">
+          GPS notice: {gpsError}. Standard road network coordinates remain active.
+        </Alert>
+      )}
 
       {/* Unavailable Warning */}
       {me && me.status !== 'available' && !active && !offer && (

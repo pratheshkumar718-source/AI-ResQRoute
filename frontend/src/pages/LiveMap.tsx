@@ -77,8 +77,8 @@ export default function LiveMap() {
 
                     {/* Police Traffic & Green Corridor Panel */}
                     <div className={`p-3 rounded-lg border space-y-2 ${sel.green_corridor
-                        ? 'bg-[#F0F9F4] border-[#198754]/40 text-[#166534]'
-                        : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#171717]'
+                      ? 'bg-[#F0F9F4] border-[#198754]/40 text-[#166534]'
+                      : 'bg-[#FAFBFD] border-[#E2E8F0] text-[#171717]'
                       }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold flex items-center gap-1.5">
@@ -92,8 +92,8 @@ export default function LiveMap() {
                               await api.post(`/api/incidents/${sel.id}/police-corridor`)
                             }}
                             className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${sel.green_corridor
-                                ? 'bg-[#DC3545] text-white hover:bg-[#BB2D3B]'
-                                : 'bg-[#173B68] text-white hover:bg-[#102A4C]'
+                              ? 'bg-[#DC3545] text-white hover:bg-[#BB2D3B]'
+                              : 'bg-[#173B68] text-white hover:bg-[#102A4C]'
                               }`}
                           >
                             {sel.green_corridor ? 'Deactivate' : 'Activate'}

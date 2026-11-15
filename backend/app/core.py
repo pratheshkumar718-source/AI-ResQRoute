@@ -134,7 +134,7 @@ async def schedule_timeout(aid: int, delay: float = 60.0):
 
 
 def dispatch(db: Session, inc: Incident, actor="system"):
-    """Rank eligible ambulances by simulated route ETA and send an offer to the best one."""
+    """Rank eligible ambulances by real road-route ETA and send an offer to the best one."""
     busy = {a.ambulance_id for a in db.query(Assignment).filter(Assignment.status.in_(ACTIVE))}
     declined = {a.ambulance_id for a in db.query(Assignment).filter_by(incident_id=inc.id) if a.status in ("declined", "cancelled")}
     ambs = db.query(Ambulance).order_by(Ambulance.id).all()
@@ -148,11 +148,24 @@ def dispatch(db: Session, inc: Incident, actor="system"):
             excluded.append(f"{a.code} (declined this incident)")
         else:
             r = routing.route((a.lat, a.lng), (inc.lat, inc.lng))
-            cands.append({"ambulance_id": a.id, "code": a.code, "distance_km": r["distance_km"], "eta_min": r["eta_min"], "route": r})
+            cands.append({
+                "ambulance_id": a.id,
+                "code": a.code,
+                "driver_name": a.driver_name,
+                "phone": a.phone,
+                "lat": a.lat,
+                "lng": a.lng,
+                "distance_km": r["distance_km"],
+                "eta_min": r["eta_min"],
+                "simulated": r.get("simulated", False),
+                "algorithm": r.get("algorithm", "OSRM Road Network"),
+                "route": r
+            })
+    # Rank eligible ambulances strictly by estimated road travel time (eta_min first, then distance_km)
     cands.sort(key=lambda c: (c["eta_min"], c["distance_km"]))
     if not cands:
         inc.status = "no_ambulance"
-        audit(db, actor, "dispatch_failed", "incident", inc.id, "No eligible ambulance")
+        audit(db, actor, "dispatch_failed", "incident", inc.id, "No eligible ambulance available")
         track(db, inc.id, None, "no_ambulance", "No suitable ambulance available — dispatcher action required")
         db.commit()
         emit({"type": "alert", "level": "error", "incident_id": inc.id,
@@ -160,24 +173,37 @@ def dispatch(db: Session, inc: Incident, actor="system"):
         emit({"type": "incident_updated", "incident_id": inc.id})
         return None
     best = cands[0]
-    expl = (f"{best['code']} selected: ranked #1 of {len(cands)} eligible ambulance(s) by SIMULATED road-route ETA "
-            f"({best['eta_min']} min, {best['distance_km']} km). ")
+    route_type = "simulated fallback route" if best.get("simulated") else "actual road route"
+    expl = (f"{best['code']} ({best.get('driver_name', 'Driver')}) selected: ranked #1 of {len(cands)} eligible ambulance(s) based on "
+            f"estimated road travel time ({best['eta_min']} min, {best['distance_km']} km via {route_type}). ")
     if len(cands) > 1:
-        expl += "Next best: " + "; ".join(f"{c['code']} {c['eta_min']} min" for c in cands[1:3]) + ". "
+        expl += "Next best: " + "; ".join(f"#{i+2} {c['code']} ({c['eta_min']} min, {c['distance_km']} km)" for i, c in enumerate(cands[1:4])) + ". "
     if excluded:
         expl += "Not eligible: " + ", ".join(excluded) + "."
     ranking = [{k: v for k, v in c.items() if k != "route"} for c in cands]
-    asg = Assignment(incident_id=inc.id, ambulance_id=best["ambulance_id"], status="offered", explanation=expl,
-                     ranking=json.dumps(ranking), scene_route=json.dumps(best["route"]), remaining_eta=best["eta_min"])
+    asg = Assignment(
+        incident_id=inc.id,
+        ambulance_id=best["ambulance_id"],
+        status="offered",
+        explanation=expl,
+        ranking=json.dumps(ranking),
+        scene_route=json.dumps(best["route"]),
+        remaining_eta=best["eta_min"]
+    )
     db.add(asg)
     if inc.status not in ("en_route", "on_scene", "transporting", "at_hospital"):
         inc.status = "dispatching"
     audit(db, actor, "offer_sent", "incident", inc.id, expl)
-    track(db, inc.id, None, "offer_sent", f"Assignment offered to {best['code']}")
+    track(db, inc.id, None, "offer_sent", f"Assignment offered to {best['code']} (ETA: {best['eta_min']} min)")
     db.commit()
     db.refresh(asg)
-    emit({"type": "assignment_updated", "incident_id": inc.id, "ambulance_id": asg.ambulance_id,
-          "message": f"New assignment offer for {best['code']} — Incident #{inc.id}", "level": "warning"})
+    emit({
+        "type": "assignment_updated",
+        "incident_id": inc.id,
+        "ambulance_id": asg.ambulance_id,
+        "message": f"New assignment offer for {best['code']} — Incident #{inc.id} (ETA: {best['eta_min']} min)",
+        "level": "warning"
+    })
     emit({"type": "incident_updated", "incident_id": inc.id})
     if LOOP is not None:
         asyncio.run_coroutine_threadsafe(schedule_timeout(asg.id, 60.0), LOOP)
@@ -207,17 +233,25 @@ def recommend_hospitals(db: Session, inc: Incident):
         if missing:
             why.append("lacks " + "/".join(missing))
         r = routing.route((inc.lat, inc.lng), (h.lat, h.lng))
-        out.append({"hospital": ser_hosp(h), "eligible": not why, "excluded_reasons": why,
-
-                    "eta_min": r["eta_min"], "distance_km": r["distance_km"], "route": r})
-    elig = sorted([o for o in out if o["eligible"]], key=lambda o: o["eta_min"])
+        out.append({
+            "hospital": ser_hosp(h),
+            "eligible": not why,
+            "excluded_reasons": why,
+            "eta_min": r["eta_min"],
+            "distance_km": r["distance_km"],
+            "route": r
+        })
+    elig = sorted([o for o in out if o["eligible"]], key=lambda o: (o["eta_min"], o["distance_km"]))
     for n, o in enumerate(elig):
         o["rank"] = n + 1
-        o["algorithm"] = "Dijkstra (Shortest Road Network Path)"
-        o["explanation"] = (f"{o['hospital']['name']}: receiving, {o['hospital']['available_beds']} free bed(s), "
-                            f"meets care requirements ({', '.join(sorted(needs)) or 'general'}), "
-                            f"Dijkstra shortest-path ETA {o['eta_min']} min ({o['distance_km']} km)"
-                            + (" — optimal nearest facility." if n == 0 else "."))
+        o["algorithm"] = o["route"].get("algorithm", "OSRM Road Network")
+        route_desc = "simulated fallback route" if o["route"].get("simulated") else "actual road route"
+        o["explanation"] = (
+            f"{o['hospital']['name']}: receiving, {o['hospital']['available_beds']} free bed(s) ({o['hospital']['icu_beds']} ICU), "
+            f"meets care requirements ({', '.join(sorted(needs)) or 'general'}), "
+            f"estimated road travel time {o['eta_min']} min ({o['distance_km']} km via {route_desc})"
+            + (" — optimal nearest suitable facility." if n == 0 else ".")
+        )
     inelig = [o for o in out if not o["eligible"]]
     return elig + inelig, needs
 

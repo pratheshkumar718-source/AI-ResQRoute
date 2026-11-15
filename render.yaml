@@ -41,6 +41,10 @@ services:
           name: resqroute-frontend
           type: web
           property: host
+      - key: OSRM_ROUTING_URL
+        value: https://router.project-osrm.org
+      - key: GRAPHHOPPER_API_KEY
+        sync: false
 
   # ---------------------------------------------------------
   # ResQRoute AI — Frontend Static Site (React + Vite + SPA)
@@ -62,6 +66,8 @@ services:
           name: resqroute-backend
           type: web
           property: host
+      - key: VITE_MAPTILER_API_KEY
+        sync: false
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY

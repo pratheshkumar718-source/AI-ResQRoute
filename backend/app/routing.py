@@ -1,13 +1,22 @@
-"""Local, offline road-network model used for SIMULATED routes.
+"""Road routing engine with real road-network geometry and simulated fallback.
 
-A deterministic jittered street grid (with some blocked links and faster 'arterial'
-roads) is generated around a fictional demo area. Routes are Dijkstra shortest-TIME
-paths over that graph. They are NOT real roads: distances and ETAs are simulated
-estimates. No external routing API is used.
+1. Primary: Real road routing via OSRM (OpenStreetMap Road Network API)
+2. Alternative: GraphHopper API (if GRAPHHOPPER_API_KEY is configured)
+3. Fallback: Deterministic local Dijkstra road network model for offline/simulation mode
+
+Every route is clearly tagged with `simulated: True/False`, provider, algorithm,
+actual road distance in kilometers, and estimated travel time in minutes.
 """
-import heapq, math, random, json, urllib.request
+import heapq, math, random, json, urllib.request, urllib.parse, os, logging
 from functools import lru_cache
 
+logger = logging.getLogger("resqroute.routing")
+
+# Environment configuration
+OSRM_ROUTING_URL = os.getenv("OSRM_ROUTING_URL", "https://router.project-osrm.org").rstrip("/")
+GRAPHHOPPER_API_KEY = os.getenv("GRAPHHOPPER_API_KEY", "").strip()
+
+# Local deterministic grid bounds (fictional demonstration area)
 N = 14
 LAT0, LAT1 = 13.030, 13.120
 LNG0, LNG1 = 80.220, 80.285
@@ -15,13 +24,15 @@ BBOX = {"min_lat": LAT0, "max_lat": LAT1, "min_lng": LNG0, "max_lng": LNG1}
 
 
 def haversine(a, b):
+    """Great-circle distance between two (lat, lng) pairs in kilometers."""
     r = 6371.0
     p1, p2 = math.radians(a[0]), math.radians(b[0])
     dp, dl = p2 - p1, math.radians(b[1] - a[1])
     h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.asin(math.sqrt(h))
+    return 2 * r * math.asin(math.sqrt(max(0.0, min(1.0, h))))
 
 
+# ---------- Local Simulated Road Network (Dijkstra Fallback) ----------
 def _build():
     rnd = random.Random(7)
     nodes = []
@@ -75,8 +86,12 @@ NODES, EDGES, GRAPH = _build()
 
 
 def network():
-    return {"bbox": BBOX, "nodes": [list(n) for n in NODES], "edges": [[a, b, 1 if m else 0] for a, b, m in EDGES],
-            "label": "Simulated demo road network (fictional, generated locally)"}
+    return {
+        "bbox": BBOX,
+        "nodes": [list(n) for n in NODES],
+        "edges": [[a, b, 1 if m else 0] for a, b, m in EDGES],
+        "label": "Simulated road network model (used for demonstration and offline fallback)"
+    }
 
 
 def _nearest(p):
@@ -102,11 +117,12 @@ def _dijkstra(s, t):
 
 
 @lru_cache(maxsize=4096)
-def _route(a, b):
+def _route_simulated(a, b):
+    """Calculates shortest-time path over the local simulated road grid."""
     sn, tn = _nearest(a), _nearest(b)
     path = _dijkstra(sn, tn) if sn != tn else [sn]
     coords = [a] + [NODES[k] for k in path] + [b]
-    # drop zero-length duplicates
+    # Drop zero-length duplicate vertices
     cl = [coords[0]] + [c for p, c in zip(coords, coords[1:]) if haversine(p, c) > 1e-6]
     if len(cl) < 2:
         cl = [a, b]
@@ -117,15 +133,23 @@ def _route(a, b):
         dist += d; tm += t
     for conn in (haversine(a, NODES[sn]), haversine(b, NODES[tn])):
         dist += conn; tm += conn / 20.0 * 60
-    return [list(c) for c in cl], dist, tm
+    return [list(c) for c in cl], round(dist, 2), round(max(tm, 0.3), 1)
 
 
-@lru_cache(maxsize=1024)
+# ---------- Real Road-Routing Providers ----------
+
+@lru_cache(maxsize=2048)
 def _osrm_route(a, b):
+    """Calls OSRM routing API to get real road coordinates, distance and duration.
+    Coordinates format: a=(lat, lng), b=(lat, lng).
+    OSRM expects: {lng},{lat};{lng},{lat}.
+    """
     try:
-        url = f"https://router.project-osrm.org/route/v1/driving/{a[1]},{a[0]};{b[1]},{b[0]}?overview=full&geometries=geojson"
-        req = urllib.request.Request(url, headers={"User-Agent": "ResQRoute-AI/1.0"})
-        with urllib.request.urlopen(req, timeout=3.0) as res:
+        url = f"{OSRM_ROUTING_URL}/route/v1/driving/{a[1]},{a[0]};{b[1]},{b[0]}?overview=full&geometries=geojson"
+        req = urllib.request.Request(url, headers={"User-Agent": "ResQRoute-AI/2.0 (+https://resqroute.ai)"})
+        with urllib.request.urlopen(req, timeout=3.5) as res:
+            if res.status != 200:
+                return None
             data = json.loads(res.read().decode())
             if data.get("code") == "Ok" and data.get("routes"):
                 r = data["routes"][0]
@@ -133,14 +157,78 @@ def _osrm_route(a, b):
                 dist_km = round(r["distance"] / 1000.0, 2)
                 eta_min = round(max(r["duration"] / 60.0, 0.5), 1)
                 return coords, dist_km, eta_min
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"OSRM road routing error for {a} -> {b}: {e}")
     return None
 
 
+@lru_cache(maxsize=1024)
+def _graphhopper_route(a, b):
+    """Alternative road router using GraphHopper API if key is configured."""
+    if not GRAPHHOPPER_API_KEY:
+        return None
+    try:
+        params = urllib.parse.urlencode({
+            "point": [f"{a[0]},{a[1]}", f"{b[0]},{b[1]}"],
+            "vehicle": "car",
+            "locale": "en",
+            "calc_points": "true",
+            "points_encoded": "false",
+            "key": GRAPHHOPPER_API_KEY
+        }, doseq=True)
+        url = f"https://graphhopper.com/api/1/route?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": "ResQRoute-AI/2.0"})
+        with urllib.request.urlopen(req, timeout=3.5) as res:
+            data = json.loads(res.read().decode())
+            if data.get("paths"):
+                path = data["paths"][0]
+                coords = [[round(lat, 6), round(lng, 6)] for lng, lat in path["points"]["coordinates"]]
+                dist_km = round(path["distance"] / 1000.0, 2)
+                eta_min = round(max(path["time"] / 60000.0, 0.5), 1)
+                return coords, dist_km, eta_min
+    except Exception as e:
+        logger.debug(f"GraphHopper road routing error: {e}")
+    return None
+
+
+# ---------- Public Routing Interface ----------
+
+def validate_coordinates(a, b):
+    """Validates that a and b are valid latitude and longitude pairs."""
+    for pt in (a, b):
+        if not (isinstance(pt, (list, tuple)) and len(pt) >= 2):
+            raise ValueError(f"Invalid coordinate format: {pt}")
+        lat, lng = float(pt[0]), float(pt[1])
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):
+            raise ValueError(f"Coordinate out of range: ({lat}, {lng})")
+
+
 def route(a, b):
-    a = (round(a[0], 5), round(a[1], 5)); b = (round(b[0], 5), round(b[1], 5))
-    osrm = _osrm_route(a, b)
+    """Calculates route between two (lat, lng) points.
+    
+    Attempts real road-network routing first (OSRM / GraphHopper).
+    If unreachable or external providers fail, falls back to the deterministic local
+    road grid. Every result is clearly labeled with `simulated: True/False`.
+    """
+    validate_coordinates(a, b)
+    # Round coordinates to 5 decimal places (~1.1 meter resolution) for caching
+    a_norm = (round(float(a[0]), 5), round(float(a[1]), 5))
+    b_norm = (round(float(b[0]), 5), round(float(b[1]), 5))
+
+    # Identical origin and destination (< 5 meters)
+    if haversine(a_norm, b_norm) < 0.005:
+        return {
+            "coords": [[a_norm[0], a_norm[1]], [b_norm[0], b_norm[1]]],
+            "distance_km": 0.0,
+            "eta_min": 0.1,
+            "simulated": False,
+            "provider": "Direct Arrival",
+            "algorithm": "On Scene",
+            "label": "Arrived at location (0.0 km · ETA 0.1 min)"
+        }
+
+    # 1. Try real road-routing via OSRM
+    osrm = _osrm_route(a_norm, b_norm)
     if osrm:
         coords, dist, tm = osrm
         return {
@@ -148,21 +236,42 @@ def route(a, b):
             "distance_km": dist,
             "eta_min": tm,
             "simulated": False,
-            "algorithm": "Dijkstra (Contraction Hierarchies)",
-            "label": f"Dijkstra Shortest Route ({len(coords)} nodes, {dist} km · ETA {tm} min)",
+            "provider": "OSRM (OpenStreetMap Road Network)",
+            "algorithm": "OSRM Real Road Network (Driving)",
+            "label": f"Road Route ({dist} km · ETA {tm} min)",
         }
-    coords, dist, tm = _route(a, b)
+
+    # 2. Try alternative real road-routing via GraphHopper (if key set)
+    gh = _graphhopper_route(a_norm, b_norm)
+    if gh:
+        coords, dist, tm = gh
+        return {
+            "coords": coords,
+            "distance_km": dist,
+            "eta_min": tm,
+            "simulated": False,
+            "provider": "GraphHopper Driving API",
+            "algorithm": "GraphHopper Road Network",
+            "label": f"Road Route ({dist} km · ETA {tm} min)",
+        }
+
+    # 3. Fallback: local simulated Dijkstra road network model
+    coords, dist, tm = _route_simulated(a_norm, b_norm)
     return {
         "coords": coords,
-        "distance_km": round(dist, 2),
-        "eta_min": round(max(tm, 0.3), 1),
+        "distance_km": dist,
+        "eta_min": tm,
         "simulated": True,
-        "algorithm": "Dijkstra (Shortest-Path Graph Optimization)",
-        "label": f"Dijkstra Shortest Route ({round(dist, 2)} km · ETA {round(max(tm, 0.3), 1)} min)",
+        "provider": "Simulated Demo Grid",
+        "algorithm": "Dijkstra (Simulated Network Fallback)",
+        "label": f"Simulated Fallback Route ({dist} km · ETA {tm} min [Demo])",
     }
 
 
+# ---------- Route Geometry Helpers ----------
+
 def cumulative(coords):
+    """Calculates cumulative distance array for waypoint interpolation."""
     cum = [0.0]
     for p, c in zip(coords, coords[1:]):
         cum.append(cum[-1] + haversine(p, c))
@@ -170,14 +279,17 @@ def cumulative(coords):
 
 
 def point_at(coords, cum, frac):
+    """Interpolates coordinates at a given progress fraction (0.0 to 1.0)."""
     total = cum[-1]
     if total <= 0:
         return coords[-1]
-    target = frac * total
+    target = max(0.0, min(1.0, frac)) * total
     for k in range(1, len(cum)):
         if cum[k] >= target:
             seg = cum[k] - cum[k - 1]
             f = 0 if seg == 0 else (target - cum[k - 1]) / seg
-            return [coords[k - 1][0] + (coords[k][0] - coords[k - 1][0]) * f,
-                    coords[k - 1][1] + (coords[k][1] - coords[k - 1][1]) * f]
+            return [
+                round(coords[k - 1][0] + (coords[k][0] - coords[k - 1][0]) * f, 6),
+                round(coords[k - 1][1] + (coords[k][1] - coords[k - 1][1]) * f, 6)
+            ]
     return coords[-1]

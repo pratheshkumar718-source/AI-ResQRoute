@@ -101,7 +101,7 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
                 <span>INCOMING PATIENT INTAKE & PRE-ARRIVAL ({incoming.length})</span>
               </span>
               <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded border border-[#198754]/30 text-[#198754]">
-                Dijkstra Shortest Route
+                Road Navigation Network
               </span>
             </div>
 
@@ -111,6 +111,7 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
               const hRoute = asg?.hospital_route
               const etaMin = hRoute?.eta_min ?? 4
               const distKm = hRoute?.distance_km ?? 2.8
+              const isSim = hRoute?.simulated === true
 
               return (
                 <div key={inc.id} className="p-3 rounded-lg bg-white border border-[#198754]/30 space-y-2 text-xs shadow-sm">
@@ -129,7 +130,9 @@ function HospCard({ h, canEdit, isAdmin }: { h: Hospital; canEdit: boolean; isAd
                   {/* Route & Pre-Arrival Telemetry */}
                   <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#FAFBFD] p-2 rounded border border-slate-200">
                     <div>
-                      <span className="text-slate-500 block text-[10px] uppercase font-bold">Dijkstra Shortest ETA</span>
+                      <span className="text-slate-500 block text-[10px] uppercase font-bold">
+                        {isSim ? 'Simulated Road ETA' : 'Road Network ETA'}
+                      </span>
                       <span className="font-mono font-extrabold text-[#173B68] text-xs">
                         ~{etaMin} min ({distKm} km)
                       </span>

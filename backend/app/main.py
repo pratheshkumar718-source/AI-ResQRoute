@@ -272,8 +272,26 @@ def network():
 
 
 @app.get("/api/route")
-def get_route(from_lat: float, from_lng: float, to_lat: float, to_lng: float):
-    return routing.route((from_lat, from_lng), (to_lat, to_lng))
+def get_route(
+    from_lat: Optional[float] = None,
+    from_lng: Optional[float] = None,
+    to_lat: Optional[float] = None,
+    to_lng: Optional[float] = None,
+    lat1: Optional[float] = None,
+    lng1: Optional[float] = None,
+    lat2: Optional[float] = None,
+    lng2: Optional[float] = None
+):
+    f_lat = from_lat if from_lat is not None else lat1
+    f_lng = from_lng if from_lng is not None else lng1
+    t_lat = to_lat if to_lat is not None else lat2
+    t_lng = to_lng if to_lng is not None else lng2
+    if f_lat is None or f_lng is None or t_lat is None or t_lng is None:
+        raise HTTPException(422, "from_lat, from_lng, to_lat, to_lng coordinates are required")
+    try:
+        return routing.route((f_lat, f_lng), (t_lat, t_lng))
+    except ValueError as e:
+        raise HTTPException(422, str(e))
 
 
 # ---------------- incidents ----------------
@@ -558,22 +576,10 @@ def arrive_scene(aid: int, db: Session = Depends(get_db), u: User = Depends(need
         raise HTTPException(409, "Ambulance has not reached the scene yet (simulation still running)")
     a.status = "on_scene"; inc.status = "on_scene"; a.leg = None
 
-    # Ensure nearest hospital route is computed via Dijkstra algorithm and ready for redirection
-    if not a.hospital_route or not inc.selected_hospital_id:
-        recs, _ = recommend_hospitals(db, inc)
-        elig = [r for r in recs if r["eligible"]]
-        if elig:
-            top = elig[0]
-            inc.recommended_hospital_id = inc.selected_hospital_id = top["hospital"]["id"]
-            a.hospital_id = top["hospital"]["id"]
-            a.hospital_route = json.dumps(top["route"])
-
-    hosp = db.get(Hospital, a.hospital_id) if a.hospital_id else None
-    hosp_name = hosp.name if hosp else "Nearest Hospital"
-
     audit(db, u.username, "arrived_scene", "assignment", aid)
-    track(db, inc.id, aid, "on_scene", f"{a.ambulance.code} arrived at accident scene. Ready for patient loading and redirection to {hosp_name}.", inc.lat, inc.lng, 0)
-    db.commit(); _done(inc, a, f"{a.ambulance.code} arrived at accident scene of incident #{inc.id}. Redirection ready for {hosp_name}.", "success")
+    track(db, inc.id, aid, "on_scene", f"{a.ambulance.code} arrived at accident scene. Ready for patient clinical assessment.", inc.lat, inc.lng, 0)
+    db.commit()
+    _done(inc, a, f"{a.ambulance.code} arrived at accident scene of incident #{inc.id}. Awaiting clinical assessment.", "success")
     return ser_inc(inc)
 
 
@@ -596,9 +602,12 @@ def assessment(aid: int, b: Assessment, db: Session = Depends(get_db), u: User =
         top = elig[0]
         inc.recommended_hospital_id = inc.selected_hospital_id = top["hospital"]["id"]
         a.hospital_id = top["hospital"]["id"]
-        a.hospital_route = json.dumps(top["route"])
+        amb = a.ambulance
+        amb_pos = (amb.lat, amb.lng) if amb else (inc.lat, inc.lng)
+        hosp_route = routing.route(amb_pos, (top["hospital"]["lat"], top["hospital"]["lng"]))
+        a.hospital_route = json.dumps(hosp_route)
         inc.hospital_warning = None
-        msg = f"Crew assessment submitted. Recommended hospital: {top['hospital']['name']}"
+        msg = f"Patient assessment submitted ({b.severity}, {b.patients} pt). Recommended hospital: {top['hospital']['name']} (Road ETA: {hosp_route['eta_min']} min, {hosp_route['distance_km']} km)"
     else:
         inc.recommended_hospital_id = inc.selected_hospital_id = None
         a.hospital_id = None; a.hospital_route = None
@@ -613,6 +622,7 @@ def assessment(aid: int, b: Assessment, db: Session = Depends(get_db), u: User =
 
 
 @app.get("/api/incidents/{iid}/hospital-recommendations")
+@app.get("/api/incidents/{iid}/recommended-hospitals")
 def hospital_recs(iid: int, db: Session = Depends(get_db), u: User = Depends(user_dep)):
     inc = get_or_404(db, Incident, iid)
     if not inc.assessment:
@@ -641,12 +651,18 @@ def select_hospital(iid: int, b: SelectHospital, db: Session = Depends(get_db), 
         any_elig = any(r["eligible"] for r in recs)
         if any_elig or not b.override or not pick["hospital"]["receiving"]:
             raise HTTPException(409, "Hospital is not eligible: " + "; ".join(pick["excluded_reasons"]))
-    a = next(x for x in inc.assignments if x.status == "on_scene")
+    a = next((x for x in inc.assignments if x.status in ("on_scene", "assessed")), None)
+    if not a:
+        raise HTTPException(409, "No active assignment on scene for this incident")
     inc.selected_hospital_id = b.hospital_id
     inc.hospital_warning = None if pick["eligible"] else "Dispatcher OVERRIDE: hospital does not meet all assessed needs"
-    a.hospital_id = b.hospital_id; a.hospital_route = json.dumps(pick["route"])
+    a.hospital_id = b.hospital_id
+    amb = a.ambulance
+    amb_pos = (amb.lat, amb.lng) if amb else (inc.lat, inc.lng)
+    hosp_route = routing.route(amb_pos, (pick["hospital"]["lat"], pick["hospital"]["lng"]))
+    a.hospital_route = json.dumps(hosp_route)
     audit(db, u.username, "hospital_selected", "incident", iid, f"{pick['hospital']['name']} override={b.override}")
-    track(db, iid, a.id, "hospital_selected", f"Dispatcher selected {pick['hospital']['name']}")
+    track(db, iid, a.id, "hospital_selected", f"Dispatcher selected {pick['hospital']['name']} (Road ETA: {hosp_route['eta_min']} min)")
     db.commit()
     _done(inc, a, f"Incident #{iid}: destination changed to {pick['hospital']['name']}")
     return ser_inc(inc)
@@ -673,9 +689,11 @@ def start_hospital_route(aid: int, db: Session = Depends(get_db), u: User = Depe
     hosp_name = hosp.name if hosp else "Hospital"
     h_route = j(a.hospital_route) or {}
     h_eta = h_route.get("eta_min", 0)
+    h_dist = h_route.get("distance_km", 0)
+    route_desc = "simulated fallback route" if h_route.get("simulated") else "actual road route"
 
     audit(db, u.username, "transport_started", "assignment", aid)
-    track(db, inc.id, aid, "transporting", f"{a.ambulance.code} departed accident scene — transporting patient to {hosp_name} via Dijkstra shortest route (ETA {h_eta} min)")
+    track(db, inc.id, aid, "transporting", f"{a.ambulance.code} departed accident scene — transporting patient to {hosp_name} via {route_desc} (ETA {h_eta} min, {h_dist} km)")
     track(db, inc.id, aid, "hospital_notified", f"{hosp_name} notified: Incoming ambulance {a.ambulance.code} en route. Prepare emergency bay and ICU bed.")
     db.commit()
     start_leg(db, a, "hospital")
@@ -687,10 +705,13 @@ def start_hospital_route(aid: int, db: Session = Depends(get_db), u: User = Depe
         "incident_id": inc.id,
         "ambulance_code": a.ambulance.code,
         "eta_min": h_eta,
+        "distance_km": h_dist,
+        "priority": inc.priority,
+        "assessment": j(inc.assessment),
         "level": "warning",
-        "message": f"🚨 INCOMING PATIENT INTAKE: {a.ambulance.code} transporting patient to {hosp_name}! Dijkstra ETA: {h_eta} min. Pre-arrival intake active."
+        "message": f"🚨 INCOMING PATIENT INTAKE: {a.ambulance.code} transporting patient to {hosp_name}! Road ETA: {h_eta} min ({h_dist} km). Pre-arrival intake active."
     })
-    _done(inc, a, f"{a.ambulance.code} is transporting to {hosp_name} (Dijkstra ETA {h_eta} min)", "success")
+    _done(inc, a, f"{a.ambulance.code} is transporting to {hosp_name} (ETA {h_eta} min, {h_dist} km)", "success")
     return ser_inc(inc)
 
 
@@ -779,6 +800,89 @@ def patch_amb(amb_id: int, b: AmbPatch, db: Session = Depends(get_db), u: User =
     audit(db, u.username, "ambulance_status", "ambulance", amb_id, b.status); db.commit()
     emit({"type": "ambulance_updated", "message": f"{a.code} status updated to {b.status}", "level": "info"})
     return ser_amb(a)
+
+
+class LocationUpdate(BaseModel):
+    lat: float
+    lng: float
+    heading: Optional[float] = None
+    accuracy_m: Optional[float] = None
+    speed_kmh: Optional[float] = None
+
+
+@app.post("/api/ambulances/{amb_id}/location")
+def update_ambulance_location(amb_id: int, b: LocationUpdate, db: Session = Depends(get_db), u: User = Depends(need("driver"))):
+    """Updates ambulance live GPS coordinates from mobile browser or vehicle GPS tracker."""
+    amb = get_or_404(db, Ambulance, amb_id)
+    if u.role == "driver" and u.ambulance_id != amb_id:
+        raise HTTPException(403, "You can only update your assigned ambulance's location")
+    if not (-90.0 <= b.lat <= 90.0 and -180.0 <= b.lng <= 180.0):
+        raise HTTPException(422, f"Invalid GPS coordinates: ({b.lat}, {b.lng})")
+
+    amb.lat = round(b.lat, 6)
+    amb.lng = round(b.lng, 6)
+
+    # Check for active assignment in transit
+    asg = db.query(Assignment).filter(
+        Assignment.ambulance_id == amb_id,
+        Assignment.status.in_(["en_route", "transporting"])
+    ).first()
+
+    rem_eta = None
+    inc_id = None
+    aid = None
+    leg = None
+
+    if asg:
+        inc = db.get(Incident, asg.incident_id)
+        inc_id = asg.incident_id
+        aid = asg.id
+        leg = asg.leg or ("scene" if asg.status == "en_route" else "hospital")
+        dest_coords = None
+        if asg.status == "en_route" and inc:
+            dest_coords = (inc.lat, inc.lng)
+        elif asg.status == "transporting" and asg.hospital_id:
+            hosp = db.get(Hospital, asg.hospital_id)
+            if hosp:
+                dest_coords = (hosp.lat, hosp.lng)
+
+        if dest_coords:
+            try:
+                rem_route = routing.route((amb.lat, amb.lng), dest_coords)
+                rem_eta = rem_route["eta_min"]
+                asg.remaining_eta = rem_eta
+                # If within 50 meters, mark leg complete
+                if rem_route["distance_km"] <= 0.05:
+                    asg.leg_complete = True
+            except Exception:
+                pass
+
+    db.commit()
+
+    emit({
+        "type": "tracking",
+        "ambulance_id": amb.id,
+        "incident_id": inc_id,
+        "assignment_id": aid,
+        "code": amb.code,
+        "lat": amb.lat,
+        "lng": amb.lng,
+        "heading": b.heading,
+        "accuracy_m": b.accuracy_m,
+        "speed_kmh": b.speed_kmh,
+        "remaining_eta": rem_eta,
+        "leg": leg,
+        "simulated": False,
+        "source": "device_gps"
+    })
+
+    return {
+        "ok": True,
+        "ambulance": ser_amb(amb),
+        "remaining_eta": rem_eta,
+        "simulated": False,
+        "source": "device_gps"
+    }
 
 
 class HospitalRegister(BaseModel):
