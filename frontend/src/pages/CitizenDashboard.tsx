@@ -3,7 +3,8 @@ import {
   PhoneCall, ShieldAlert, AlertTriangle, Video, Camera, Upload, CheckCircle2,
   MapPin, Clock, Truck, Building2, User, Users, HeartHandshake, Eye, Sparkles,
   ChevronRight, ArrowLeft, RefreshCw, Plus, Trash2, Edit2, Star, Check, X,
-  Navigation, ExternalLink, HelpCircle, AlertOctagon, Info, Play, Square, RotateCcw
+  Navigation, ExternalLink, HelpCircle, AlertOctagon, Info, Play, Square, RotateCcw,
+  Lock, Shield
 } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Badge, Btn, Alert, useAct } from '../components/ui'
@@ -96,15 +97,13 @@ export default function CitizenDashboard() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([])
   const [loadingReports, setLoadingReports] = useState(false)
 
-  // Multi-step Report Wizard state
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  // Locked On-Scene Accident Location
   const [accidentLat, setAccidentLat] = useState<number>(13.0827)
   const [accidentLng, setAccidentLng] = useState<number>(80.2707)
   const [locationName, setLocationName] = useState<string>('Central Junction, Anna Salai')
-  const [isCurrentLocation, setIsCurrentLocation] = useState<'yes' | 'no' | null>(null)
 
   // Evidence state
-  const [videoMode, setVideoMode] = useState<'none' | 'record' | 'upload'>('none')
+  const [videoMode, setVideoMode] = useState<'none' | 'record' | 'upload'>('record')
   const [isRecording, setIsRecording] = useState(false)
   const [recordSecs, setRecordSecs] = useState(0)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
@@ -120,11 +119,7 @@ export default function CitizenDashboard() {
   const recordTimerRef = useRef<any>(null)
   const chunksRef = useRef<Blob[]>([])
 
-  // Details state
-  const [accidentType, setAccidentType] = useState<string>('Vehicle collision')
-  const [vehiclesInvolved, setVehiclesInvolved] = useState<number | ''>(2)
-  const [injuredCount, setInjuredCount] = useState<number | ''>(1)
-  const [relationship, setRelationship] = useState<string>('reporting as a witness')
+  // Optional details
   const [reporterPhone, setReporterPhone] = useState<string>(user?.phone || '+91-98401-23456')
   const [description, setDescription] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
@@ -299,16 +294,21 @@ export default function CitizenDashboard() {
     }
   }, [])
 
-  // Start wizard
-  const openReportingWizard = () => {
+  // Start instant AI reporting
+  const openReportingModal = () => {
+    // If an ambulance is already assigned to this citizen's active emergency, the location is locked!
+    if (activeIncident && asg) {
+      alert(`Ambulance ${asg.ambulance_code} is already assigned and navigating to your accident location (${activeIncident.location_name}). The accident location is locked to ensure fastest paramedic routing and cannot be changed.`)
+      setActiveTab('tracking')
+      return
+    }
+
     const lat = citizenGps?.lat || 13.0827
     const lng = citizenGps?.lng || 80.2707
     setAccidentLat(lat)
     setAccidentLng(lng)
     setLocationName(citizenGps?.address || 'Near Anna Salai Junction')
-    setIsCurrentLocation('yes')
-    setStep(1)
-    setVideoMode('none')
+    setVideoMode('record')
     setRecordedBlob(null)
     setRecordedVideoUrl(null)
     setUploadedVideoFile(null)
@@ -318,33 +318,40 @@ export default function CitizenDashboard() {
     setDescription('')
     setSubmitFeedback(null)
     setReportingModalOpen(true)
+    startCamera()
   }
 
   // Submit Emergency Report to backend
   const handleSubmitReport = async () => {
+    if (!citizenGps?.lat || !citizenGps?.lng) {
+      alert('Detecting your on-scene GPS coordinates. Please ensure location permissions are enabled so ambulances can navigate to your exact spot.')
+      detectLocation()
+      return
+    }
+
     setSubmitting(true)
-    setSubmitFeedback('Transmitting emergency location & incident details...')
+    setSubmitFeedback('Locking on-scene GPS coordinates & transmitting telemetry...')
 
     try {
       const fd = new FormData()
       fd.append('lat', accidentLat.toString())
       fd.append('lng', accidentLng.toString())
-      fd.append('location_name', locationName)
-      fd.append('accident_type', accidentType)
-      fd.append('vehicles_involved', vehiclesInvolved ? vehiclesInvolved.toString() : '1')
-      fd.append('injured_count', injuredCount ? injuredCount.toString() : '1')
-      fd.append('citizen_relationship', relationship)
-      fd.append('reporter_phone', reporterPhone)
-      fd.append('description', description)
-      fd.append('priority', injuredCount && Number(injuredCount) > 1 ? 'critical' : 'high')
+      fd.append('location_name', locationName || 'Citizen Verified On-Scene Spot')
+      fd.append('accident_type', 'Vehicle collision (AI Detection)')
+      fd.append('vehicles_involved', '1')
+      fd.append('injured_count', '1')
+      fd.append('citizen_relationship', 'Witness on Scene')
+      fd.append('reporter_phone', reporterPhone || user?.phone || '+91-98401-23456')
+      fd.append('description', description.trim() || 'Accident reported via citizen mobile portal with on-scene video evidence.')
+      fd.append('priority', 'high')
 
       // Attach video if available
       if (recordedBlob) {
-        setSubmitFeedback('Uploading recorded video & executing PyTorch ResNet-18 analysis...')
+        setSubmitFeedback('Uploading video footage & executing PyTorch ResNet-18 collision analysis...')
         const vidFile = new File([recordedBlob], 'citizen_accident_capture.mp4', { type: 'video/mp4' })
         fd.append('video', vidFile)
       } else if (uploadedVideoFile) {
-        setSubmitFeedback('Uploading video footage & running frame-by-frame AI scan...')
+        setSubmitFeedback('Uploading video footage & running frame-by-frame AI collision scan...')
         fd.append('video', uploadedVideoFile)
       }
 
@@ -500,7 +507,7 @@ export default function CitizenDashboard() {
 
           {/* OPTION A: AI Report Button */}
           <button
-            onClick={openReportingWizard}
+            onClick={openReportingModal}
             className="flex items-center justify-center gap-2 px-5 py-3 bg-[#173B68] hover:bg-[#122E52] text-white rounded-xl font-bold text-sm shadow-md transition transform active:scale-95 cursor-pointer border border-[#0F2643]"
           >
             <ShieldAlert className="w-4 h-4 text-[#D69E36]" />
@@ -594,6 +601,23 @@ export default function CitizenDashboard() {
                   <p className="text-xs text-white/90">
                     {activeIncident.notes || `${activeIncident.accident_type || 'Accident'} reported with immediate priority.`}
                   </p>
+
+                  {/* Locked Accident Location Coordinates */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/20 text-xs">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/25 backdrop-blur-sm font-mono font-semibold">
+                      <Lock className="w-3.5 h-3.5 text-[#D69E36]" />
+                      <span>Accident Location: {activeIncident.lat.toFixed(5)}, {activeIncident.lng.toFixed(5)}</span>
+                    </div>
+                    {asg ? (
+                      <span className="text-[11px] text-white/90 bg-black/20 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                        🔒 Permanently Locked — Ambulance {asg.ambulance_code} Dispatched
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-white/80">
+                        GPS Location Locked to Scene Coordinates
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {asg && (
@@ -696,6 +720,13 @@ export default function CitizenDashboard() {
                           </div>
                         </>
                       )}
+                      <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                        <span className="text-[#666666]">Accident Coordinates</span>
+                        <span className="font-mono font-bold text-[#171717] flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-[#DC3545]" />
+                          {activeIncident.lat.toFixed(5)}, {activeIncident.lng.toFixed(5)} (Locked)
+                        </span>
+                      </div>
                       <div className="flex justify-between py-1">
                         <span className="text-[#666666]">Current Status</span>
                         <Badge s={asg.status} />
@@ -769,7 +800,7 @@ export default function CitizenDashboard() {
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={openReportingWizard}
+                  onClick={openReportingModal}
                   className="w-full sm:w-auto px-6 py-3 bg-[#173B68] hover:bg-[#122E52] text-white rounded-xl font-bold text-xs shadow transition cursor-pointer"
                 >
                   Report an Accident (AI Assisted)
@@ -1150,17 +1181,18 @@ export default function CitizenDashboard() {
         </div>
       )}
 
-      {/* 4. OPTION A: MULTI-STEP ACCIDENT REPORTING MODAL */}
+      {/* 4. OPTION A: INSTANT AI-POWERED ACCIDENT REPORTING MODAL */}
       {reportingModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-2xl w-full border border-[#CBD5E1] shadow-2xl overflow-hidden my-6">
             {/* Modal Header */}
             <div className="bg-[#173B68] text-white p-5 flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#93C5FD] font-semibold">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#93C5FD] font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D69E36]" />
                   Option A · AI-Powered Emergency Reporting
                 </span>
-                <h2 className="text-lg font-extrabold">Report Road Accident</h2>
+                <h2 className="text-lg font-extrabold">Instant Accident Reporting</h2>
               </div>
               <button
                 onClick={() => {
@@ -1173,481 +1205,238 @@ export default function CitizenDashboard() {
               </button>
             </div>
 
-            {/* Stepper Header */}
-            <div className="bg-[#F8FAFC] px-6 py-3 border-b border-[#E2E8F0] flex items-center justify-between text-xs">
-              {[
-                { s: 1, label: 'Location' },
-                { s: 2, label: 'Video / Evidence' },
-                { s: 3, label: 'Incident Details' },
-                { s: 4, label: 'Review & Submit' }
-              ].map(st => (
-                <div key={st.s} className="flex items-center gap-1.5">
-                  <span className={`w-5 h-5 rounded-full font-bold grid place-items-center text-[11px] ${step === st.s
-                      ? 'bg-[#173B68] text-white'
-                      : step > st.s
-                        ? 'bg-[#198754] text-white'
-                        : 'bg-[#E2E8F0] text-[#666666]'
-                    }`}>
-                    {step > st.s ? '✓' : st.s}
-                  </span>
-                  <span className={`font-semibold hidden sm:inline ${step === st.s ? 'text-[#173B68]' : 'text-[#666666]'}`}>
-                    {st.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-
             {/* Modal Body */}
-            <div className="p-6 space-y-5 max-h-[72vh] overflow-y-auto">
-              {/* STEP 1: LOCATION SHARING */}
-              {step === 1 && (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#171717]">Step 1: Emergency Location Sharing</h3>
-                    <p className="text-xs text-[#666666]">
-                      Accurate coordinates allow the nearest ambulance driver to calculate actual road routes without delay.
-                    </p>
+            <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* SECTION 1: VERIFIED ON-SCENE GPS LOCATION (LOCKED) */}
+              <div className="p-4 rounded-2xl bg-[#F0F9F4] border border-[#198754]/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#166534] flex items-center gap-1.5 uppercase tracking-wide">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#198754] animate-ping" />
+                    Accident Location: Verified On-Scene GPS
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#198754] text-white flex items-center gap-1">
+                    <Lock className="w-3 h-3" /> Location Locked
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1 text-xs">
+                  <div className="font-bold text-[#171717] flex items-center gap-1">
+                    <MapPin className="w-4 h-4 text-[#DC3545] shrink-0" />
+                    <span>{locationName}</span>
                   </div>
-
-                  {/* Ask Question: Is accident at your current location? */}
-                  <div className="p-4 rounded-2xl bg-[#F0F9F4] border border-[#198754]/30 space-y-2">
-                    <span className="text-xs font-bold text-[#166534] block">
-                      Is the accident at your current GPS location?
-                    </span>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsCurrentLocation('yes')
-                          if (citizenGps) {
-                            setAccidentLat(citizenGps.lat)
-                            setAccidentLng(citizenGps.lng)
-                            setLocationName(citizenGps.address)
-                          }
-                        }}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${isCurrentLocation === 'yes'
-                            ? 'bg-[#198754] text-white border-[#198754]'
-                            : 'bg-white text-[#166534] border-[#198754]/40 hover:bg-[#DCFCE7]'
-                          }`}
-                      >
-                        ✓ Yes, at my location
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsCurrentLocation('no')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${isCurrentLocation === 'no'
-                            ? 'bg-[#173B68] text-white border-[#173B68]'
-                            : 'bg-white text-[#173B68] border-[#356FA5]/40 hover:bg-[#EBF2FA]'
-                          }`}
-                      >
-                        ✎ No, adjust location
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Location Coordinate Inputs */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-semibold text-[#171717] block mb-1">
-                        Accident Spot / Landmark Address
-                      </label>
-                      <input
-                        type="text"
-                        value={locationName}
-                        onChange={e => setLocationName(e.target.value)}
-                        placeholder="e.g. Near Gemini Flyover, Anna Salai"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] text-xs focus:outline-none focus:border-[#173B68]"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-semibold text-[#666666] block mb-0.5">Latitude</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          value={accidentLat}
-                          onChange={e => setAccidentLat(parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-[#666666] block mb-0.5">Longitude</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          value={accidentLng}
-                          onChange={e => setAccidentLng(parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-mono"
-                        />
-                      </div>
-                    </div>
+                  <div className="font-mono text-[#173B68] font-bold text-[11px] bg-white px-2.5 py-1 rounded-lg border border-[#198754]/30">
+                    {accidentLat.toFixed(6)}, {accidentLng.toFixed(6)}
                   </div>
                 </div>
-              )}
+                <p className="text-[11px] text-[#166534]/90 pt-1 border-t border-[#198754]/20 leading-relaxed">
+                  Your device's live coordinates are automatically locked as the collision location for incoming paramedic navigation. Once an ambulance is dispatched, this location cannot be changed.
+                </p>
+              </div>
 
-              {/* STEP 2: VIDEO CAPTURE / UPLOAD */}
-              {step === 2 && (
-                <div className="space-y-4">
+              {/* SECTION 2: AI ACCIDENT EVIDENCE CAPTURE */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-extrabold text-base text-[#171717]">Step 2: Accident Video & Evidence Capture</h3>
+                    <h3 className="font-extrabold text-sm text-[#171717]">Accident Video & Evidence</h3>
                     <p className="text-xs text-[#666666]">
-                      Short video footage is analyzed by our PyTorch ResNet-18 model to verify the accident and extract collision frames.
+                      Capture or upload footage — our PyTorch ResNet-18 model and Gemini AI automatically evaluate collision severity and vehicles.
                     </p>
                   </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#D69E36]" /> AI Handled
+                  </span>
+                </div>
 
-                  {/* Safety Warning Notice */}
-                  <div className="p-3.5 rounded-2xl bg-[#FDF9F0] border border-[#D69E36]/40 flex items-start gap-2.5 text-xs text-[#855B14]">
-                    <AlertTriangle className="w-4 h-4 text-[#D69E36] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block">Safety First Warning</span>
-                      <span>
-                        Do not approach hazardous wreckage, fire, or live traffic. Do not record while driving. Video is completely optional — you may skip if unsafe.
-                      </span>
-                    </div>
-                  </div>
+                {/* Safety Notice */}
+                <div className="p-3 rounded-xl bg-[#FDF9F0] border border-[#D69E36]/30 flex items-start gap-2 text-xs text-[#855B14]">
+                  <AlertTriangle className="w-4 h-4 text-[#D69E36] shrink-0 mt-0.5" />
+                  <span>
+                    <b>Safety First:</b> Maintain safe distance from live traffic and wreckage. Video is optional — you can submit immediately without video if in danger.
+                  </span>
+                </div>
 
-                  {/* Recording / Upload Selection Tabs */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setVideoMode('record')
-                        startCamera()
-                      }}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${videoMode === 'record'
-                          ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68]'
-                          : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                        }`}
-                    >
-                      <Camera className="w-5 h-5 text-[#173B68]" />
-                      <span>Record Video (Camera)</span>
-                    </button>
+                {/* Capture Mode Tabs */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoMode('record')
+                      startCamera()
+                    }}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      videoMode === 'record'
+                        ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68] ring-1 ring-[#173B68]'
+                        : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
+                    }`}
+                  >
+                    <Camera className="w-4 h-4 text-[#173B68]" />
+                    <span>Record Video (Camera)</span>
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        stopCameraStream()
-                        setVideoMode('upload')
-                      }}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${videoMode === 'upload'
-                          ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68]'
-                          : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                        }`}
-                    >
-                      <Upload className="w-5 h-5 text-[#173B68]" />
-                      <span>Upload Video File (MP4/MOV)</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCameraStream()
+                      setVideoMode('upload')
+                    }}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      videoMode === 'upload'
+                        ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68] ring-1 ring-[#173B68]'
+                        : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
+                    }`}
+                  >
+                    <Upload className="w-4 h-4 text-[#173B68]" />
+                    <span>Upload Video File</span>
+                  </button>
+                </div>
 
-                  {/* Camera Record View */}
-                  {videoMode === 'record' && (
-                    <div className="space-y-3 bg-black rounded-2xl p-3 overflow-hidden text-center">
+                {/* Camera Record View */}
+                {videoMode === 'record' && (
+                  <div className="space-y-3 bg-black rounded-2xl p-3 overflow-hidden text-center">
+                    {!recordedVideoUrl ? (
+                      <div className="relative aspect-video max-h-60 rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center">
+                        <video
+                          ref={videoPreviewRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full h-full object-cover"
+                        />
+                        {isRecording && (
+                          <div className="absolute top-3 left-3 bg-[#DC3545] text-white px-2.5 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 animate-pulse">
+                            <span className="w-2 h-2 rounded-full bg-white" />
+                            <span>REC {recordSecs}s / 20s</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <video
+                          controls
+                          src={recordedVideoUrl}
+                          className="w-full max-h-60 rounded-xl object-contain bg-black"
+                        />
+                        <span className="text-xs text-white/90 font-medium block">
+                          ✓ Video captured — PyTorch ResNet-18 will analyze collision frames
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-center gap-2 pt-1">
                       {!recordedVideoUrl ? (
-                        <div className="relative aspect-video max-h-60 rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center">
-                          <video
-                            ref={videoPreviewRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            className="w-full h-full object-cover"
-                          />
-                          {isRecording && (
-                            <div className="absolute top-3 left-3 bg-[#DC3545] text-white px-2.5 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 animate-pulse">
-                              <span className="w-2 h-2 rounded-full bg-white" />
-                              <span>REC {recordSecs}s / 20s</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <video
-                            controls
-                            src={recordedVideoUrl}
-                            className="w-full max-h-60 rounded-xl object-contain bg-black"
-                          />
-                          <span className="text-xs text-white/90 font-medium block">
-                            ✓ Video recording ready for PyTorch AI processing
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-center gap-2 pt-1">
-                        {!recordedVideoUrl ? (
-                          !isRecording ? (
-                            <button
-                              type="button"
-                              onClick={handleStartRecording}
-                              className="px-4 py-2 bg-[#DC3545] hover:bg-[#BB2D3B] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Play className="w-3.5 h-3.5" /> Start Recording
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={handleStopRecording}
-                              className="px-4 py-2 bg-white text-[#DC3545] rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Square className="w-3.5 h-3.5 fill-[#DC3545]" /> Stop Recording
-                            </button>
-                          )
+                        !isRecording ? (
+                          <button
+                            type="button"
+                            onClick={handleStartRecording}
+                            className="px-5 py-2.5 bg-[#DC3545] hover:bg-[#BB2D3B] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow"
+                          >
+                            <Play className="w-4 h-4" /> Start Recording
+                          </button>
                         ) : (
                           <button
                             type="button"
-                            onClick={handleRetakeVideo}
-                            className="px-3.5 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                            onClick={handleStopRecording}
+                            className="px-5 py-2.5 bg-white text-[#DC3545] rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" /> Retake Video
+                            <Square className="w-4 h-4 fill-[#DC3545]" /> Stop Recording
                           </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* File Upload View */}
-                  {videoMode === 'upload' && (
-                    <div className="space-y-3">
-                      <label className="border-2 border-dashed border-[#CBD5E1] hover:border-[#173B68] rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-[#F8FAFC] transition">
-                        <Upload className="w-8 h-8 text-[#173B68] mb-2" />
-                        <span className="text-xs font-bold text-[#171717]">Select MP4 or MOV video file</span>
-                        <span className="text-[11px] text-[#666666] mt-0.5">Maximum file size: 50 MB</span>
-                        <input
-                          type="file"
-                          accept="video/mp4,video/quicktime,video/webm"
-                          onChange={handleVideoUploadChange}
-                          className="hidden"
-                        />
-                      </label>
-
-                      {uploadedVideoUrl && (
-                        <div className="bg-black rounded-2xl p-2 max-h-56">
-                          <video controls src={uploadedVideoUrl} className="w-full max-h-52 object-contain" />
-                        </div>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleRetakeVideo}
+                          className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" /> Retake Video
+                        </button>
                       )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Optional Photos */}
-                  <div className="pt-2 border-t border-[#E2E8F0] space-y-2">
-                    <label className="text-xs font-semibold text-[#171717] flex items-center justify-between">
-                      <span>Optional Accident Photographs</span>
-                      <span className="text-[11px] text-[#666666]">Up to 4 images</span>
+                {/* File Upload View */}
+                {videoMode === 'upload' && (
+                  <div className="space-y-3">
+                    <label className="border-2 border-dashed border-[#CBD5E1] hover:border-[#173B68] rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-[#F8FAFC] transition">
+                      <Upload className="w-8 h-8 text-[#173B68] mb-2" />
+                      <span className="text-xs font-bold text-[#171717]">Select MP4 or MOV video file</span>
+                      <span className="text-[11px] text-[#666666] mt-0.5">Maximum file size: 50 MB</span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/quicktime,video/webm"
+                        onChange={handleVideoUploadChange}
+                        className="hidden"
+                      />
                     </label>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      multiple
-                      onChange={handlePhotoUploadChange}
-                      className="text-xs text-[#666666]"
-                    />
-                    {photoPreviews.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 pt-1">
-                        {photoPreviews.map((p, idx) => (
-                          <img
-                            key={idx}
-                            src={p}
-                            alt="Preview"
-                            className="aspect-video object-cover rounded-lg border border-[#CBD5E1]"
-                          />
-                        ))}
+
+                    {uploadedVideoUrl && (
+                      <div className="bg-black rounded-2xl p-2 max-h-56">
+                        <video controls src={uploadedVideoUrl} className="w-full max-h-52 object-contain" />
+                        <span className="text-xs text-white/90 text-center block py-1 font-medium">
+                          ✓ Video loaded for AI evaluation
+                        </span>
                       </div>
                     )}
                   </div>
+                )}
+
+                {/* Optional Quick Note */}
+                <div className="pt-2">
+                  <label className="text-xs font-semibold text-[#171717] block mb-1">
+                    Quick Scene Note (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="e.g. Near bus stop, white sedan collided with median (AI extracts other details)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#CBD5E1] text-xs focus:outline-none focus:border-[#173B68]"
+                  />
                 </div>
-              )}
+              </div>
 
-              {/* STEP 3: INCIDENT DETAILS */}
-              {step === 3 && (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#171717]">Step 3: Incident Details</h3>
-                    <p className="text-xs text-[#666666]">
-                      Describe the visible vehicles and injuries to help the hospital prepare clinical bed capacity.
-                    </p>
-                  </div>
+              {/* SECTION 3: AI GUARANTEE BANNER */}
+              <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#CBD5E1] text-xs space-y-1">
+                <span className="font-bold text-[#173B68] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D69E36]" />
+                  AI Does the Rest
+                </span>
+                <p className="text-[#666666] leading-relaxed">
+                  You don't have to fill in lengthy vehicle or injury forms. Our PyTorch ResNet-18 model scans evidence frames to confirm the collision, while Gemini AI estimates vehicles, hazards, and patient triage requirements directly for dispatchers.
+                </p>
+              </div>
 
-                  {/* Accident Type Pills */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#171717]">Accident Type</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {ACCIDENT_TYPES.map(t => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setAccidentType(t)}
-                          className={`p-2 rounded-xl text-xs font-medium border text-left transition cursor-pointer ${accidentType === t
-                              ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68] font-bold'
-                              : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                            }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Counts */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-[#171717] block mb-1">
-                        Vehicles Involved
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={vehiclesInvolved}
-                        onChange={e => setVehiclesInvolved(e.target.value === '' ? '' : parseInt(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-[#171717] block mb-1">
-                        Injured Persons Count
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="50"
-                        value={injuredCount}
-                        onChange={e => setInjuredCount(e.target.value === '' ? '' : parseInt(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#DC3545]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Relationship */}
-                  <div>
-                    <label className="text-xs font-semibold text-[#171717] block mb-1">
-                      Your Relationship to Accident
-                    </label>
-                    <select
-                      value={relationship}
-                      onChange={e => setRelationship(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-[#CBD5E1] text-xs bg-white focus:outline-none"
-                    >
-                      <option value="reporting as a witness">I am reporting as a witness</option>
-                      <option value="I am involved">I am involved in the accident</option>
-                      <option value="reporting on behalf of someone else">Reporting on behalf of a family member / friend</option>
-                    </select>
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="text-xs font-semibold text-[#171717] block mb-1">
-                      Contact Phone for Paramedic Coordination
-                    </label>
-                    <input
-                      type="tel"
-                      value={reporterPhone}
-                      onChange={e => setReporterPhone(e.target.value)}
-                      placeholder="+91-98401-00000"
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#CBD5E1] text-xs font-mono"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="text-xs font-semibold text-[#171717] block mb-1">
-                      Additional Scene Details / Landmarks
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder="e.g. Near bus stop, white sedan hit divider, two people receiving bystander aid"
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#CBD5E1] text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: REVIEW & SUBMIT */}
-              {step === 4 && (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#171717]">Step 4: Review Emergency Report</h3>
-                    <p className="text-xs text-[#666666]">
-                      Verify the captured evidence and location before triggering emergency dispatch alerts.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#CBD5E1] space-y-3 text-xs">
-                    <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                      <span className="text-[#666666]">Location:</span>
-                      <span className="font-bold text-[#171717] text-right">{locationName}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                      <span className="text-[#666666]">Coordinates:</span>
-                      <span className="font-mono text-[#171717]">{accidentLat.toFixed(5)}, {accidentLng.toFixed(5)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                      <span className="text-[#666666]">Accident Type:</span>
-                      <span className="font-bold text-[#171717]">{accidentType}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                      <span className="text-[#666666]">Vehicles / Injured:</span>
-                      <span className="font-bold text-[#171717]">{vehiclesInvolved || 1} Vehicle(s) · {injuredCount || 1} Injured</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                      <span className="text-[#666666]">Reporter Phone:</span>
-                      <span className="font-mono font-bold text-[#173B68]">{reporterPhone}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-[#666666]">Video Evidence:</span>
-                      <span className="font-bold text-[#198754]">
-                        {recordedBlob || uploadedVideoFile ? '✓ Video Attached (PyTorch ResNet-18 will analyze)' : 'No Video Attached (Manual Review)'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {submitFeedback && (
-                    <div className="p-3 rounded-xl bg-[#EBF2FA] border border-[#356FA5]/30 text-xs font-semibold text-[#173B68] flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4 animate-spin text-[#173B68]" />
-                      <span>{submitFeedback}</span>
-                    </div>
-                  )}
+              {/* Submission Feedback Message */}
+              {submitFeedback && (
+                <div className="p-3.5 rounded-xl bg-[#EBF2FA] border border-[#356FA5]/30 text-xs font-semibold text-[#173B68] flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#173B68]" />
+                  <span>{submitFeedback}</span>
                 </div>
               )}
             </div>
 
-            {/* Stepper Footer Controls */}
-            <div className="bg-[#F8FAFC] p-5 border-t border-[#E2E8F0] flex items-center justify-between">
-              {step > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setStep((s => (s - 1) as any))}
-                  disabled={submitting}
-                  className="px-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#666666] hover:bg-white transition cursor-pointer"
-                >
-                  Back
-                </button>
-              ) : (
-                <div />
-              )}
+            {/* Modal Footer */}
+            <div className="bg-[#F8FAFC] p-5 border-t border-[#E2E8F0] flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  stopCameraStream()
+                  setReportingModalOpen(false)
+                }}
+                disabled={submitting}
+                className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#666666] hover:bg-white transition cursor-pointer"
+              >
+                Cancel
+              </button>
 
-              {step < 4 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (step === 2) stopCameraStream()
-                    setStep((s => (s + 1) as any))
-                  }}
-                  className="px-6 py-2.5 rounded-xl bg-[#173B68] hover:bg-[#122E52] text-white text-xs font-bold shadow transition cursor-pointer"
-                >
-                  Continue to Next Step →
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmitReport}
-                  disabled={submitting}
-                  className="px-6 py-2.5 rounded-xl bg-[#DC3545] hover:bg-[#BB2D3B] text-white text-xs font-extrabold shadow-lg transition flex items-center gap-2 cursor-pointer"
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>{submitting ? 'Submitting Report…' : 'Submit Emergency Report'}</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleSubmitReport}
+                disabled={submitting}
+                className="flex-1 max-w-sm px-6 py-3 rounded-xl bg-[#DC3545] hover:bg-[#BB2D3B] text-white text-xs font-extrabold shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>{submitting ? 'Transmitting to Dispatcher…' : 'Transmit Emergency Report (AI Assisted)'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1696,7 +1485,7 @@ export default function CitizenDashboard() {
                 type="button"
                 onClick={() => {
                   setCall108ModalOpen(false)
-                  openReportingWizard()
+                  openReportingModal()
                 }}
                 className="w-full py-2.5 bg-[#EBF2FA] hover:bg-[#DBEAFE] text-[#173B68] rounded-xl font-bold text-xs transition cursor-pointer"
               >

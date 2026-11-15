@@ -177,8 +177,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setMode('auto')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${mode !== 'offline'
-                  ? 'bg-[#173B68] text-white border-[#173B68]'
-                  : 'bg-white text-[#666666] border-[#CBD5E1] hover:bg-[#F7F8FA]'
+                ? 'bg-[#173B68] text-white border-[#173B68]'
+                : 'bg-white text-[#666666] border-[#CBD5E1] hover:bg-[#F7F8FA]'
                 }`}
             >
               OpenStreetMap (Auto)
@@ -186,8 +186,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setMode('offline')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${mode === 'offline'
-                  ? 'bg-[#173B68] text-white border-[#173B68]'
-                  : 'bg-white text-[#666666] border-[#CBD5E1] hover:bg-[#F7F8FA]'
+                ? 'bg-[#173B68] text-white border-[#173B68]'
+                : 'bg-white text-[#666666] border-[#CBD5E1] hover:bg-[#F7F8FA]'
                 }`}
             >
               Offline SVG Cartography
