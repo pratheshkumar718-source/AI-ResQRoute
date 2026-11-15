@@ -15,9 +15,14 @@ import logging
 import os
 from pathlib import Path
 from typing import List, Optional, Dict, Any
+from dotenv import load_dotenv
 import httpx
 
 logger = logging.getLogger("resqroute.gemini")
+
+BASE = Path(__file__).resolve().parent.parent
+load_dotenv(BASE / ".env")
+load_dotenv(BASE.parent / ".env")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
