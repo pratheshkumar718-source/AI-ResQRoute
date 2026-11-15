@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Volume2, VolumeX, BellRing, BellOff, ShieldCheck, Activity, RefreshCw } from 'lucide-react'
+import { Volume2, VolumeX, BellRing, BellOff, ShieldCheck, Activity, RefreshCw, User, Mail, Phone, Shield } from 'lucide-react'
 import { useApp } from '../lib/store'
 import { Card, Btn, Alert, useAct } from '../components/ui'
 import { api } from '../lib/api'
@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [health, setHealth] = useState<any>(null)
   const [muted, setMuted] = useState(sound.isMuted)
   const [ringing, setRinging] = useState(false)
+
+  const isCitizen = user?.role === 'citizen'
 
   useEffect(() => {
     api.get('/api/health').then(setHealth).catch(() => setHealth(null))
@@ -38,6 +40,82 @@ export default function SettingsPage() {
     }
   }
 
+  /* ─────────────── Citizen-only simplified view ─────────────── */
+  if (isCitizen) {
+    return (
+      <div className="space-y-6 max-w-3xl text-[#171717]">
+        <div className="pb-2 border-b border-[#E2E8F0]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Account & Preferences</h1>
+          <p className="text-xs text-[#666666] mt-0.5">
+            View your profile details and configure emergency notification preferences.
+          </p>
+        </div>
+
+        {/* Profile Card */}
+        <Card title="Your Profile">
+          <ul className="text-xs sm:text-sm space-y-3">
+            <li className="flex items-center justify-between py-1.5 border-b border-[#E2E8F0]">
+              <span className="flex items-center gap-2 text-[#666666]">
+                <User className="w-3.5 h-3.5" /> Full Name
+              </span>
+              <b className="text-[#171717]">{user?.name || '—'}</b>
+            </li>
+            <li className="flex items-center justify-between py-1.5 border-b border-[#E2E8F0]">
+              <span className="flex items-center gap-2 text-[#666666]">
+                <Shield className="w-3.5 h-3.5" /> Account Role
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F7F8FA] text-[#666666] border border-[#E2E8F0] uppercase tracking-wider">
+                Citizen Responder
+              </span>
+            </li>
+            {user?.email && (
+              <li className="flex items-center justify-between py-1.5 border-b border-[#E2E8F0]">
+                <span className="flex items-center gap-2 text-[#666666]">
+                  <Mail className="w-3.5 h-3.5" /> Email
+                </span>
+                <b className="text-[#171717]">{user.email}</b>
+              </li>
+            )}
+            {user?.phone && (
+              <li className="flex items-center justify-between py-1.5 border-b border-[#E2E8F0]">
+                <span className="flex items-center gap-2 text-[#666666]">
+                  <Phone className="w-3.5 h-3.5" /> Phone
+                </span>
+                <b className="font-mono text-[#173B68]">{user.phone}</b>
+              </li>
+            )}
+            <li className="flex items-center justify-between py-1.5">
+              <span className="flex items-center gap-2 text-[#666666]">
+                <Activity className="w-3.5 h-3.5" /> Connection Status
+              </span>
+              <span className={`font-mono text-xs font-bold ${connected ? 'text-[#198754]' : 'text-[#D69E36]'}`}>
+                {connected ? '● Connected' : '○ Reconnecting…'}
+              </span>
+            </li>
+          </ul>
+        </Card>
+
+        {/* Notification Preferences */}
+        <Card title="Emergency Notification Sound">
+          <p className="text-xs text-[#666666] mb-3 leading-relaxed">
+            Control the audible emergency alert tone that sounds when an ambulance dispatch update or critical notification arrives.
+          </p>
+          <div className="flex flex-wrap gap-2.5">
+            <Btn v={muted ? 'ghost' : 'primary'} onClick={handleToggleMute}>
+              {muted ? <VolumeX className="w-4 h-4 text-[#DC3545]" /> : <Volume2 className="w-4 h-4" />}
+              <span>{muted ? 'Notifications Muted' : 'Notifications Active'}</span>
+            </Btn>
+            <Btn v={ringing ? 'danger' : 'ghost'} onClick={handleTestRing} disabled={muted}>
+              {ringing ? <BellOff className="w-4 h-4" /> : <BellRing className="w-4 h-4 text-[#D69E36]" />}
+              <span>{ringing ? 'Stop Test' : 'Test Alert Sound'}</span>
+            </Btn>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  /* ─────────────── Full admin / staff view (unchanged) ─────────────── */
   return (
     <div className="space-y-6 max-w-4xl text-[#171717]">
       <div className="pb-2 border-b border-[#E2E8F0]">

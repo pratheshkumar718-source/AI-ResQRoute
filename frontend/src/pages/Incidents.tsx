@@ -374,13 +374,12 @@ export default function Incidents() {
                             <span className="w-2 h-2 rounded-full bg-[#173B68]" />
                             <span className="text-xs font-bold text-[#171717]">PyTorch ResNet-18 Video Inference</span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                            aiData.category?.toLowerCase().includes('detected') && !aiData.category?.toLowerCase().includes('no')
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${aiData.category?.toLowerCase().includes('detected') && !aiData.category?.toLowerCase().includes('no')
                               ? 'bg-[#F0F9F4] text-[#166534] border border-[#198754]/30'
                               : aiData.category?.toLowerCase().includes('inconclusive')
-                              ? 'bg-[#FDF9F0] text-[#855B14] border border-[#D69E36]/30'
-                              : 'bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]'
-                          }`}>
+                                ? 'bg-[#FDF9F0] text-[#855B14] border border-[#D69E36]/30'
+                                : 'bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]'
+                            }`}>
                             {aiData.category || 'AI Analysis Completed'}
                           </span>
                         </div>
@@ -395,9 +394,8 @@ export default function Incidents() {
                             </div>
                             <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full ${
-                                  aiData.confidence >= 0.8 ? 'bg-[#DC3545]' : aiData.confidence >= 0.5 ? 'bg-[#D69E36]' : 'bg-[#198754]'
-                                }`}
+                                className={`h-full rounded-full ${aiData.confidence >= 0.8 ? 'bg-[#DC3545]' : aiData.confidence >= 0.5 ? 'bg-[#D69E36]' : 'bg-[#198754]'
+                                  }`}
                                 style={{ width: `${Math.min(100, Math.max(5, aiData.confidence * 100))}%` }}
                               />
                             </div>

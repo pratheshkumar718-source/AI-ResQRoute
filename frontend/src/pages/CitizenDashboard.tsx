@@ -513,11 +513,10 @@ export default function CitizenDashboard() {
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E2E8F0] scrollbar-none">
         <button
           onClick={() => setActiveTab('tracking')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${
-            activeTab === 'tracking'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${activeTab === 'tracking'
               ? 'bg-[#173B68] text-white shadow-sm'
               : 'bg-white text-[#666666] hover:bg-[#F8FAFC] border border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <Truck className="w-4 h-4" />
           <span>Active Response & Tracking</span>
@@ -528,11 +527,10 @@ export default function CitizenDashboard() {
 
         <button
           onClick={() => setActiveTab('hospitals')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${
-            activeTab === 'hospitals'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${activeTab === 'hospitals'
               ? 'bg-[#173B68] text-white shadow-sm'
               : 'bg-white text-[#666666] hover:bg-[#F8FAFC] border border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <Building2 className="w-4 h-4" />
           <span>Nearby Hospitals ({sortedHospitals.length})</span>
@@ -540,11 +538,10 @@ export default function CitizenDashboard() {
 
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${
-            activeTab === 'reports'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${activeTab === 'reports'
               ? 'bg-[#173B68] text-white shadow-sm'
               : 'bg-white text-[#666666] hover:bg-[#F8FAFC] border border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <Clock className="w-4 h-4" />
           <span>My Reports ({myReports.length})</span>
@@ -552,11 +549,10 @@ export default function CitizenDashboard() {
 
         <button
           onClick={() => setActiveTab('contacts')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${
-            activeTab === 'contacts'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${activeTab === 'contacts'
               ? 'bg-[#173B68] text-white shadow-sm'
               : 'bg-white text-[#666666] hover:bg-[#F8FAFC] border border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <Users className="w-4 h-4" />
           <span>Emergency Contacts ({contacts.length})</span>
@@ -564,11 +560,10 @@ export default function CitizenDashboard() {
 
         <button
           onClick={() => setActiveTab('guide')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${
-            activeTab === 'guide'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer ${activeTab === 'guide'
               ? 'bg-[#173B68] text-white shadow-sm'
               : 'bg-white text-[#666666] hover:bg-[#F8FAFC] border border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <HeartHandshake className="w-4 h-4" />
           <span>Good Samaritan Rights & First Aid</span>
@@ -645,13 +640,12 @@ export default function CitizenDashboard() {
                     return (
                       <div
                         key={s.key}
-                        className={`p-3 rounded-xl border text-xs transition ${
-                          isCurrent
+                        className={`p-3 rounded-xl border text-xs transition ${isCurrent
                             ? 'border-[#198754] bg-[#F0F9F4] shadow-sm ring-1 ring-[#198754]'
                             : isDone
-                            ? 'border-[#CBD5E1] bg-[#F8FAFC]'
-                            : 'border-[#E2E8F0] bg-white opacity-50'
-                        }`}
+                              ? 'border-[#CBD5E1] bg-[#F8FAFC]'
+                              : 'border-[#E2E8F0] bg-white opacity-50'
+                          }`}
                       >
                         <div className="flex items-center gap-1.5 mb-1">
                           {isDone ? (
@@ -674,90 +668,90 @@ export default function CitizenDashboard() {
 
               {/* Telemetry Details */}
               <div className="grid md:grid-cols-2 gap-6">
-                  {/* Ambulance & Driver Card */}
-                  <div className="bg-white p-5 rounded-2xl border border-[#CBD5E1] shadow-sm space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#173B68] flex items-center gap-1.5">
-                      <Truck className="w-4 h-4" />
-                      <span>Paramedic Unit Telemetry</span>
-                    </h4>
-                    {asg ? (
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                          <span className="text-[#666666]">Ambulance Unit</span>
-                          <span className="font-bold text-[#173B68]">{asg.ambulance_code}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                          <span className="text-[#666666]">Paramedic Pilot</span>
-                          <span className="font-semibold text-[#171717]">{asg.driver_name}</span>
-                        </div>
-                        {asg.scene_route && (
-                          <>
-                            <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                              <span className="text-[#666666]">Road Distance</span>
-                              <span className="font-mono font-bold text-[#171717]">{asg.scene_route.distance_km} km</span>
-                            </div>
-                            <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                              <span className="text-[#666666]">Estimated Arrival ETA</span>
-                              <span className="font-mono font-bold text-[#DC3545]">{asg.scene_route.eta_min} min</span>
-                            </div>
-                          </>
-                        )}
-                        <div className="flex justify-between py-1">
-                          <span className="text-[#666666]">Current Status</span>
-                          <Badge s={asg.status} />
-                        </div>
-                        {asg.driver_phone && (
-                          <a
-                            href={`tel:${asg.driver_phone}`}
-                            className="mt-2 w-full flex items-center justify-center gap-2 py-2 bg-[#F0F9F4] text-[#166534] border border-[#198754]/30 rounded-xl font-bold hover:bg-[#DCFCE7] transition"
-                          >
-                            <PhoneCall className="w-3.5 h-3.5" />
-                            <span>Call Paramedic ({asg.driver_phone})</span>
-                          </a>
-                        )}
+                {/* Ambulance & Driver Card */}
+                <div className="bg-white p-5 rounded-2xl border border-[#CBD5E1] shadow-sm space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#173B68] flex items-center gap-1.5">
+                    <Truck className="w-4 h-4" />
+                    <span>Paramedic Unit Telemetry</span>
+                  </h4>
+                  {asg ? (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                        <span className="text-[#666666]">Ambulance Unit</span>
+                        <span className="font-bold text-[#173B68]">{asg.ambulance_code}</span>
                       </div>
-                    ) : (
-                      <p className="text-xs text-[#666666] italic">Chief Dispatcher is allocating the nearest eligible ambulance unit…</p>
-                    )}
-                  </div>
+                      <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                        <span className="text-[#666666]">Paramedic Pilot</span>
+                        <span className="font-semibold text-[#171717]">{asg.driver_name}</span>
+                      </div>
+                      {asg.scene_route && (
+                        <>
+                          <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                            <span className="text-[#666666]">Road Distance</span>
+                            <span className="font-mono font-bold text-[#171717]">{asg.scene_route.distance_km} km</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                            <span className="text-[#666666]">Estimated Arrival ETA</span>
+                            <span className="font-mono font-bold text-[#DC3545]">{asg.scene_route.eta_min} min</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between py-1">
+                        <span className="text-[#666666]">Current Status</span>
+                        <Badge s={asg.status} />
+                      </div>
+                      {asg.driver_phone && (
+                        <a
+                          href={`tel:${asg.driver_phone}`}
+                          className="mt-2 w-full flex items-center justify-center gap-2 py-2 bg-[#F0F9F4] text-[#166534] border border-[#198754]/30 rounded-xl font-bold hover:bg-[#DCFCE7] transition"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          <span>Call Paramedic ({asg.driver_phone})</span>
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#666666] italic">Chief Dispatcher is allocating the nearest eligible ambulance unit…</p>
+                  )}
+                </div>
 
-                  {/* Designated Hospital Card */}
-                  <div className="bg-white p-5 rounded-2xl border border-[#CBD5E1] shadow-sm space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#198754] flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4" />
-                      <span>Designated Emergency Hospital</span>
-                    </h4>
-                    {activeIncident.selected_hospital_name || asg?.hospital_name ? (
-                      <div className="space-y-2 text-xs">
-                        <div className="font-bold text-sm text-[#171717]">
-                          {activeIncident.selected_hospital_name || asg?.hospital_name}
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                          <span className="text-[#666666]">Available Emergency Beds</span>
-                          <span className="font-bold text-[#198754]">
-                            {activeIncident.selected_hospital_beds ?? asg?.hospital_available_beds ?? 'Available'} beds
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
-                          <span className="text-[#666666]">ICU Capacity</span>
-                          <span className="font-bold text-[#173B68]">
-                            {activeIncident.selected_hospital_icu ?? asg?.hospital_icu_beds ?? '2'} ICU beds ready
-                          </span>
-                        </div>
-                        {(activeIncident.selected_hospital_phone || asg?.hospital_phone) && (
-                          <a
-                            href={`tel:${activeIncident.selected_hospital_phone || asg?.hospital_phone}`}
-                            className="mt-2 w-full flex items-center justify-center gap-2 py-2 bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 rounded-xl font-bold hover:bg-[#DBEAFE] transition"
-                          >
-                            <PhoneCall className="w-3.5 h-3.5" />
-                            <span>Call Hospital Emergency Desk</span>
-                          </a>
-                        )}
+                {/* Designated Hospital Card */}
+                <div className="bg-white p-5 rounded-2xl border border-[#CBD5E1] shadow-sm space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#198754] flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4" />
+                    <span>Designated Emergency Hospital</span>
+                  </h4>
+                  {activeIncident.selected_hospital_name || asg?.hospital_name ? (
+                    <div className="space-y-2 text-xs">
+                      <div className="font-bold text-sm text-[#171717]">
+                        {activeIncident.selected_hospital_name || asg?.hospital_name}
                       </div>
-                    ) : (
-                      <p className="text-xs text-[#666666] italic">Nearest hospital triage matching in progress…</p>
-                    )}
-                  </div>
+                      <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                        <span className="text-[#666666]">Available Emergency Beds</span>
+                        <span className="font-bold text-[#198754]">
+                          {activeIncident.selected_hospital_beds ?? asg?.hospital_available_beds ?? 'Available'} beds
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                        <span className="text-[#666666]">ICU Capacity</span>
+                        <span className="font-bold text-[#173B68]">
+                          {activeIncident.selected_hospital_icu ?? asg?.hospital_icu_beds ?? '2'} ICU beds ready
+                        </span>
+                      </div>
+                      {(activeIncident.selected_hospital_phone || asg?.hospital_phone) && (
+                        <a
+                          href={`tel:${activeIncident.selected_hospital_phone || asg?.hospital_phone}`}
+                          className="mt-2 w-full flex items-center justify-center gap-2 py-2 bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30 rounded-xl font-bold hover:bg-[#DBEAFE] transition"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          <span>Call Hospital Emergency Desk</span>
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#666666] italic">Nearest hospital triage matching in progress…</p>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -1022,9 +1016,8 @@ export default function CitizenDashboard() {
               {contacts.map(c => (
                 <div
                   key={c.id}
-                  className={`bg-white rounded-2xl p-5 border shadow-sm flex flex-col justify-between transition ${
-                    c.is_primary ? 'border-[#173B68] ring-1 ring-[#173B68]' : 'border-[#CBD5E1]'
-                  }`}
+                  className={`bg-white rounded-2xl p-5 border shadow-sm flex flex-col justify-between transition ${c.is_primary ? 'border-[#173B68] ring-1 ring-[#173B68]' : 'border-[#CBD5E1]'
+                    }`}
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
@@ -1189,13 +1182,12 @@ export default function CitizenDashboard() {
                 { s: 4, label: 'Review & Submit' }
               ].map(st => (
                 <div key={st.s} className="flex items-center gap-1.5">
-                  <span className={`w-5 h-5 rounded-full font-bold grid place-items-center text-[11px] ${
-                    step === st.s
+                  <span className={`w-5 h-5 rounded-full font-bold grid place-items-center text-[11px] ${step === st.s
                       ? 'bg-[#173B68] text-white'
                       : step > st.s
-                      ? 'bg-[#198754] text-white'
-                      : 'bg-[#E2E8F0] text-[#666666]'
-                  }`}>
+                        ? 'bg-[#198754] text-white'
+                        : 'bg-[#E2E8F0] text-[#666666]'
+                    }`}>
                     {step > st.s ? '✓' : st.s}
                   </span>
                   <span className={`font-semibold hidden sm:inline ${step === st.s ? 'text-[#173B68]' : 'text-[#666666]'}`}>
@@ -1233,22 +1225,20 @@ export default function CitizenDashboard() {
                             setLocationName(citizenGps.address)
                           }
                         }}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                          isCurrentLocation === 'yes'
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${isCurrentLocation === 'yes'
                             ? 'bg-[#198754] text-white border-[#198754]'
                             : 'bg-white text-[#166534] border-[#198754]/40 hover:bg-[#DCFCE7]'
-                        }`}
+                          }`}
                       >
                         ✓ Yes, at my location
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsCurrentLocation('no')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                          isCurrentLocation === 'no'
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${isCurrentLocation === 'no'
                             ? 'bg-[#173B68] text-white border-[#173B68]'
                             : 'bg-white text-[#173B68] border-[#356FA5]/40 hover:bg-[#EBF2FA]'
-                        }`}
+                          }`}
                       >
                         ✎ No, adjust location
                       </button>
@@ -1325,11 +1315,10 @@ export default function CitizenDashboard() {
                         setVideoMode('record')
                         startCamera()
                       }}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
-                        videoMode === 'record'
+                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${videoMode === 'record'
                           ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68]'
                           : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                      }`}
+                        }`}
                     >
                       <Camera className="w-5 h-5 text-[#173B68]" />
                       <span>Record Video (Camera)</span>
@@ -1341,11 +1330,10 @@ export default function CitizenDashboard() {
                         stopCameraStream()
                         setVideoMode('upload')
                       }}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
-                        videoMode === 'upload'
+                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${videoMode === 'upload'
                           ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68]'
                           : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                      }`}
+                        }`}
                     >
                       <Upload className="w-5 h-5 text-[#173B68]" />
                       <span>Upload Video File (MP4/MOV)</span>
@@ -1487,11 +1475,10 @@ export default function CitizenDashboard() {
                           key={t}
                           type="button"
                           onClick={() => setAccidentType(t)}
-                          className={`p-2 rounded-xl text-xs font-medium border text-left transition cursor-pointer ${
-                            accidentType === t
+                          className={`p-2 rounded-xl text-xs font-medium border text-left transition cursor-pointer ${accidentType === t
                               ? 'border-[#173B68] bg-[#EBF2FA] text-[#173B68] font-bold'
                               : 'border-[#CBD5E1] bg-white text-[#666666] hover:bg-[#F8FAFC]'
-                          }`}
+                            }`}
                         >
                           {t}
                         </button>
