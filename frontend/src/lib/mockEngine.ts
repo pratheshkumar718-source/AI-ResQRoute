@@ -132,6 +132,14 @@ export function getAllUsers() {
   return [...DEFAULT_USERS, ...custom]
 }
 
+export function getAuthedUser(): any {
+  try {
+    const cur = localStorage.getItem('resq_current_user')
+    if (cur) return JSON.parse(cur)
+  } catch { }
+  return { id: 3, username: 'citizen1', name: 'Citizen Responder Priya Raman', role: 'citizen', phone: '+91-98401-23456' }
+}
+
 export function registerMockUser(data: {
   username: string
   password: string
@@ -236,7 +244,7 @@ export function getMockIncidents(): Incident[] {
   return list
 }
 
-export async function handleMockRequest(method: string, url: string, body?: any, _form?: FormData): Promise<any> {
+export async function handleMockRequest(method: string, url: string, body?: any, form?: FormData): Promise<any> {
   const path = url.replace(/^[a-zA-Z]+:\/\/[^/]+/, '').split('?')[0]
 
   // Login
@@ -846,7 +854,11 @@ export async function handleMockRequest(method: string, url: string, body?: any,
       hospital_warning: null,
       created_at: new Date().toISOString(),
       completed_at: null,
-      evidence: [],
+      evidence: hasVideo ? [
+        { id: 1, url: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80', seq: 1, captured_at: new Date().toISOString() },
+        { id: 2, url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80', seq: 2, captured_at: new Date().toISOString() },
+        { id: 3, url: 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=600&q=80', seq: 3, captured_at: new Date().toISOString() },
+      ] : [],
       assignments: [
         {
           id: Date.now(),
