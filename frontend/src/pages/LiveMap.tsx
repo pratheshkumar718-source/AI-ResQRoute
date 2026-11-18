@@ -31,10 +31,6 @@ export default function LiveMap() {
             Real-time tracking of ambulance locations, collision coordinates, and receiving emergency hospitals on local street networks.
           </p>
         </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#198754] bg-[#F0F9F4] border border-[#198754]/30 px-3 py-1 rounded-lg font-mono self-start sm:self-auto">
-          <span className="w-2 h-2 rounded-full bg-[#198754] animate-pulse"></span>
-          <span>LIVE STREET RADAR ACTIVE</span>
-        </div>
       </div>
 
       <div className="grid xl:grid-cols-4 gap-6">

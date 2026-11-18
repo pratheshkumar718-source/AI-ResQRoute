@@ -198,8 +198,8 @@ function Active({ inc }: { inc: Incident }) {
                 <div className="flex justify-between items-center text-[10px] pt-1 border-t border-[#E2E8F0]">
                   <span className="text-[#666666]">Navigation Mode</span>
                   <span className={`px-2 py-0.5 rounded font-bold ${(route as any)?.simulated
-                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                    : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
                     {(route as any)?.simulated ? '⚡ Simulated Fallback Route' : '🛣️ Real Road Network Route'}
                   </span>
@@ -345,8 +345,8 @@ function Active({ inc }: { inc: Incident }) {
                           <div className="flex justify-between items-center text-[10px]">
                             <span>Routing Engine:</span>
                             <span className={`px-2 py-0.5 rounded font-bold ${(a.hospital_route as any)?.simulated
-                                ? 'bg-amber-100 text-amber-900'
-                                : 'bg-emerald-100 text-emerald-900'
+                              ? 'bg-amber-100 text-amber-900'
+                              : 'bg-emerald-100 text-emerald-900'
                               }`}>
                               {(a.hospital_route as any)?.simulated ? '⚡ Simulated Fallback' : '🛣️ Real Road Network'}
                             </span>
@@ -686,8 +686,8 @@ export default function Driver() {
               onClick={toggleGps}
               title={gpsActive ? 'Disable live device GPS tracking' : 'Enable live device GPS tracking (Geolocation API)'}
               className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm ${gpsActive
-                  ? 'bg-[#EBF2FA] text-[#173B68] border border-[#173B68]/40 hover:bg-[#DDEBFA]'
-                  : 'bg-white text-[#666666] border border-[#CBD5E1] hover:bg-[#F7F8FA]'
+                ? 'bg-[#EBF2FA] text-[#173B68] border border-[#173B68]/40 hover:bg-[#DDEBFA]'
+                : 'bg-white text-[#666666] border border-[#CBD5E1] hover:bg-[#F7F8FA]'
                 }`}
             >
               <Radio className={`w-3.5 h-3.5 ${gpsActive ? 'text-[#173B68] animate-pulse' : 'text-[#94A3B8]'}`} />

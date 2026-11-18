@@ -822,7 +822,7 @@ export default function CitizenDashboard() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-lg font-bold text-[#171717]">Emergency Hospital Capacity Radar</h2>
+              <h2 className="text-lg font-bold text-[#171717]">Emergency Hospital Bed Capacity</h2>
               <p className="text-xs text-[#666666]">
                 Sorted by real driving proximity from your current position ({citizenGps?.address || 'Chennai Central'}).
               </p>

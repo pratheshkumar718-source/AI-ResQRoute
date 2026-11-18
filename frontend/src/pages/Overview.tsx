@@ -26,7 +26,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">Operations Command Grid</h1>
             <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg bg-[#EBF2FA] text-[#173B68] border border-[#356FA5]/30">
-              SYNCHRONIZED RADAR
+              SYNCHRONIZED GRID
             </span>
           </div>
           <p className="text-xs text-[#666666] mt-0.5">
@@ -77,7 +77,7 @@ export default function Overview({ go }: { go: (p: string) => void }) {
       <div className="grid lg:grid-cols-5 gap-6">
         <Card
           className="lg:col-span-3"
-          title="Live Emergency Map Radar"
+          title="Live Emergency Tactical Map"
           right={
             <button
               className="text-xs font-semibold text-[#173B68] hover:text-[#102A4C] flex items-center gap-1 cursor-pointer"

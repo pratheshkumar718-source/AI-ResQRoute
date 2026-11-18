@@ -244,20 +244,18 @@ function Shell() {
           <div className="flex items-center gap-3">
             {/* Live Telemetry Ping */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-xs font-mono">
-              {backendConnected || connected ? (
+              {connected ? (
                 <>
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#198754] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#198754]" />
                   </span>
-                  <span className="text-[#198754] font-medium">🟢 Backend Connected ({connected ? 'Live WS' : 'REST Online'})</span>
+                  <span className="text-[#198754] font-medium">WS Live Telemetry</span>
                 </>
               ) : (
                 <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0284C7]" />
-                  </span>
-                  <span className="text-[#0284C7] font-medium">⚡ Resilient Engine Active</span>
+                  <span className="inline-flex rounded-full h-2 w-2 bg-[#D69E36] animate-pulse" />
+                  <span className="text-[#D69E36]">Connecting…</span>
                 </>
               )}
             </div>
