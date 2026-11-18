@@ -11,8 +11,14 @@ load_dotenv(BASE.parent / ".env")
 
 DATA = pathlib.Path(os.getenv("RESQ_DATA_DIR", str(BASE / "data")))
 EVIDENCE = DATA / "evidence"
-DATA.mkdir(parents=True, exist_ok=True)
-EVIDENCE.mkdir(parents=True, exist_ok=True)
+LOGS_DIR = DATA / "logs"
+FALSE_ALARMS_DIR = LOGS_DIR / "false_alarms"
+VERIFIED_DIR = LOGS_DIR / "verified_accidents"
+HANDOVER_DIR = LOGS_DIR / "handover_records"
+AUDIT_DIR = LOGS_DIR / "system_audit"
+
+for d in [DATA, EVIDENCE, LOGS_DIR, FALSE_ALARMS_DIR, VERIFIED_DIR, HANDOVER_DIR, AUDIT_DIR]:
+    d.mkdir(parents=True, exist_ok=True)
 
 # Supabase PostgreSQL with automated resilience and SQLite fallback
 def clean_database_url(url: str | None) -> str | None:

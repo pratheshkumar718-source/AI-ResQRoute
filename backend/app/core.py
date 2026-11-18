@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import WebSocket
 from sqlalchemy.orm import Session
 from . import routing
-from .db import SessionLocal
+from .db import SessionLocal, LOGS_DIR, FALSE_ALARMS_DIR, VERIFIED_DIR, HANDOVER_DIR, AUDIT_DIR
 from .models import *
 
 ACTIVE = ["offered", "en_route", "on_scene", "transporting", "at_hospital"]
@@ -284,12 +284,40 @@ def recommend_hospitals(db: Session, inc: Incident):
 
 
 # ---------- simulation ----------
+def write_structured_log(category: str, filename: str, data: dict):
+    try:
+        dir_map = {
+            "false_alarms": FALSE_ALARMS_DIR,
+            "verified": VERIFIED_DIR,
+            "handover": HANDOVER_DIR,
+            "audit": AUDIT_DIR
+        }
+        target_dir = dir_map.get(category, AUDIT_DIR)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        file_path = target_dir / filename
+        file_path.write_text(json.dumps(data, indent=2))
+    except Exception as e:
+        print(f"[Logging] Failed to write file log: {e}")
+
+
 def finish_leg(db: Session, a: Assignment, leg: str):
     route = j(a.scene_route if leg == "scene" else a.hospital_route)
     amb = db.get(Ambulance, a.ambulance_id)
-    amb.lat, amb.lng = route["coords"][-1]
+    if route and route.get("coords") and len(route["coords"]) > 0:
+        amb.lat, amb.lng = route["coords"][-1]
     a.remaining_eta = 0.0
     a.leg_complete = True
+    emit({
+        "type": "tracking",
+        "incident_id": a.incident_id,
+        "assignment_id": a.id,
+        "ambulance_id": amb.id,
+        "lat": amb.lat,
+        "lng": amb.lng,
+        "remaining_eta": 0.0,
+        "leg": leg,
+        "simulated": False
+    })
 
 
 def start_leg(db: Session, a: Assignment, leg: str):

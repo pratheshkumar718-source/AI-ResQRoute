@@ -282,6 +282,26 @@ export function getMockIncidents(): Incident[] {
   return list
 }
 
+export function logStructuredMock(category: string, folder: string, tags: string[], detail: string, data: any) {
+  const audit = getStored<any[]>(KEY_AUDIT, [])
+  const entry = {
+    id: Date.now() + Math.random(),
+    ts: new Date().toISOString(),
+    category,
+    folder,
+    tags,
+    detail,
+    data,
+    actor: getAuthedUser()?.name || 'Paramedic',
+    action: category,
+    entity: 'incident',
+    entity_id: data?.incident_id || null,
+  }
+  audit.unshift(entry)
+  setStored(KEY_AUDIT, audit)
+  return entry
+}
+
 export async function handleMockRequest(method: string, url: string, body?: any, form?: FormData): Promise<any> {
   const path = url.replace(/^[a-zA-Z]+:\/\/[^/]+/, '').split('?')[0]
 
@@ -781,17 +801,28 @@ export async function handleMockRequest(method: string, url: string, body?: any,
   }
 
   // History and Audit trails
-  if (path === '/api/history' && method === 'GET') {
-    const audit = [
-      { id: 1, ts: new Date().toISOString(), actor: 'admin', action: 'system_boot', entity: 'core', entity_id: '1', detail: 'Operations grid initialized with PyTorch AI Surveillance' },
-      { id: 2, ts: new Date().toISOString(), actor: 'ai_model', action: 'surveillance_standby', entity: 'camera', entity_id: '1', detail: 'Optical accident heuristics active (resqroute_accident_model.pt)' },
-      { id: 3, ts: new Date().toISOString(), actor: 'police1', action: 'corridor_readiness', entity: 'traffic', entity_id: '103', detail: 'Green Corridor priority preemption synchronized' },
+  if ((path === '/api/history' || path === '/api/logs/folders') && method === 'GET') {
+    const rawAudit = getStored<any[]>(KEY_AUDIT, [])
+    const defaultAudit = [
+      { id: 1, ts: new Date(Date.now() - 3600000).toISOString(), actor: 'Chief Dispatcher', action: 'system_boot', entity: 'core', entity_id: '1', detail: 'Operations grid initialized with PyTorch AI Surveillance', category: 'audit', folder: '📁 System Audit Trail', tags: ['[SYSTEM]', '[BOOT]'] },
+      { id: 2, ts: new Date(Date.now() - 1800000).toISOString(), actor: 'PyTorch AI', action: 'surveillance_standby', entity: 'camera', entity_id: '1', detail: 'Optical accident heuristics active (resqroute_accident_model.pt)', category: 'audit', folder: '📁 System Audit Trail', tags: ['[AI_MODEL]', '[SURVEILLANCE]'] },
+      { id: 3, ts: new Date(Date.now() - 900000).toISOString(), actor: 'Inspector Vikram Singh', action: 'corridor_readiness', entity: 'traffic', entity_id: '103', detail: 'Green Corridor priority preemption synchronized', category: 'audit', folder: '📁 System Audit Trail', tags: ['[POLICE]', '[CORRIDOR]'] },
     ]
+    const allAudit = rawAudit.length > 0 ? rawAudit : defaultAudit
+
+    const folders = [
+      { id: 'all', name: '📁 All Audit & Incident Records', description: 'Unified chronological telemetry and operational audit logs', tag: 'ALL', count: allAudit.length },
+      { id: 'false_alarms', name: '📁 False Alarms & Unverified Dispatches', description: 'Separately filed incidents verified as false alarms or unverified by paramedics', tag: 'FALSE_ALARM', count: allAudit.filter(a => a.category === 'false_alarms').length, badge: 'bg-amber-100 text-amber-900 border-amber-300' },
+      { id: 'verified', name: '📁 Verified Collisions & Rescues', description: 'Confirmed collision incidents and active emergency dispatches', tag: 'VERIFIED', count: allAudit.filter(a => a.category === 'verified').length, badge: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+      { id: 'handover', name: '📁 Hospital Admissions & Handover Records', description: 'Emergency department admissions and ambulance release records', tag: 'HANDOVER', count: allAudit.filter(a => a.category === 'handover').length, badge: 'bg-blue-100 text-blue-900 border-blue-300' },
+    ]
+
     const events = [
       { id: 1, incident_id: 101, event: 'detected', message: 'PyTorch AI Model detected collision event', ts: new Date().toISOString() },
       { id: 2, incident_id: 101, event: 'dispatched', message: 'AMB-01 dispatched to scene', ts: new Date().toISOString() },
     ]
-    return { audit, events }
+
+    return { audit: allAudit, events, folders, records: allAudit }
   }
 
   // Citizen Emergency Reporting & Management
@@ -1084,6 +1115,10 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           if (!body?.verified) {
             asg.status = 'declined'
             inc.status = 'rejected'
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.status = 'available'; setStored(KEY_AMBULANCES, ambs) }
+            logStructuredMock('false_alarms', '📁 False Alarms & Unverified', ['[FALSE_ALARM]', '[DISMISSED]', '[UNVERIFIED]', `[INCIDENT #${inc.id}]`, `[AMBULANCE ${asg.ambulance_code}]`], body?.notes || 'Paramedic examined 6 camera frames: False alarm / no accident', { incident_id: inc.id, location: inc.location_name, source: inc.source, status: 'rejected', dismissed_by: asg.driver_name })
           } else {
             asg.status = 'en_route'
             inc.status = 'en_route'
@@ -1092,21 +1127,40 @@ export async function handleMockRequest(method: string, url: string, body?: any,
             inc.green_corridor = true
             asg.responded_at = new Date().toISOString()
             asg.leg_complete = false
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.status = 'busy'; setStored(KEY_AMBULANCES, ambs) }
+            logStructuredMock('verified', '📁 Verified Collisions & Rescues', ['[VERIFIED_ACCIDENT]', '[CODE_RED]', '[DISPATCHED]', `[INCIDENT #${inc.id}]`, `[AMBULANCE ${asg.ambulance_code}]`], `Accident confirmed by ${asg.driver_name}. Needed fleet: ${inc.required_ambulances} unit(s). En route ASAP.`, { incident_id: inc.id, location: inc.location_name, status: 'en_route', verified_by: asg.driver_name })
           }
         } else if (action === 'respond') {
           if (body?.accept) {
             asg.status = 'en_route'
             inc.status = 'en_route'
             asg.responded_at = new Date().toISOString()
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.status = 'busy'; setStored(KEY_AMBULANCES, ambs) }
           } else {
             asg.status = 'declined'
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.status = 'available'; setStored(KEY_AMBULANCES, ambs) }
           }
         } else if (action === 'simulate' || (action === 'simulate' && parts[5] === 'skip') || action === 'skip') {
           asg.leg_complete = true
           asg.remaining_eta = 0
           if (asg.status === 'en_route') {
-            asg.remaining_eta = 0
-            asg.leg_complete = true
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.lat = inc.lat; amb.lng = inc.lng; setStored(KEY_AMBULANCES, ambs) }
+          } else if (asg.status === 'transporting') {
+            const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
+            const h = hosps.find(x => x.id === (asg.hospital_id || inc.selected_hospital_id))
+            if (h) {
+              const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+              const amb = ambs.find(a => a.id === asg.ambulance_id)
+              if (amb) { amb.lat = h.lat; amb.lng = h.lng; setStored(KEY_AMBULANCES, ambs) }
+            }
           }
         } else if (action === 'assessment') {
           inc.assessment = {
@@ -1121,6 +1175,9 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           inc.status = 'on_scene'
           asg.leg_complete = true
           asg.remaining_eta = 0
+          const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+          const amb = ambs.find(a => a.id === asg.ambulance_id)
+          if (amb) { amb.lat = inc.lat; amb.lng = inc.lng; setStored(KEY_AMBULANCES, ambs) }
           if (!asg.hospital_route && inc.selected_hospital_id) {
             const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
             const h = hosps.find(x => x.id === inc.selected_hospital_id)
@@ -1147,12 +1204,27 @@ export async function handleMockRequest(method: string, url: string, body?: any,
           inc.status = 'at_hospital'
           asg.leg_complete = true
           asg.remaining_eta = 0
+          const hosps = getStored<Hospital[]>(KEY_HOSPITALS, DEFAULT_HOSPITALS)
+          const h = hosps.find(x => x.id === (asg.hospital_id || inc.selected_hospital_id))
+          if (h) {
+            const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+            const amb = ambs.find(a => a.id === asg.ambulance_id)
+            if (amb) { amb.lat = h.lat; amb.lng = h.lng; setStored(KEY_AMBULANCES, ambs) }
+            const pts = inc.assessment?.patients || 1
+            h.available_beds = Math.max(0, h.available_beds - pts)
+            h.last_admission_at = new Date().toISOString()
+            setStored(KEY_HOSPITALS, hosps)
+          }
         } else if (action === 'complete') {
           asg.status = 'completed'
           inc.status = 'completed'
           asg.completed_at = new Date().toISOString()
+          inc.completed_at = new Date().toISOString()
+          const ambs = getStored<Ambulance[]>(KEY_AMBULANCES, DEFAULT_AMBULANCES)
+          const amb = ambs.find(a => a.id === asg.ambulance_id)
+          if (amb) { amb.status = 'available'; setStored(KEY_AMBULANCES, ambs) }
+          logStructuredMock('handover', '📁 Hospital Admissions & Handover', ['[HANDOVER_COMPLETED]', '[PATIENT_ADMITTED]', '[AMBULANCE_RELEASED]', `[INCIDENT #${inc.id}]`], `Patient successfully admitted. Bed count updated. ${asg.ambulance_code} restored to AVAILABLE (READY).`, { incident_id: inc.id, hospital_id: asg.hospital_id, status: 'completed' })
         } else if (action === 'timeout') {
-          // No auto-timeout forced
           return inc
         }
         setStored(KEY_INCIDENTS, incs)

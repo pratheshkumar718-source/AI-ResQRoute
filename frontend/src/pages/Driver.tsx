@@ -107,9 +107,10 @@ function Assess({ aid }: { aid: number }) {
 }
 
 function Active({ inc }: { inc: Incident }) {
-  const { ambulances, hospitals, tracking, user } = useApp()
+  const { ambulances, hospitals, tracking, user, refresh, push } = useApp()
   const act = useAct()
   const [zoomUrl, setZoomUrl] = useState<string | null>(null)
+  const [fastForwarding, setFastForwarding] = useState(false)
   const a = inc.assignments.find(x =>
     ['offered', 'en_route', 'on_scene', 'transporting', 'at_hospital'].includes(x.status)
   )!
@@ -120,6 +121,37 @@ function Active({ inc }: { inc: Incident }) {
 
   // Driver isolation: focus this driver's unit on map
   const myAmbulances = ambulances.filter(amb => amb.id === user?.ambulance_id)
+  const me = ambulances.find(amb => amb.id === user?.ambulance_id)
+
+  const handleFastForward = async (legName: 'scene' | 'hospital') => {
+    const curRoute = legName === 'scene' ? a.scene_route : a.hospital_route
+    const routeCoords = curRoute?.coords || []
+    setFastForwarding(true)
+
+    // Rapidly traverse route points across street network
+    if (routeCoords.length > 2 && me) {
+      const totalSteps = Math.min(14, routeCoords.length)
+      const stepIdxs = Array.from({ length: totalSteps }, (_, i) =>
+        Math.floor((i / (totalSteps - 1)) * (routeCoords.length - 1))
+      )
+      for (const idx of stepIdxs) {
+        const pt = routeCoords[idx]
+        if (pt) {
+          api.post(`/api/ambulances/${me.id}/location`, { lat: pt[0], lng: pt[1] }).catch(() => { })
+        }
+        await new Promise(r => setTimeout(r, 65))
+      }
+    }
+
+    await act(
+      () => api.post(`/api/assignments/${a.id}/simulate/skip`),
+      legName === 'scene'
+        ? '⚡ Rapid road network transit: Arrived at accident scene!'
+        : '⚡ Rapid road network transit: Arrived at Emergency Bay!'
+    )
+    setFastForwarding(false)
+    refresh()
+  }
 
   return (
     <div className="grid xl:grid-cols-3 gap-6">
@@ -243,10 +275,11 @@ function Active({ inc }: { inc: Incident }) {
                 <Btn
                   v="ghost"
                   className="w-full"
-                  onClick={() => post('simulate/skip', 'Fast-forwarded to scene')}
+                  disabled={fastForwarding}
+                  onClick={() => handleFastForward('scene')}
                 >
-                  <FastForward className="w-4 h-4 text-[#356FA5]" />
-                  <span>Fast-Forward Travel (Simulation)</span>
+                  <FastForward className={`w-4 h-4 text-[#356FA5] ${fastForwarding ? 'animate-spin' : ''}`} />
+                  <span>{fastForwarding ? '⚡ Rapid Transit in Progress…' : 'Fast-Forward Travel (Simulation)'}</span>
                 </Btn>
               )}
             </div>
@@ -364,10 +397,11 @@ function Active({ inc }: { inc: Incident }) {
                 <Btn
                   v="ghost"
                   className="w-full"
-                  onClick={() => post('simulate/skip', 'Fast-forwarded to hospital')}
+                  disabled={fastForwarding}
+                  onClick={() => handleFastForward('hospital')}
                 >
-                  <FastForward className="w-4 h-4 text-[#356FA5]" />
-                  <span>Fast-Forward Travel (Simulation)</span>
+                  <FastForward className={`w-4 h-4 text-[#356FA5] ${fastForwarding ? 'animate-spin' : ''}`} />
+                  <span>{fastForwarding ? '⚡ Rapid Transit in Progress…' : 'Fast-Forward Travel (Simulation)'}</span>
                 </Btn>
               )}
             </div>
@@ -383,7 +417,11 @@ function Active({ inc }: { inc: Incident }) {
               <Btn
                 v="success"
                 className="w-full py-2.5"
-                onClick={() => post('complete', 'Handover complete — incident closed')}
+                onClick={async () => {
+                  await post('complete', 'Handover complete — incident closed')
+                  push('success', `✅ Patient successfully handed over to ${hosp?.name || 'hospital'}! ${a.ambulance_code} restored to AVAILABLE (READY). Ready for new emergency dispatches.`)
+                  refresh()
+                }}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Complete Patient Handover</span>
@@ -1056,12 +1094,34 @@ export default function Driver() {
 
       {/* Standby State */}
       {!offer && !active && (
-        <Card>
-          <Empty
-            text="No active dispatch assignment"
-            hint="Keep your duty status as AVAILABLE (READY). Emergency dispatch alerts will appear here in real time."
-          />
-        </Card>
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-[#F0F9F4] border border-[#198754]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#198754] opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#198754]" />
+              </span>
+              <div>
+                <div className="font-bold text-[#198754] text-sm">
+                  {me?.code ?? 'AMB-01'} Duty: AVAILABLE (READY)
+                </div>
+                <div className="text-xs text-[#666666]">
+                  Ambulance crew standing by. AI Surveillance & 108 Emergency dispatches will automatically route here.
+                </div>
+              </div>
+            </div>
+            <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-white text-[#198754] border border-[#198754]/30 self-start sm:self-auto">
+              STANDBY READY
+            </span>
+          </div>
+
+          <Card>
+            <Empty
+              text="No active dispatch assignment"
+              hint="Keep your duty status as AVAILABLE (READY). Emergency alerts will appear here in real time as accidents are detected."
+            />
+          </Card>
+        </div>
       )}
 
       <SystemNote />

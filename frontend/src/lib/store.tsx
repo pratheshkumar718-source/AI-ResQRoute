@@ -18,7 +18,7 @@ interface Ctx {
   }) => Promise<void>
   logout: () => void
   incidents: Incident[]; ambulances: Ambulance[]; hospitals: Hospital[]; cameras: Camera[]
-  loading: boolean; error: string | null; connected: boolean; refresh: () => void
+  loading: boolean; error: string | null; connected: boolean; backendConnected: boolean; refresh: () => void
   tracking: Record<number, Tracking>; toasts: Toast[]; push: (level: string, message: string) => void
   selectedId: number | null; setSelectedId: (id: number | null) => void
 }
@@ -36,6 +36,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
+  const [backendConnected, setBackendConnected] = useState(false)
   const [tracking, setTracking] = useState<Record<number, Tracking>>({})
   const [toasts, setToasts] = useState<Toast[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -58,8 +59,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCameras(d.cameras || [])
         setError(null)
       }
+      const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+      if (apiUrl) {
+        fetch(`${apiUrl}/api/health`)
+          .then(r => setBackendConnected(r.ok))
+          .catch(() => setBackendConnected(false))
+      }
     } catch (e: any) {
       console.warn('[Store] Bootstrap notice:', e.message)
+      setBackendConnected(false)
     } finally {
       setLoading(false)
     }
@@ -122,7 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const mine = !m.ambulance_id || u?.role !== 'driver' || m.ambulance_id === u.ambulance_id
             if (m.message && mine && m.type !== 'hello') push(m.level || 'info', m.message)
             if (m.type !== 'hello') refresh()
-          } catch {}
+          } catch { }
         }
       } catch {
         setConnected(false)
@@ -149,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   if (booting) return <div className="h-screen grid place-items-center text-slate-500">Loading…</div>
   return (
-    <C.Provider value={{ user, login, register, logout, incidents, ambulances, hospitals, cameras, loading, error, connected, refresh, tracking, toasts, push, selectedId, setSelectedId }}>
+    <C.Provider value={{ user, login, register, logout, incidents, ambulances, hospitals, cameras, loading, error, connected, backendConnected, refresh, tracking, toasts, push, selectedId, setSelectedId }}>
       {children}
     </C.Provider>
   )

@@ -722,11 +722,32 @@ def verify_and_respond(aid: int, b: DriverVerify, db: Session = Depends(get_db),
         # Driver verified 6 screenshots as false alarm / minor
         a.status = "declined"
         inc.status = "rejected"
+        a.ambulance.status = "available"
         audit(db, u.username, "driver_reported_false_alarm", "incident", inc.id, b.notes)
         track(db, inc.id, aid, "rejected", f"{code} examined 6 camera screenshots and reported: False alarm / no dispatch required")
+
+        # Files false alarms separately into dedicated logs/false_alarms folder
+        log_entry = {
+            "incident_id": inc.id,
+            "assignment_id": aid,
+            "timestamp": iso(now()),
+            "category": "false_alarms",
+            "folder": "📁 False Alarms & Unverified",
+            "tags": ["[FALSE_ALARM]", "[UNVERIFIED]", "[DISMISSED]", f"[INCIDENT #{inc.id}]", f"[AMBULANCE {code}]"],
+            "location": inc.location_name,
+            "lat": inc.lat,
+            "lng": inc.lng,
+            "source": inc.source,
+            "dismissed_by": f"{u.name} ({code})",
+            "driver_notes": b.notes or "False alarm reported by paramedic after visual verification of 6 camera frames",
+            "status": "rejected"
+        }
+        core.write_structured_log("false_alarms", f"false_alarm_inc_{inc.id}_{int(time.time())}.json", log_entry)
+
         db.commit()
         emit({"type": "incident_updated", "incident_id": inc.id, "level": "info",
-              "message": f"Incident #{inc.id} marked as False Alarm by {code}"})
+              "message": f"Incident #{inc.id} marked as False Alarm by {code}. Ambulance {code} is AVAILABLE."})
+        emit({"type": "ambulance_updated", "ambulance_id": a.ambulance_id, "status": "available"})
         return ser_inc(inc)
 
     # Accident verified by primary paramedic!
@@ -738,6 +759,24 @@ def verify_and_respond(aid: int, b: DriverVerify, db: Session = Depends(get_db),
 
     a.status = "en_route"
     a.ambulance.status = "busy"
+
+    # Files verified accident into dedicated logs/verified_accidents folder
+    log_entry = {
+        "incident_id": inc.id,
+        "assignment_id": aid,
+        "timestamp": iso(now()),
+        "category": "verified",
+        "folder": "📁 Verified Collisions & Rescues",
+        "tags": ["[VERIFIED_ACCIDENT]", "[CODE_RED]", "[DISPATCHED]", f"[INCIDENT #{inc.id}]", f"[AMBULANCE {code}]"],
+        "location": inc.location_name,
+        "lat": inc.lat,
+        "lng": inc.lng,
+        "verified_by": f"{u.name} ({code})",
+        "required_ambulances": req,
+        "driver_notes": b.notes,
+        "status": "en_route"
+    }
+    core.write_structured_log("verified", f"verified_inc_{inc.id}_{int(time.time())}.json", log_entry)
 
     # Automatically assign best receiving hospital
     recs, needs = recommend_hospitals(db, inc)
@@ -1016,13 +1055,31 @@ def complete(aid: int, db: Session = Depends(get_db), u: User = Depends(need("dr
         hosp.updated_at = now()
     a.status = "completed"; a.completed_at = now(); a.ambulance.status = "available"
     inc.status = "completed"; inc.completed_at = now()
+
+    # Files handover log into dedicated logs/handover_records folder
+    log_entry = {
+        "incident_id": inc.id,
+        "assignment_id": aid,
+        "timestamp": iso(now()),
+        "category": "handover",
+        "folder": "📁 Hospital Admissions & Handover",
+        "tags": ["[HANDOVER_COMPLETED]", "[PATIENT_ADMITTED]", "[AMBULANCE_RELEASED]", f"[INCIDENT #{inc.id}]", f"[HOSPITAL {hosp.name if hosp else 'ER'}]"],
+        "hospital_id": a.hospital_id,
+        "hospital_name": hosp.name if hosp else "Hospital",
+        "patients_admitted": patients,
+        "remaining_beds": hosp.available_beds if hosp else None,
+        "ambulance_released": a.ambulance.code,
+        "status": "completed"
+    }
+    core.write_structured_log("handover", f"handover_inc_{inc.id}_{int(time.time())}.json", log_entry)
+
     audit(db, u.username, "handover_completed", "assignment", aid, f"patients={patients}")
-    track(db, inc.id, aid, "completed", f"Patient handover completed for {a.ambulance.code}. Incident closed.")
+    track(db, inc.id, aid, "completed", f"Patient handover completed for {a.ambulance.code}. Incident #{inc.id} closed. Unit is available.")
     db.commit()
     emit({"type": "hospital_updated", "level": "info",
-          "message": f"Handover complete at {hosp.name if hosp else 'hospital'}. Hourly bed count verification requested."})
-    emit({"type": "ambulance_updated"})
-    _done(inc, a, f"Incident #{inc.id} completed", "success")
+          "message": f"Handover complete at {hosp.name if hosp else 'hospital'}. Bed count updated ({hosp.available_beds if hosp else 0} available)."})
+    emit({"type": "ambulance_updated", "ambulance_id": a.ambulance_id, "status": "available"})
+    _done(inc, a, f"Successfully handed over patient to {hosp.name if hosp else 'Hospital'}. {a.ambulance.code} is now AVAILABLE (READY) for nearby emergencies.", "success")
     return ser_inc(inc)
 
 
@@ -1275,13 +1332,53 @@ def patch_hosp(hid: int, b: HospPatch, db: Session = Depends(get_db), u: User = 
     return ser_hosp(x)
 
 
-# ---------------- history ----------------
+# ---------------- history & log folders ----------------
+@app.get("/api/logs/folders")
+def get_log_folders(db: Session = Depends(get_db), u: User = Depends(user_dep)):
+    folders = [
+        {"id": "all", "name": "📁 All Audit & Incident Records", "description": "Unified chronological telemetry and operational audit logs", "tag": "ALL"},
+        {"id": "false_alarms", "name": "📁 False Alarms & Unverified Dispatches", "description": "Separately filed incidents verified as false alarms or unverified by paramedics", "tag": "FALSE_ALARM", "badge": "bg-amber-100 text-amber-900 border-amber-300"},
+        {"id": "verified", "name": "📁 Verified Collisions & Rescues", "description": "Confirmed collision incidents and active emergency dispatches", "tag": "VERIFIED", "badge": "bg-emerald-100 text-emerald-900 border-emerald-300"},
+        {"id": "handover", "name": "📁 Hospital Admissions & Handover Records", "description": "Emergency department admissions and ambulance release records", "tag": "HANDOVER", "badge": "bg-blue-100 text-blue-900 border-blue-300"}
+    ]
+    file_records = []
+    dir_map = {
+        "false_alarms": (core.FALSE_ALARMS_DIR, "FALSE_ALARM", "📁 False Alarms & Unverified"),
+        "verified": (core.VERIFIED_DIR, "VERIFIED", "📁 Verified Collisions & Rescues"),
+        "handover": (core.HANDOVER_DIR, "HANDOVER", "📁 Hospital Admissions & Handover")
+    }
+    for cat, (dir_path, tag, folder_name) in dir_map.items():
+        if dir_path.exists():
+            for f in sorted(dir_path.glob("*.json"), reverse=True):
+                try:
+                    data = json.loads(f.read_text())
+                    file_records.append({
+                        "file": f.name,
+                        "category": cat,
+                        "folder": folder_name,
+                        "tag": tag,
+                        "tags": data.get("tags", [f"[{tag}]"]),
+                        "ts": data.get("timestamp"),
+                        "incident_id": data.get("incident_id"),
+                        "detail": data.get("driver_notes") or data.get("notes") or f"Incident #{data.get('incident_id')} recorded",
+                        "data": data
+                    })
+                except Exception:
+                    pass
+    return {"folders": folders, "records": file_records}
+
+
 @app.get("/api/history")
 def history(db: Session = Depends(get_db), u: User = Depends(user_dep)):
     logs = db.query(AuditLog).order_by(AuditLog.id.desc()).limit(200).all()
     ev = db.query(TrackingEvent).filter(TrackingEvent.event != "position").order_by(TrackingEvent.id.desc()).limit(100).all()
-    return {"audit": [{"id": l.id, "ts": iso(l.ts), "actor": l.actor, "action": l.action, "entity": l.entity, "entity_id": l.entity_id, "detail": l.detail} for l in logs],
-            "events": [{"id": e.id, "incident_id": e.incident_id, "event": e.event, "message": e.message, "ts": iso(e.ts)} for e in ev]}
+    folder_data = get_log_folders(db, u)
+    return {
+        "audit": [{"id": l.id, "ts": iso(l.ts), "actor": l.actor, "action": l.action, "entity": l.entity, "entity_id": l.entity_id, "detail": l.detail} for l in logs],
+        "events": [{"id": e.id, "incident_id": e.incident_id, "event": e.event, "message": e.message, "ts": iso(e.ts)} for e in ev],
+        "folders": folder_data["folders"],
+        "records": folder_data["records"]
+    }
 
 
 class SimulateAccidentIn(BaseModel):
